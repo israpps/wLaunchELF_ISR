@@ -48,6 +48,7 @@
 #include <sio.h>
 #include <sior_rpc.h>
 
+#include "OSD/hddosd-headers.h"
 #ifdef SIO_DEBUG
 #define DPRINTF(args...) sio_printf(args)
 #else

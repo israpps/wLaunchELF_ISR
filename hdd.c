@@ -31,6 +31,7 @@ enum {  //For menu commands
 	REMOVE,
 	RENAME,
 	EXPAND,
+	HEADER,
 	FORMAT,
 	NUM_MENU
 };
@@ -346,6 +347,7 @@ int MenuParty(PARTYINFO Info)
 	                   strlen(LNG(Remove));
 	menu_len = strlen(LNG(Rename)) > menu_len ? strlen(LNG(Rename)) : menu_len;
 	menu_len = strlen(LNG(Expand)) > menu_len ? strlen(LNG(Expand)) : menu_len;
+	menu_len = strlen("Inject") > menu_len ? strlen("Inject") : menu_len;
 	menu_len = strlen(LNG(Format)) > menu_len ? strlen(LNG(Format)) : menu_len;
 
 	int menu_ch_w = menu_len + 1;                                 //Total characters in longest menu string
@@ -368,15 +370,19 @@ int MenuParty(PARTYINFO Info)
 		enable[REMOVE] = FALSE;
 		enable[RENAME] = FALSE;
 		enable[EXPAND] = FALSE;
+		enable[HEADER] = FALSE;
 	}
 	if (Info.Treatment == TREAT_HDL_RAW) {
 		enable[EXPAND] = FALSE;
+		enable[HEADER] = FALSE;
 	}
 	if (Info.Treatment == TREAT_HDL_GAME) {
 		enable[EXPAND] = FALSE;
+		enable[HEADER] = FALSE;
 	}
 	if (Info.Treatment == TREAT_NOACCESS) {
 		enable[EXPAND] = FALSE;
+		enable[HEADER] = FALSE;
 	}
 
 	for (sel = 0; sel < NUM_MENU; sel++)
@@ -427,6 +433,8 @@ int MenuParty(PARTYINFO Info)
 					strcpy(tmp, LNG(Rename));
 				else if (i == EXPAND)
 					strcpy(tmp, LNG(Expand));
+				else if (i == HEADER)
+					stpcpy(tmp,"Inject");
 				else if (i == FORMAT)
 					strcpy(tmp, LNG(Format));
 
@@ -841,6 +849,18 @@ void hddManager(void)
 							nparties = 0;  //Tell FileBrowser to refresh party list
 						}
 					}
+				} else if (ret == HEADER) {
+					char* msg = "";
+					sprintf(msg,"Inject selected partition?\ndata will be retrieved from:\n mass:/%s/",PartyInfo[browser_sel].Name);
+					if (ynDialog(msg) == 1) {
+						header_info_t info;
+							sprintf(info.systemCnf, " mass:/%s/system.cnf", PartyInfo[browser_sel].Name);
+							sprintf(info.iconSys, "mass:/%s/icon.sys", PartyInfo[browser_sel].Name);
+							sprintf(info.listIco, "mass:/%s/list.ico", PartyInfo[browser_sel].Name);
+							sprintf(info.partition, "hdd0:%s", PartyInfo[browser_sel].Name); 
+						if (WriteAPAHeader(info) < 0) {drawMsg("injection succeded");} else {drawMsg("injection failed");}
+					}
+					
 				} else if (ret == FORMAT) {
 					if (ynDialog(LNG(Format_HDD)) == 1) {
 						FormatHdd();
