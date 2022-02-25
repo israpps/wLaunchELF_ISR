@@ -297,7 +297,7 @@ static void Show_About_uLE(void)
 	while (1) {
 		//Pad response section
 		waitAnyPadReady();
-		if (readpad() && new_pad) {
+		if (readpad()) {
 			event |= 2;
 			if (setting->GUI_skin[0]) {
 				GUI_active = 1;
@@ -314,6 +314,7 @@ static void Show_About_uLE(void)
 			sprintf(TextRow, " commit: %s (based on commit 41e4ebe)", GIT_HASH);
 			PrintPos(04, hpos, TextRow);
 			PrintPos(05, hpos, "Mod created by: Matias Israelson");
+			PrintPos(-1, hpos, "Support for DS3/DS4 By Alex Parrado");
 			PrintPos(-1, hpos, "Build features:"
 #ifdef SMB
 " SMB:1"
@@ -831,7 +832,7 @@ static void ShowDebugInfo(void)
 	while (1) {
 		//Pad response section
 		waitAnyPadReady();
-		if (readpad() && new_pad) {
+		if (readpad()) {
 			event |= 2;
 #ifdef SMB
 			if (new_pad & PAD_CIRCLE) {
@@ -1514,7 +1515,7 @@ done_test:
 
 		//Pad response section
 		waitAnyPadReady();
-		if (readpad() && new_pad) {
+		if (readpad()) {
 			event |= 2;
 			if ((++test_type) < test_types) {
 				mat_y++;
