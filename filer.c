@@ -2582,7 +2582,7 @@ non_PSU_RESTORE_init:
 		nonDialog(progress);  //Make new progress report
 		PasteProgress_f = 1;  //and note that it was done for next time
 		drawMsg(file.name);
-		if (readpad() && new_pad) {
+		if (readpad()) {
 			if (-1 == ynDialog(LNG(Continue_transfer))) {
 				genClose(out_fd);
 				out_fd = -1;

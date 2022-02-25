@@ -10,7 +10,7 @@ EE_OBJS = main.o pad.o config.o elf.o draw.o loader_elf.o filer.o \
 	ps2hdd_irx.o ps2fs_irx.o usbd_irx.o usbhdfsd_irx.o mcman_irx.o mcserv_irx.o\
 	cdvd_irx.o vmc_fs_irx.o ps2kbd_irx.o\
 	hdd.o hdl_rpc.o hdl_info_irx.o editor.o timer.o jpgviewer.o icon.o lang.o\
-	font_uLE.o makeicon.o chkesr.o sior_irx.o allowdvdv_irx.o
+	font_uLE.o makeicon.o chkesr.o sior_irx.o allowdvdv_irx.o ds34usb.o libds34usb.a ds34bt.o libds34bt.a
 ifeq ($(SMB),1)
 	EE_OBJS += smbman.o
 endif
@@ -24,7 +24,7 @@ EE_INCS := -I$(PS2DEV)/gsKit/include -I$(PS2SDK)/ports/include -Ioldlibs/libcdvd
 EE_LDFLAGS := -L$(PS2DEV)/gsKit/lib -L$(PS2SDK)/ports/lib -Loldlibs/libcdvd/lib -s
 EE_LIBS = -lgskit -ldmakit -ljpeg -lpad -lmc -lhdd -lcdvdfs -lkbd -lmf \
 	-lcdvd -lc -lfileXio -lpatches -lpoweroff -ldebug -lc -lsior
-EE_CFLAGS := -mgpopt -G10240 -G0
+EE_CFLAGS := -mgpopt -G10240 -G0 -DNEWLIB_PORT_AWARE -D_EE
 
 ifeq ($(SMB),1)
 	EE_CFLAGS += -DSMB
@@ -147,6 +147,30 @@ ifeq ($(ETH),1)
 ps2host_irx.s: ps2host/ps2host.irx
 	bin2s $< $@ ps2host_irx
 endif
+
+ds34usb/ee/libds34usb.a: ds34usb/ee
+	$(MAKE) -C $<
+
+ds34usb/iop/ds34usb.irx: ds34usb/iop
+	$(MAKE) -C $<
+
+ds34bt/ee/libds34bt.a: ds34bt/ee
+	$(MAKE) -C $<
+
+ds34bt/iop/ds34bt.irx: ds34bt/iop
+	$(MAKE) -C $<
+
+ds34usb.s: ds34usb/iop/ds34usb.irx
+	@bin2s $< $@ ds34usb_irx
+
+libds34usb.a: ds34usb/ee/libds34usb.a
+	cp $< $@	
+
+ds34bt.s: ds34bt/iop/ds34bt.irx
+	@bin2s $< $@ ds34bt_irx
+
+libds34bt.a: ds34bt/ee/libds34bt.a
+	cp $< $@
 
 ifeq ($(SMB),1)
 smbman_irx.s: $(PS2SDK)/iop/irx/smbman.irx
