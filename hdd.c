@@ -54,7 +54,7 @@ void DebugDisp(char *Message)
 	for (done = 0; done == 0;) {
 		nonDialog(Message);
 		drawLastMsg();
-		if (readpad() && new_pad) {
+		if (readpad()) {
 			done = 1;
 		}
 	}
