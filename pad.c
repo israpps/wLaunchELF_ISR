@@ -20,7 +20,6 @@ u32 new_pad, new_pad_t[4];
 u32 joy_value = 0;
 static int test_joy = 0;
 
-int pad_thr_id;
 int semPoll,semRunning,semFinish;
 int isRunning;
 
@@ -106,7 +105,8 @@ void padPollingThread(void *args)
 void padPollingInit(void)
 {
 
-	ee_thread_t th_attr;	
+	ee_thread_t th_attr;
+	int pad_thr_id;	
 	ee_sema_t semData;
 	static unsigned char stack[4096] __attribute__((aligned(16)));
 

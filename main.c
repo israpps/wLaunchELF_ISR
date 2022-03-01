@@ -1707,12 +1707,12 @@ static void CleanUp(void)
 	//    padEnd();  //Required when a newer libpad library is used.
 	if (ps2kbd_opened)
 		PS2KbdClose();
-	ds34usb_reset();
-	ds34bt_reset();
 	WaitSema(semRunning);
 	isRunning=0;
 	SignalSema(semRunning);	
 	WaitSema(semFinish);
+	ds34usb_reset();
+	ds34bt_reset();
 }
 //------------------------------
 //endfunc CleanUp
