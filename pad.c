@@ -2,8 +2,6 @@
 // File name:   pad.c
 //---------------------------------------------------------------------------
 #include "launchelf.h"
-#include "ds34usb/ee/libds34usb.h"
-#include "ds34bt/ee/libds34bt.h"
 #include <kernel.h>
 #include <timer.h>
 #include <time.h>
