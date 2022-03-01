@@ -1709,7 +1709,7 @@ static void CleanUp(void)
 		PS2KbdClose();
 	ds34usb_reset();
 	ds34bt_reset();
-	WaitSema(semRunning)
+	WaitSema(semRunning);
 	isRunning=0;
 	SignalSema(semRunning);	
 	WaitSema(semFinish);
