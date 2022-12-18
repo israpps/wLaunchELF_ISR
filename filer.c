@@ -67,7 +67,7 @@ int mcfreeSpace;
 int mctype_PSx;  //dlanor: Needed for proper scaling of mcfreespace
 int vfreeSpace;  //flags validity of freespace value
 int browser_cut;
-int nclipFiles, nmarks, nparties
+int nclipFiles, nmarks, nparties;
 #ifdef DVRP
 int ndvrpparties;
 char mountedDVRPParty[MOUNT_LIMIT][MAX_NAME];
@@ -382,7 +382,7 @@ void unmountAll(void)
 	char pfs_str[6];
 #ifdef DVRP
 	char dvr_pfs_str[10];
-#ifdef
+#endif
 	char vmc_str[6];
 	int i;
 

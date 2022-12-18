@@ -146,11 +146,11 @@ ps2hdd_irx.s: $(PS2SDK)/iop/irx/ps2hdd-osd.irx
 ps2fs_irx.s: $(PS2SDK)/iop/irx/ps2fs.irx
 	bin2s $< $@ ps2fs_irx
 	
-dvrdrv_irx.s: iop/irx/dvrdrv.irx
-	$(BIN2S) $< $@ dvrdrv_irx
+dvrdrv_irx.s: iop/dvrdrv.irx
+	bin2s $< $@ dvrdrv_irx
 
-dvrfile_irx.s: iop/irx/dvrfile.irx
-	$(BIN2S) $< $@ dvrfile_irx
+dvrfile_irx.s: iop/dvrfile.irx
+	bin2s $< $@ dvrfile_irx
 
 ifeq ($(ETH),1)
 ps2netfs_irx.s: $(PS2SDK)/iop/irx/ps2netfs.irx
