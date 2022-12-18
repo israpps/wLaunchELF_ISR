@@ -6,23 +6,24 @@ SMB = 0
 EE_BIN = BOOT-UNC.ELF
 EE_BIN_PKD = BOOT.ELF
 EE_OBJS = main.o pad.o config.o elf.o draw.o loader_elf.o filer.o \
-	poweroff_irx.o iomanx_irx.o filexio_irx.o ps2atad_irx.o ps2dev9_irx.o\
-	ps2hdd_irx.o ps2fs_irx.o usbd_irx.o usbhdfsd_irx.o mcman_irx.o mcserv_irx.o\
-	cdvd_irx.o vmc_fs_irx.o ps2kbd_irx.o\
-	hdd.o hdl_rpc.o hdl_info_irx.o editor.o timer.o jpgviewer.o icon.o lang.o\
-	font_uLE.o makeicon.o chkesr.o allowdvdv_irx.o ds34usb.o libds34usb.a ds34bt.o libds34bt.a
+    poweroff_irx.o iomanx_irx.o filexio_irx.o ps2atad_irx.o ps2dev9_irx.o\
+    ps2hdd_irx.o ps2fs_irx.o usbd_irx.o usbhdfsd_irx.o mcman_irx.o mcserv_irx.o\
+    cdvd_irx.o vmc_fs_irx.o ps2kbd_irx.o\
+    hdd.o hdl_rpc.o hdl_info_irx.o editor.o timer.o jpgviewer.o icon.o lang.o\
+    font_uLE.o makeicon.o chkesr.o allowdvdv_irx.o ds34usb.o libds34usb.a ds34bt.o libds34bt.a
 ifeq ($(SMB),1)
-	EE_OBJS += smbman.o
+    EE_OBJS += smbman.o
 endif
 
 ifeq ($(ETH),1)
-	EE_OBJS += ps2smap_irx.o ps2ftpd_irx.o ps2host_irx.o ps2netfs_irx.o ps2ip_irx.o
+    EE_OBJS += ps2smap_irx.o ps2ftpd_irx.o ps2host_irx.o ps2netfs_irx.o ps2ip_irx.o
 endif
 
 ifeq ($(DVRP),1)
     EE_OBJS += dvrdrv_irx.o dvrfile_irx.o
-	EE_CFLAGS += -DDVRP
+    EE_CFLAGS += -DDVRP
 endif
+
 EE_INCS := -I$(PS2DEV)/gsKit/include -I$(PS2SDK)/ports/include -Ioldlibs/libcdvd/ee
 
 EE_LDFLAGS := -L$(PS2DEV)/gsKit/lib -L$(PS2SDK)/ports/lib -Loldlibs/libcdvd/lib -s
@@ -146,11 +147,13 @@ ps2hdd_irx.s: $(PS2SDK)/iop/irx/ps2hdd-osd.irx
 ps2fs_irx.s: $(PS2SDK)/iop/irx/ps2fs.irx
 	bin2s $< $@ ps2fs_irx
 	
+ifeq ($(DVRP),1)
 dvrdrv_irx.s: iop/dvrdrv.irx
 	bin2s $< $@ dvrdrv_irx
 
 dvrfile_irx.s: iop/dvrfile.irx
 	bin2s $< $@ dvrfile_irx
+endif
 
 ifeq ($(ETH),1)
 ps2netfs_irx.s: $(PS2SDK)/iop/irx/ps2netfs.irx
