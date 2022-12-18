@@ -55,6 +55,17 @@ jobs:
       run: |
         make clean
 
+    - name: Compile wLaunchELF with DVRP support
+      run: |
+        make clean all TMANIP=1 ETH=1 DVRP=1
+        mv BOOT.ELF BOOT-DVRP.ELF
+        make clean all TMANIP=1 ETH=0 DVRP=1
+        mv BOOT.ELF BOOT-DVRP-NO_NETWORK.ELF
+
+    - name: Clean Project
+      run: |
+        make clean
+
     - name: Compile wLaunchELF
       run: |
         make TMANIP=1 ETH=1
@@ -115,6 +126,17 @@ jobs:
         make TMANIP=1 ETH=0
         mv BOOT.ELF BOOT-SPA_NO-NETWORK.ELF
         mv BOOT-UNC.ELF BOOT-UNC-SPA_NO-NETWORK.ELF
+
+    - name: Compile wLaunchELF with DVRP support
+      run: |
+        make clean all TMANIP=1 ETH=1 DVRP=1
+        mv BOOT.ELF BOOT-DVRP.ELF
+        make clean all TMANIP=1 ETH=0 DVRP=1
+        mv BOOT.ELF BOOT-DVRP-NO_NETWORK.ELF
+
+    - name: Clean Project
+      run: |
+        make clean
 
     - name: Get short SHA
       id: slug

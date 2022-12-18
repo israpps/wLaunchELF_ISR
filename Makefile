@@ -19,6 +19,10 @@ ifeq ($(ETH),1)
 	EE_OBJS += ps2smap_irx.o ps2ftpd_irx.o ps2host_irx.o ps2netfs_irx.o ps2ip_irx.o
 endif
 
+ifeq ($(DVRP),1)
+    EE_OBJS += dvrdrv_irx.o dvrfile_irx.o
+	EE_CFLAGS += -DDVRP
+endif
 EE_INCS := -I$(PS2DEV)/gsKit/include -I$(PS2SDK)/ports/include -Ioldlibs/libcdvd/ee
 
 EE_LDFLAGS := -L$(PS2DEV)/gsKit/lib -L$(PS2SDK)/ports/lib -Loldlibs/libcdvd/lib -s
@@ -142,6 +146,12 @@ ps2hdd_irx.s: $(PS2SDK)/iop/irx/ps2hdd-osd.irx
 ps2fs_irx.s: $(PS2SDK)/iop/irx/ps2fs.irx
 	bin2s $< $@ ps2fs_irx
 	
+dvrdrv_irx.s: iop/irx/dvrdrv.irx
+	$(BIN2S) $< $@ dvrdrv_irx
+
+dvrfile_irx.s: iop/irx/dvrfile.irx
+	$(BIN2S) $< $@ dvrfile_irx
+
 ifeq ($(ETH),1)
 ps2netfs_irx.s: $(PS2SDK)/iop/irx/ps2netfs.irx
 	bin2s $< $@ ps2netfs_irx

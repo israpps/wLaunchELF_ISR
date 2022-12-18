@@ -355,6 +355,10 @@ int genRmdir(char *path);
 int genCmpFileExt(const char *filename, const char *extension);
 int mountParty(const char *party);
 void unmountParty(int party_ix);
+#ifdef DVRP
+void unmountDVRPParty(int party_ix);
+int mountDVRPParty(const char *party);
+#endif
 void unmountAll(void);
 int setFileList(const char *path, const char *ext, FILEINFO *files, int cnfmode);
 

@@ -73,6 +73,19 @@ int checkELFheader(char *path)
 		if ((ret = mountParty(tmp)) < 0)
 			goto error;
 		fullpath[3] += ret;
+#ifdef DVRP
+	} else if (!strncmp(fullpath, "dvr_hdd0:", 9)) {
+		p = &path[9];
+		if (*p == '/')
+			p++;
+		sprintf(tmp, "dvr_hdd0:%s", p);
+		p = strchr(tmp, '/');
+		sprintf(fullpath, "dvr_pfs0:%s", p);
+		*p = 0;
+		if ((ret = mountDVRPParty(tmp)) < 0)
+			goto error;
+		fullpath[7] += ret;
+#endif
 	} else if (!strncmp(fullpath, "mass", 4)) {
 		char *pathSep;
 
@@ -138,6 +151,25 @@ void RunLoaderElf(char *filename, char *party)
 
 		argv[0] = filename;
 		argv[1] = bootpath;
+#ifdef DVRP
+	} else if ((!strncmp(party, "dvr_hdd0:", 9)) && (!strncmp(filename, "dvr_pfs0:", 9))) {
+		if (0 > fileXioMount("dvr_pfs0:", party, FIO_MT_RDONLY)) {
+			//Some error occurred, it could be due to something else having used pfs0
+			unmountDVRPParty(0);  //So we try unmounting pfs0, to try again
+			if (0 > fileXioMount("dvr_pfs0:", party, FIO_MT_RDONLY))
+				return;  //If it still fails, we have to give up...
+		}
+
+		//If a path to a file on PFS is specified, change it to the standard format.
+		//dvr_hdd0:partition:pfs:path/to/file
+		if (strncmp(filename, "dvr_pfs0:", 9) == 0) {
+			sprintf(bootpath, "%s:pfs:%s", party, &filename[9]);
+		} else {
+			sprintf(bootpath, "%s:%s", party, filename);
+		}
+		argv[0] = filename;
+		argv[1] = bootpath;
+#endif
 	} else {
 		argv[0] = filename;
 		argv[1] = filename;
