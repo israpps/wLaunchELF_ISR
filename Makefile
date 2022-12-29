@@ -40,6 +40,10 @@ ifeq ($(SMB),1)
 	EE_CFLAGS += -DSMB
 endif
 
+ifeq ($(DVRP),1)
+    EE_CFLAGS += -DDVRP
+endif
+
 ifeq ($(SIO_DEBUG),1)
 	EE_CFLAGS += -DSIO_DEBUG
 	EE_OBJS += sior_irx.o
