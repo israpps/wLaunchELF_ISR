@@ -53,7 +53,8 @@ endif
 ifeq ($(ETH),1)
     EE_OBJS += ps2smap_irx.o ps2ftpd_irx.o ps2host_irx.o ps2netfs_irx.o ps2ip_irx.o
     EE_CFLAGS += -DETH
-    HAS_ETH = -ETH
+else
+    HAS_ETH = -NO_NETWORK
 endif
 
 ifeq ($(TMANIP),1)
