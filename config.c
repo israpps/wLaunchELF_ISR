@@ -10,7 +10,11 @@ enum {
 #ifdef CUSTOM_COLORS
 	DEF_COLOR1 = GS_SETREG_RGBA(0, 0, 0, 0),  //Backgr
 	DEF_COLOR2 = GS_SETREG_RGBA(160, 160, 160, 0),     //Frame
+#ifdef DVRP
+	DEF_COLOR3 = GS_SETREG_RGBA(0x7a, 0, 0xbe, 0),
+#else
 	DEF_COLOR3 = GS_SETREG_RGBA(0, 204, 255, 0),       //Select
+#endif
 	DEF_COLOR4 = GS_SETREG_RGBA(255, 255, 255, 0),        //Text
 	DEF_COLOR5 = GS_SETREG_RGBA(255, 255, 0, 0),      //Graph1
 	DEF_COLOR6 = GS_SETREG_RGBA(0, 255, 0, 0),       //Graph2
