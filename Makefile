@@ -1,6 +1,11 @@
 #.SILENT:
 
-SMB = 0
+SMB ?= 0
+DVRP ?= 0
+SIO_DEBUG ?= 0
+ETH ?= 1
+IOP_RESET ?= 1
+
 #set SMB to 1 to build uLe with smb support
 
 EE_BIN = BOOT-UNC.ELF
@@ -91,6 +96,7 @@ current_flags:
 	@echo "DEFAULT_COLORS - set to 1 to use default uLaunchELF colors, otherwise, custom values will be used"
 	@echo "TMANIP: set to 1 to compile with time manipulation function, if set to 2 the function will manipulate the date of a specific folder (to avoid issues caused by noobs) (the specific folder name used is the macro HACK_FOLDER, wich is defined at launchelf.h)"
 	@echo "LANG: use a custom language file to compile wLe (by now only SPA and ENG are available)"
+	@echo "DVRP: support for PSX DESR encrypted HDD area"
 
 mcman_irx.s: $(PS2SDK)/iop/irx/mcman.irx
 	bin2s $< $@ mcman_irx
