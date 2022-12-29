@@ -27,9 +27,18 @@ jobs:
         
     - name: Compile wLaunchELF without network
       run: |
-        make TMANIP=1
+        make rebuild TMANIP=1
         mv BOOT.ELF BOOT-NO_NETWORK.ELF
         mv BOOT-UNC.ELF BOOT-UNC-NO_NETWORK.ELF
+                
+    - name: Compile wLaunchELF with EXFAT
+      run: |
+        make rebuild TMANIP=1 EXFAT=1
+        mv BOOT.ELF BOOT-NO_NETWORK-EXFAT.ELF
+        mv BOOT-UNC.ELF BOOT-UNC-NO_NETWORK-EXFAT.ELF
+        make rebuild TMANIP=1 EXFAT=1 ETH=1
+        mv BOOT.ELF BOOT-EXFAT.ELF
+        mv BOOT-UNC.ELF BOOT-UNC-EXFAT.ELF
         
     - name: Clean Project
       run: |
@@ -37,7 +46,7 @@ jobs:
         
     - name: "Compile wLaunchELF - NO IOP-RESET"
       run: |
-        make TMANIP=1 ETH=0 IOP_RESET=0
+        make rebuild TMANIP=1 ETH=0 IOP_RESET=0
         mv BOOT.ELF BOOT-NO_IOP_RESET.ELF
         
     - name: Clean Project
@@ -46,9 +55,9 @@ jobs:
         
     - name: Compile wLaunchELF with EE-SIO
       run: |
-        make TMANIP=1 ETH=1 SIO_DEBUG=1
+        make rebuild TMANIP=1 ETH=1 SIO_DEBUG=1
         mv BOOT.ELF BOOT-EE_SIO.ELF
-        make clean all TMANIP=1 ETH=0 SIO_DEBUG=1
+        make rebuild clean all TMANIP=1 ETH=0 SIO_DEBUG=1
         mv BOOT.ELF BOOT-NO_NETWORK-EE_SIO.ELF
         
     - name: Clean Project
@@ -68,7 +77,7 @@ jobs:
 
     - name: Compile wLaunchELF
       run: |
-        make TMANIP=1 ETH=1
+        make rebuild TMANIP=1 ETH=1
         
     - name: Get short SHA
       id: slug

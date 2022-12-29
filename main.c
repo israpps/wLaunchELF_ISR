@@ -31,6 +31,14 @@ IMPORT_BIN2C(smbman_irx);
 IMPORT_BIN2C(sior_irx);
 #endif
 
+IMPORT_BIN2C(usbd_irx);
+#ifdef EXFAT
+IMPORT_BIN2C(bdm_irx);
+IMPORT_BIN2C(bdmfs_fatfs_irx);
+IMPORT_BIN2C(usbmass_bd_irx);
+#else
+IMPORT_BIN2C(usb_mass_irx);
+#endif
 IMPORT_BIN2C(vmc_fs_irx);
 IMPORT_BIN2C(ps2atad_irx);
 IMPORT_BIN2C(ps2hdd_irx);
@@ -38,8 +46,6 @@ IMPORT_BIN2C(ps2fs_irx);
 IMPORT_BIN2C(poweroff_irx);
 IMPORT_BIN2C(loader_elf);
 IMPORT_BIN2C(iopmod_irx);
-IMPORT_BIN2C(usbd_irx);
-IMPORT_BIN2C(usb_mass_irx);
 IMPORT_BIN2C(cdvd_irx);
 IMPORT_BIN2C(ps2kbd_irx);
 IMPORT_BIN2C(hdl_info_irx);
@@ -306,19 +312,77 @@ static void Show_About_uLE(void)
 			PrintPos(04, hpos, TextRow);
 			PrintPos(05, hpos, "Mod created by: Matias Israelson");
 			PrintPos(-1, hpos, "DS3/DS4 support by Alex Parrado");
-			PrintPos(-1, hpos, "Build features:"
+			PrintPos(-1, hpos, "Project maintainers:  sp193 & AKuHAK");
+			PrintPos(-1, hpos, "  ");
+			PrintPos(-1, hpos, "uLaunchELF Project maintainers:");
+			PrintPos(-1, hpos, "  Eric Price       (aka: 'E P')");
+			PrintPos(-1, hpos, "  Ronald Andersson (aka: 'dlanor')");
+			PrintPos(-1, hpos, " ");
+			PrintPos(-1, hpos, "Other contributors:");
+			PrintPos(-1, hpos, "  Polo35, radad, Drakonite, sincro");
+			PrintPos(-1, hpos, "  kthu, Slam-Tilt, chip, pixel, Hermes");
+			PrintPos(-1, hpos, "  and others in the PS2Dev community");
+			PrintPos(-1, hpos, " ");
+			PrintPos(-1, hpos, "Main release site:");
+			PrintPos(-1, hpos, "   github.com/ps2homebrew/wLaunchELF/releases");
+			PrintPos(-1, hpos, "Mod Release site:");
+			PrintPos(-1, hpos, "   github.com/israpps/wLaunchELF_ISR/releases");
+			PrintPos(-1, hpos, "Ancestral project: LaunchELF v3.41 by Mirakichi");
+			//PrintPos(-1, hpos, "Created by:        Mirakichi");
+		}  //ends if(event||post_event)
+		drawScr();// https://github.com/israpps/wLaunchELF_ISR/tree/41e43b3-mod
+		post_event = event;
+		event = 0;
+	}  //ends while
+	   //----- End of event loop -----
+}
+
+static void Show_build_info(void)
+{
+	char TextRow[256];
+	int event, post_event = 0;
+	int hpos = 16;
+
+	event = 1;  //event = initial entry
+	//----- Start of event loop -----
+	while (1) {
+		//Pad response section
+		waitAnyPadReady();
+		if (readpad() && new_pad) {
+			event |= 2;
+			if (setting->GUI_skin[0]) {
+				GUI_active = 1;
+				loadSkin(BACKGROUND_PIC, 0, 0);
+			}
+			break;
+		}
+
+		//Display section
+		if (event || post_event) {  //NB: We need to update two frame buffers per event
+			clrScr(setting->color[COLOR_BACKGR]);
+			sprintf(TextRow, "About wLaunchELF %s  %s", ULE_VERSION, ULE_VERDATE);
+			PrintPos(03, hpos, TextRow);
+			sprintf(TextRow, " commit: %s (based on commit 41e4ebe)", GIT_HASH);
+			PrintPos(04, hpos, TextRow);
+			PrintPos(05, hpos, "Mod created by: Matias Israelson");
+			PrintPos(-1, hpos, "DS3/DS4 support by Alex Parrado");
+			PrintPos(-1, hpos, "Build features:");
+			
+			PrintPos(-1, hpos, 
 #ifdef SMB
 " SMB:1"
 #else
 " SMB:0"
 #endif
-
+);
+			PrintPos(-1, hpos, 
 #ifdef ETH
 " ETH:1"
 #else
 " ETH:0"
 #endif	
-
+);
+			PrintPos(-1, hpos, 
 #ifdef NO_IOP_RESET
 " IOP_RESET=0"
 #else
@@ -331,22 +395,18 @@ static void Show_About_uLE(void)
 " DVRP_HDD=0"
 #endif
 );
-			PrintPos(-1, hpos, "Project maintainers:  sp193 & AKuHAK");
-			PrintPos(-1, hpos, "  ");
-			PrintPos(-1, hpos, "uLaunchELF Project maintainers:");
-			PrintPos(-1, hpos, " Eric Price       (aka: 'E P')");
-			PrintPos(-1, hpos, " Ronald Andersson (aka: 'dlanor')");
-			PrintPos(-1, hpos, " ");
-			PrintPos(-1, hpos, "Other contributors:");
-			PrintPos(-1, hpos, " Polo35, radad, Drakonite, sincro");
-			PrintPos(-1, hpos, " kthu, Slam-Tilt, chip, pixel, Hermes & others");
-			PrintPos(-1, hpos, " ");
-			PrintPos(-1, hpos, "Main release site:");
-			PrintPos(-1, hpos, "   github.com/ps2homebrew/wLaunchELF/releases");
+
+			PrintPos(-1, hpos, 
+#ifdef EXFAT
+" EXFAT=0"
+#else
+" EXFAT=1"
+#endif
+);
 			PrintPos(-1, hpos, "Mod Release site:");
 			PrintPos(-1, hpos, "   github.com/israpps/wLaunchELF_ISR/releases");
-			PrintPos(-1, hpos, "Ancestral project: LaunchELF v3.41 by Mirakichi");
-			//PrintPos(-1, hpos, "Created by:        Mirakichi");
+
+
 		}  //ends if(event||post_event)
 		drawScr();// https://github.com/israpps/wLaunchELF_ISR/tree/41e43b3-mod
 		post_event = event;
@@ -1217,7 +1277,31 @@ static void loadDs34Modules(void)
                 have_ds34 = 1;
     }
 }
+
 static void loadUsbModules(void)
+#ifdef EXFAT
+{
+    int ret;
+
+    loadUsbDModule();
+    if (have_usbd && !have_usb_mass && (USB_mass_loaded = loadExternalModule(setting->usbmass_file, NULL, 0))) {
+        delay(3);
+        have_usb_mass = 1;
+    } else if (have_usbd && !have_usb_mass) {
+        SifExecModuleBuffer(bdm_irx, size_bdm_irx, 0, NULL, &ret);
+        SifExecModuleBuffer(bdmfs_fatfs_irx, size_bdmfs_fatfs_irx, 0, NULL, &ret);
+        SifExecModuleBuffer(usbmass_bd_irx, size_usbmass_bd_irx, 0, NULL, &ret);
+        delay(3);
+        USB_mass_loaded = 1;
+        have_usb_mass = 1;
+    }
+    if (USB_mass_loaded == 1)                       // if using the internal mass driver
+        USB_mass_max_drives = USB_MASS_MAX_DRIVES;  // allow multiple drives
+    else
+        USB_mass_max_drives = 1;  // else allow only one mass drive
+	loadDs34Modules();
+}
+#else
 {
 	loadUsbDModule();
 	if (have_usbd && !have_usb_mass && (USB_mass_loaded = loadExternalModule(setting->usbmass_file, &usb_mass_irx, size_usb_mass_irx))) {
@@ -1231,6 +1315,7 @@ static void loadUsbModules(void)
 		
 	loadDs34Modules();
 }
+#endif
 //------------------------------
 //endfunc loadUsbModules
 //---------------------------------------------------------------------------
@@ -2102,6 +2187,13 @@ Recurse_for_ESR:  //Recurse here for PS2Disc command with ESR disc
 			loadSkin(BACKGROUND_PIC, 0, 0);
 		}
 		Show_About_uLE();
+		return;
+	} else if (!stricmp(path, setting->Misc_Show_Build_Info)) {
+		if (setting->GUI_skin[0]) {
+			GUI_active = 0;
+			loadSkin(BACKGROUND_PIC, 0, 0);
+		}
+		Show_build_info();
 		return;
 	} else if (!strncmp(path, "cdfs", 4)) {
 		CDVD_FlushCache();

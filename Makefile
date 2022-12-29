@@ -5,17 +5,16 @@ DVRP ?= 0
 SIO_DEBUG ?= 0
 ETH ?= 1
 IOP_RESET ?= 1
-
-#set SMB to 1 to build uLe with smb support
+EXFAT ?= 0
 
 EE_BIN = BOOT-UNC.ELF
 EE_BIN_PKD = BOOT.ELF
 EE_OBJS = main.o pad.o config.o elf.o draw.o loader_elf.o filer.o \
-    poweroff_irx.o iomanx_irx.o filexio_irx.o ps2atad_irx.o ps2dev9_irx.o\
-    ps2hdd_irx.o ps2fs_irx.o usbd_irx.o usbhdfsd_irx.o mcman_irx.o mcserv_irx.o\
-    cdvd_irx.o vmc_fs_irx.o ps2kbd_irx.o\
-    hdd.o hdl_rpc.o hdl_info_irx.o editor.o timer.o jpgviewer.o icon.o lang.o\
-    font_uLE.o makeicon.o chkesr.o allowdvdv_irx.o ds34usb.o libds34usb.a ds34bt.o libds34bt.a
+	poweroff_irx.o iomanx_irx.o filexio_irx.o ps2atad_irx.o ps2dev9_irx.o\
+	ps2hdd_irx.o ps2fs_irx.o usbd_irx.o mcman_irx.o mcserv_irx.o\
+	cdvd_irx.o vmc_fs_irx.o ps2kbd_irx.o\
+	hdd.o hdl_rpc.o hdl_info_irx.o editor.o timer.o jpgviewer.o icon.o lang.o\
+	font_uLE.o makeicon.o chkesr.o allowdvdv_irx.o ds34usb.o libds34usb.a ds34bt.o libds34bt.a
 ifeq ($(SMB),1)
     EE_OBJS += smbman.o
 endif
@@ -37,7 +36,7 @@ EE_LIBS = -lgskit -ldmakit -ljpeg -lpad -lmc -lhdd -lcdvdfs -lkbd -lmf \
 EE_CFLAGS := -mgpopt -G10240 -G0 -DNEWLIB_PORT_AWARE -D_EE
 
 ifeq ($(SMB),1)
-	EE_CFLAGS += -DSMB
+    EE_CFLAGS += -DSMB
 endif
 
 ifeq ($(DVRP),1)
@@ -45,16 +44,16 @@ ifeq ($(DVRP),1)
 endif
 
 ifeq ($(SIO_DEBUG),1)
-	EE_CFLAGS += -DSIO_DEBUG
-	EE_OBJS += sior_irx.o
+    EE_CFLAGS += -DSIO_DEBUG
+    EE_OBJS += sior_irx.o
 endif
 
 ifeq ($(IOP_RESET),0)
-	EE_CFLAGS += -DNO_IOP_RESET
+     EE_CFLAGS += -DNO_IOP_RESET
 endif
 
 ifeq ($(ETH),1)
-	EE_CFLAGS += -DETH
+    EE_CFLAGS += -DETH
 endif
 
 ifeq ($(TMANIP),1)
@@ -64,6 +63,14 @@ endif
 ifeq ($(TMANIP),2)
  EE_CFLAGS += -DTMANIP
  EE_CFLAGS += -DTMANIP_MORON
+endif
+
+
+ifeq ($(EXFAT),1)
+    EE_OBJS += bdm_irx.o bdmfs_fatfs_irx.o usbmass_bd_irx.o
+    EE_CFLAGS += -DEXFAT
+else
+    EE_OBJS += usbhdfsd_irx.o
 endif
 
 ifeq ($(DEFAULT_COLORS),1)
@@ -111,8 +118,19 @@ mcserv_irx.s: $(PS2SDK)/iop/irx/mcserv.irx
 usbd_irx.s: $(PS2SDK)/iop/irx/usbd.irx
 	bin2s $< $@ usbd_irx
 
+ifeq ($(EXFAT),1)
+bdm_irx.s: iop/bdm.irx
+	bin2s $< $@ bdm_irx
+
+bdmfs_fatfs_irx.s: iop/bdmfs_fatfs.irx
+	bin2s $< $@ bdmfs_fatfs_irx
+
+usbmass_bd_irx.s: iop/usbmass_bd.irx
+	bin2s $< $@ usbmass_bd_irx
+else
 usbhdfsd_irx.s: $(PS2SDK)/iop/irx/usbhdfsd.irx
 	bin2s $< $@ usb_mass_irx
+endif
 
 oldlibs/libcdvd/lib/cdvd.irx: oldlibs/libcdvd
 	$(MAKE) -C $<

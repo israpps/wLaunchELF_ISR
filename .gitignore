@@ -9,5 +9,4 @@
 *.irx
 *.s
 githash.h
-
 !iop/*.irx

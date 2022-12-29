@@ -158,6 +158,7 @@ typedef struct
 	char Misc_ShowFont[64];
 	char Misc_Debug_Info[64];
 	char Misc_About_uLE[64];
+	char Misc_Show_Build_Info[64];
 	char Misc_OSDSYS[64];
 	char usbd_file[MAX_PATH];
 	char usbkbd_file[MAX_PATH];

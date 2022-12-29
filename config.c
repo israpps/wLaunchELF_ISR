@@ -457,6 +457,7 @@ void saveConfig(char *mainMsg, char *CNF)
 	        "Misc_ShowFont = %s\r\n"
 	        "Misc_Debug_Info = %s\r\n"
 	        "Misc_About_uLE = %s\r\n"
+	        "Misc_Show_Build_Info = %s\r\n"
 	        "Misc_OSDSYS = %s\r\n"
 	        "%n",  // %n causes NO output, but only a measurement
 	        setting->Misc,
@@ -476,6 +477,7 @@ void saveConfig(char *mainMsg, char *CNF)
 	        setting->Misc_ShowFont + i,
 	        setting->Misc_Debug_Info + i,
 	        setting->Misc_About_uLE + i,
+	        setting->Misc_Show_Build_Info + i,
 	        setting->Misc_OSDSYS + i,
 	        &CNF_step  // This variable measures the size of sprintf data
 	        );
@@ -644,6 +646,7 @@ void initConfig(void)
 	sprintf(setting->Misc_ShowFont, "%s/%s", LNG_DEF(MISC), LNG_DEF(ShowFont));
 	sprintf(setting->Misc_Debug_Info, "%s/%s", LNG_DEF(MISC), LNG_DEF(Debug_Info));
 	sprintf(setting->Misc_About_uLE, "%s/%s", LNG_DEF(MISC), LNG_DEF(About_uLE));
+	sprintf(setting->Misc_Show_Build_Info, "%s/%s", LNG(MISC), LNG(Build_Info));
 	sprintf(setting->Misc_OSDSYS, "%s/%s", LNG_DEF(MISC), LNG_DEF(OSDSYS));
 
 	for (i = 0; i < SETTING_LK_COUNT; i++) {
@@ -829,6 +832,8 @@ int loadConfig(char *mainMsg, char *CNF)
 			sprintf(setting->Misc_Debug_Info, "%s%s", setting->Misc, value);
 		else if (!strcmp(name, "Misc_About_uLE"))
 			sprintf(setting->Misc_About_uLE, "%s%s", setting->Misc, value);
+		else if (!strcmp(name, "Misc_Show_Build_Info"))
+			sprintf(setting->Misc_Show_Build_Info, "%s%s", setting->Misc, value);
 		else if (!strcmp(name, "Misc_OSDSYS"))
 			sprintf(setting->Misc_OSDSYS, "%s%s", setting->Misc, value);
 		//----------
