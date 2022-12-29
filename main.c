@@ -48,10 +48,12 @@ IMPORT_BIN2C(mcserv_irx);
 IMPORT_BIN2C(allowdvdv_irx);
 IMPORT_BIN2C(ds34usb_irx);
 IMPORT_BIN2C(ds34bt_irx);
+
 #ifdef DVRP
-IMPORT_BIN2C(dvrdrv_irx)
-IMPORT_BIN2C(dvrfile_irx)
+IMPORT_BIN2C(dvrdrv_irx);
+IMPORT_BIN2C(dvrfile_irx);
 #endif
+
 //#define DEBUG
 #ifdef DEBUG
 #define dbgprintf(args...) scr_printf(args)
