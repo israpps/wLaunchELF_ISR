@@ -9,13 +9,14 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
     strategy:
-     matrix:
-       eth: ["ETH=0", "ETH=1"]
-       exfat: ["EXFAT=0", "EXFAT=1"]
-       dvrp: ["DVRP=0", "DVRP=1"]
-       sior: ["SIO_DEBUG=0", "SIO_DEBUG=1"]
+      fail-fast: false
+      matrix:
+        eth: ["ETH=0", "ETH=1"]
+        exfat: ["EXFAT=0", "EXFAT=1"]
+        dvrp: ["DVRP=0", "DVRP=1"]
+        sior: ["SIO_DEBUG=0", "SIO_DEBUG=1"]
+    runs-on: ubuntu-latest
     container: ps2dev/ps2dev:v1.0
     steps:
 
@@ -37,13 +38,11 @@ jobs:
       run: |
         make rebuild 
 
-    - name: Upload artifacts
-      if: ${{ success() }}
+    - name: Upload variants artifact ELF
       uses: actions/upload-artifact@v3
       with:
         name: WLE
-        path: |
-              BOOT*.ELF
+        path: BOOT*.ELF
     
 ####################################################### 
   release:
