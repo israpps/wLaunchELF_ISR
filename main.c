@@ -1325,7 +1325,7 @@ void loadDVRPHddModules(void)
 			drawMsg(LNG(Loading_HDD_Modules));
 		setupPowerOff();
 		load_ps2dvr();
-		sceCdNoticeGameStart(0, NULL);
+		//sceCdNoticeGameStart(0, NULL); //shouldn't this be done by the bootloader?
 		have_DVRP_HDD_modules = TRUE;
 	}
 }
