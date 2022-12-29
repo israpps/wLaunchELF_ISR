@@ -41,9 +41,8 @@ jobs:
       if: ${{ success() }}
       uses: actions/upload-artifact@v3
       with:
-        name: wLaunchELF_4.43x_isr
-        path: |
-              *.ELF
+        name: WLE
+        path: *.ELF
     
 ####################################################### 
   release:
@@ -67,7 +66,7 @@ jobs:
         automatic_release_tag: "latest"
         title: "Latest automated build"
         files: |
-               wLaunchELF_4.43x_isr/*.ELF
+               WLE/*.ELF
 
   trigger-auto-update:
     if: github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main'
