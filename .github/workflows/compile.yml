@@ -43,7 +43,7 @@ jobs:
       with:
         name: WLE
         path: |
-              *.ELF
+              BOOT*.ELF
     
 ####################################################### 
   release:
