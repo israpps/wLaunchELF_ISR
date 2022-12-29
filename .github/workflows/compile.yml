@@ -10,87 +10,55 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    strategy:
+     matrix:
+       eth: ["ETH=0", "ETH=1"]
+       exfat: ["EXFAT=0", "EXFAT=1"]
+       dvrp: ["DVRP=0", "DVRP=1"]
+       sior: ["SIO_DEBUG=0", "SIO_DEBUG=1"]
     container: ps2dev/ps2dev:v1.0
     steps:
+
     - name: Install dependencies
       run: |
         apk add build-base git zip
+
     - uses: actions/checkout@v2
     - run: |
         git config --global --add safe.directory "$GITHUB_WORKSPACE"
         git fetch --prune --unshallow
-        
+
     - name: Install ps2eth
       run: |
         git clone https://github.com/ps2dev/ps2eth.git
         cd ps2eth && make clean all install
-        
+
     - name: Compile wLaunchELF without network
       run: |
-        make rebuild TMANIP=1
-        mv BOOT.ELF BOOT-NO_NETWORK.ELF
-        mv BOOT-UNC.ELF BOOT-UNC-NO_NETWORK.ELF
-                
-    - name: Compile wLaunchELF with EXFAT
-      run: |
-        make rebuild TMANIP=1 EXFAT=1
-        mv BOOT.ELF BOOT-NO_NETWORK-EXFAT.ELF
-        mv BOOT-UNC.ELF BOOT-UNC-NO_NETWORK-EXFAT.ELF
-        make rebuild TMANIP=1 EXFAT=1 ETH=1
-        mv BOOT.ELF BOOT-EXFAT.ELF
-        mv BOOT-UNC.ELF BOOT-UNC-EXFAT.ELF
-        
-    - name: Clean Project
-      run: |
-        make clean
-        
-    - name: "Compile wLaunchELF - NO IOP-RESET"
-      run: |
-        make rebuild TMANIP=1 ETH=0 IOP_RESET=0
-        mv BOOT.ELF BOOT-NO_IOP_RESET.ELF
-        
-    - name: Clean Project
-      run: |
-        make clean
-        
-    - name: Compile wLaunchELF with EE-SIO
-      run: |
-        make rebuild TMANIP=1 ETH=1 SIO_DEBUG=1
-        mv BOOT.ELF BOOT-EE_SIO.ELF
-        make rebuild clean all TMANIP=1 ETH=0 SIO_DEBUG=1
-        mv BOOT.ELF BOOT-NO_NETWORK-EE_SIO.ELF
-        
-    - name: Clean Project
-      run: |
-        make clean
-
-    - name: Compile wLaunchELF with DVRP support
-      run: |
-        make clean all TMANIP=1 ETH=1 DVRP=1
-        mv BOOT.ELF BOOT-DVRP.ELF
-        make clean all TMANIP=1 ETH=0 DVRP=1
-        mv BOOT.ELF BOOT-DVRP-NO_NETWORK.ELF
-
-    - name: Clean Project
-      run: |
-        make clean
-
-    - name: Compile wLaunchELF
-      run: |
-        make rebuild TMANIP=1 ETH=1
-        
-    - name: Get short SHA
-      id: slug
-      run: echo "::set-output name=sha8::$(echo ${GITHUB_SHA} | cut -c1-8)"
+        make rebuild 
 
     - name: Upload artifacts
       if: ${{ success() }}
       uses: actions/upload-artifact@v2
       with:
-        name: wLaunchELF-4.43x_isr-${{ steps.slug.outputs.sha8 }}
+        name: wLaunchELF_4.43x_isr
         path: |
               *.ELF
-              
+    
+####################################################### 
+  release:
+    if: github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+
+    - name: Download all artifacts
+      uses: actions/download-artifact@v3
+
+    - name: list
+      run: |
+        ls -R
+
     - name: Create release
       if: github.ref == 'refs/heads/master'
       uses: marvinpinto/action-automatic-releases@latest
@@ -99,80 +67,12 @@ jobs:
         automatic_release_tag: "latest"
         title: "Latest automated build"
         files: |
-               *.ELF
-               
-####################################################### 
-  build-spanish:
-    if: github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
-    needs: build
-    container: ps2dev/ps2dev:v1.0
-    steps:
-    - name: Install dependencies
-      run: |
-        apk add build-base git zip
-    - uses: actions/checkout@v2
-    - run: |
-        git config --global --add safe.directory "$GITHUB_WORKSPACE"
-        git fetch --prune --unshallow
-        
-    - name: Install ps2eth
-      run: |
-        git clone https://github.com/ps2dev/ps2eth.git
-        cd ps2eth && make clean all install
+               wLaunchELF_4.43x_isr/*.ELF
 
-    - name: Compile wLaunchELF
-      run: |
-        SCH=${GITHUB_SHA::7}
-        echo "#include \"Lang/SPA.LNG\"">lang.h
-        make TMANIP=1 ETH=1
-        mv BOOT.ELF BOOT-SPA.ELF
-        mv BOOT-UNC.ELF BOOT-UNC-SPA.ELF
-
-    - name: Compile wLaunchELF without network modules
-      run: |
-        make clean
-        make TMANIP=1 ETH=0
-        mv BOOT.ELF BOOT-SPA_NO-NETWORK.ELF
-        mv BOOT-UNC.ELF BOOT-UNC-SPA_NO-NETWORK.ELF
-
-    - name: Compile wLaunchELF with DVRP support
-      run: |
-        make clean all TMANIP=1 ETH=1 DVRP=1
-        mv BOOT.ELF BOOT-DVRP.ELF
-        make clean all TMANIP=1 ETH=0 DVRP=1
-        mv BOOT.ELF BOOT-DVRP-NO_NETWORK.ELF
-
-    - name: Clean Project
-      run: |
-        make clean
-
-    - name: Get short SHA
-      id: slug
-      run: echo "::set-output name=sha8::$(echo ${GITHUB_SHA} | cut -c1-8)"
-
-    - name: Upload artifacts
-      if: ${{ success() }}
-      uses: actions/upload-artifact@v2
-      with:
-        name: wLaunchELF-spanish-${{ steps.slug.outputs.sha8 }}
-        path: |
-              *.ELF
-
-    - name: Create release
-      if: github.ref == 'refs/heads/master'
-      uses: marvinpinto/action-automatic-releases@latest
-      with:
-        repo_token: "${{ secrets.GITHUB_TOKEN }}"
-        automatic_release_tag: "español"
-        title: "Ultima compilacion automatica"
-        files: |
-               *.ELF
-               
   trigger-auto-update:
     if: github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
-    needs: [build]
+    needs: [release]
     strategy:
       matrix:
         repos: [israpps/FreeMcBoot-Installer, israpps/Funtuna-Fork, israpps/DiagBox]

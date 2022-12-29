@@ -1,14 +1,18 @@
 #.SILENT:
 
-SMB ?= 0
-DVRP ?= 0
+# ---{ BUILD CONFIGURATION }--- #
 SIO_DEBUG ?= 0
+SMB ?= 0
+TMANIP ?= 1
 ETH ?= 1
-IOP_RESET ?= 1
 EXFAT ?= 0
+DVRP ?= 0
+IOP_RESET ?= 1
+# ----------------------------- #
 
-EE_BIN = BOOT-UNC.ELF
-EE_BIN_PKD = BOOT.ELF
+BIN_NAME = BOOT
+EE_BIN = $(BIN_NAME)-UNC.ELF
+EE_BIN_PKD = $(BIN_NAME).ELF
 EE_OBJS = main.o pad.o config.o elf.o draw.o loader_elf.o filer.o \
 	poweroff_irx.o iomanx_irx.o filexio_irx.o ps2atad_irx.o ps2dev9_irx.o\
 	ps2hdd_irx.o ps2fs_irx.o usbd_irx.o mcman_irx.o mcserv_irx.o\
@@ -17,15 +21,7 @@ EE_OBJS = main.o pad.o config.o elf.o draw.o loader_elf.o filer.o \
 	font_uLE.o makeicon.o chkesr.o allowdvdv_irx.o ds34usb.o libds34usb.a ds34bt.o libds34bt.a
 ifeq ($(SMB),1)
     EE_OBJS += smbman.o
-endif
-
-ifeq ($(ETH),1)
-    EE_OBJS += ps2smap_irx.o ps2ftpd_irx.o ps2host_irx.o ps2netfs_irx.o ps2ip_irx.o
-endif
-
-ifeq ($(DVRP),1)
-    EE_OBJS += dvrdrv_irx.o dvrfile_irx.o
-    EE_CFLAGS += -DDVRP
+    BIN_NAME += -SMB
 endif
 
 EE_INCS := -I$(PS2DEV)/gsKit/include -I$(PS2SDK)/ports/include -Ioldlibs/libcdvd/ee
@@ -40,35 +36,42 @@ ifeq ($(SMB),1)
 endif
 
 ifeq ($(DVRP),1)
+    EE_OBJS += dvrdrv_irx.o dvrfile_irx.o
     EE_CFLAGS += -DDVRP
+    BIN_NAME += -DVRP
 endif
 
 ifeq ($(SIO_DEBUG),1)
     EE_CFLAGS += -DSIO_DEBUG
     EE_OBJS += sior_irx.o
+    BIN_NAME += -EE_SIO
 endif
 
 ifeq ($(IOP_RESET),0)
-     EE_CFLAGS += -DNO_IOP_RESET
+    EE_CFLAGS += -DNO_IOP_RESET
+    BIN_NAME += -NO_IOP_RESET
 endif
 
 ifeq ($(ETH),1)
+    EE_OBJS += ps2smap_irx.o ps2ftpd_irx.o ps2host_irx.o ps2netfs_irx.o ps2ip_irx.o
     EE_CFLAGS += -DETH
+    BIN_NAME += -ETH
 endif
 
 ifeq ($(TMANIP),1)
- EE_CFLAGS += -DTMANIP
+    EE_CFLAGS += -DTMANIP
 endif
 
 ifeq ($(TMANIP),2)
- EE_CFLAGS += -DTMANIP
- EE_CFLAGS += -DTMANIP_MORON
+    EE_CFLAGS += -DTMANIP
+    EE_CFLAGS += -DTMANIP_MORON
 endif
 
 
 ifeq ($(EXFAT),1)
     EE_OBJS += bdm_irx.o bdmfs_fatfs_irx.o usbmass_bd_irx.o
     EE_CFLAGS += -DEXFAT
+    BIN_NAME += -EXFAT
 else
     EE_OBJS += usbhdfsd_irx.o
 endif
