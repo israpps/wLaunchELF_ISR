@@ -21,7 +21,7 @@ EE_OBJS = main.o pad.o config.o elf.o draw.o loader_elf.o filer.o \
 	font_uLE.o makeicon.o chkesr.o allowdvdv_irx.o ds34usb.o libds34usb.a ds34bt.o libds34bt.a
 ifeq ($(SMB),1)
     EE_OBJS += smbman.o
-    BIN_NAME +=-SMB
+    BIN_NAME = $(BIN_NAME)-SMB
 endif
 
 EE_INCS := -I$(PS2DEV)/gsKit/include -I$(PS2SDK)/ports/include -Ioldlibs/libcdvd/ee
@@ -38,24 +38,24 @@ endif
 ifeq ($(DVRP),1)
     EE_OBJS += dvrdrv_irx.o dvrfile_irx.o
     EE_CFLAGS += -DDVRP
-    BIN_NAME +=-DVRP
+    BIN_NAME = $(BIN_NAME)-DVRP
 endif
 
 ifeq ($(SIO_DEBUG),1)
     EE_CFLAGS += -DSIO_DEBUG
     EE_OBJS += sior_irx.o
-    BIN_NAME +=-EE_SIO
+    BIN_NAME = $(BIN_NAME)-EE_SIO
 endif
 
 ifeq ($(IOP_RESET),0)
     EE_CFLAGS += -DNO_IOP_RESET
-    BIN_NAME +=-NO_IOP_RESET
+    BIN_NAME = $(BIN_NAME)-NO_IOP_RESET
 endif
 
 ifeq ($(ETH),1)
     EE_OBJS += ps2smap_irx.o ps2ftpd_irx.o ps2host_irx.o ps2netfs_irx.o ps2ip_irx.o
     EE_CFLAGS += -DETH
-    BIN_NAME +=-ETH
+    BIN_NAME = $(BIN_NAME)-ETH
 endif
 
 ifeq ($(TMANIP),1)
@@ -71,7 +71,7 @@ endif
 ifeq ($(EXFAT),1)
     EE_OBJS += bdm_irx.o bdmfs_fatfs_irx.o usbmass_bd_irx.o
     EE_CFLAGS += -DEXFAT
-    BIN_NAME +=-EXFAT
+    BIN_NAME = $(BIN_NAME)-EXFAT
 else
     EE_OBJS += usbhdfsd_irx.o
 endif
