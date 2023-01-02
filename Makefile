@@ -2,6 +2,7 @@
 
 # ---{ BUILD CONFIGURATION }--- #
 SIO_DEBUG ?= 0
+DS34 ?= 0
 SMB ?= 0
 TMANIP ?= 1
 ETH ?= 1
@@ -10,15 +11,15 @@ DVRP ?= 0
 IOP_RESET ?= 1
 # ----------------------------- #
 
-BIN_NAME = BOOT$(HAS_ETH)$(HAS_IOP_RESET)$(HAS_SMB)$(HAS_DVRP)$(HAS_EXFAT)$(HAS_EESIO)
+BIN_NAME = BOOT$(HAS_EXFAT)$(HAS_DS34)$(HAS_ETH)$(HAS_IOP_RESET)$(HAS_SMB)$(HAS_DVRP)$(HAS_EESIO)
 EE_BIN = UNC-$(BIN_NAME).ELF
 EE_BIN_PKD = $(BIN_NAME).ELF
-EE_OBJS = main.o pad.o config.o elf.o draw.o loader_elf.o filer.o \
+EE_OBJS = main.o config.o elf.o draw.o loader_elf.o filer.o \
 	poweroff_irx.o iomanx_irx.o filexio_irx.o ps2atad_irx.o ps2dev9_irx.o\
 	ps2hdd_irx.o ps2fs_irx.o usbd_irx.o mcman_irx.o mcserv_irx.o\
 	cdvd_irx.o vmc_fs_irx.o ps2kbd_irx.o\
 	hdd.o hdl_rpc.o hdl_info_irx.o editor.o timer.o jpgviewer.o icon.o lang.o\
-	font_uLE.o makeicon.o chkesr.o allowdvdv_irx.o ds34usb.o libds34usb.a ds34bt.o libds34bt.a
+	font_uLE.o makeicon.o chkesr.o allowdvdv_irx.o
 
 EE_INCS := -I$(PS2DEV)/gsKit/include -I$(PS2SDK)/ports/include -Ioldlibs/libcdvd/ee
 
@@ -31,6 +32,14 @@ ifeq ($(SMB),1)
     EE_OBJS += smbman.o
     HAS_SMB = -SMB
     EE_CFLAGS += -DSMB
+endif
+
+ifeq ($(DS34),1)
+    EE_OBJS += ds34usb.o libds34usb.a ds34bt.o libds34bt.a pad_ds34.o 
+    HAS_DS34 = -DS34
+    EE_CFLAGS += -DDS34
+else
+	EE_OBJS += pad.o
 endif
 
 ifeq ($(DVRP),1)

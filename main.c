@@ -11,10 +11,7 @@
     extern u8 _n[];   \
     extern int size_##_n
 
-IMPORT_BIN2C(iomanx_irx);
-IMPORT_BIN2C(filexio_irx);
-IMPORT_BIN2C(ps2dev9_irx);
-
+//IRX for togleable features
 #ifdef ETH
 IMPORT_BIN2C(ps2ip_irx);
 IMPORT_BIN2C(ps2smap_irx);
@@ -39,6 +36,21 @@ IMPORT_BIN2C(usbmass_bd_irx);
 #else
 IMPORT_BIN2C(usb_mass_irx);
 #endif
+
+#ifdef DS34
+IMPORT_BIN2C(ds34usb_irx);
+IMPORT_BIN2C(ds34bt_irx);
+#endif
+
+#ifdef DVRP
+IMPORT_BIN2C(dvrdrv_irx);
+IMPORT_BIN2C(dvrfile_irx);
+#endif
+
+// Mandatory IRX
+IMPORT_BIN2C(iomanx_irx);
+IMPORT_BIN2C(filexio_irx);
+IMPORT_BIN2C(ps2dev9_irx);
 IMPORT_BIN2C(vmc_fs_irx);
 IMPORT_BIN2C(ps2atad_irx);
 IMPORT_BIN2C(ps2hdd_irx);
@@ -52,13 +64,7 @@ IMPORT_BIN2C(hdl_info_irx);
 IMPORT_BIN2C(mcman_irx);
 IMPORT_BIN2C(mcserv_irx);
 IMPORT_BIN2C(allowdvdv_irx);
-IMPORT_BIN2C(ds34usb_irx);
-IMPORT_BIN2C(ds34bt_irx);
 
-#ifdef DVRP
-IMPORT_BIN2C(dvrdrv_irx);
-IMPORT_BIN2C(dvrfile_irx);
-#endif
 
 //#define DEBUG
 #ifdef DEBUG
@@ -111,7 +117,9 @@ static u8 have_HDD_modules = 0;
 //State of Uncheckable Modules (invalid header)
 static u8 have_cdvd = 0;
 static u8 have_usbd = 0;
+#ifdef DS34
 static u8 have_ds34 = 0;
+#endif
 static u8 have_usb_mass = 0;
 
 static u8 have_ps2smap = 0;
@@ -403,6 +411,14 @@ static void Show_build_info(void)
 " EXFAT=1"
 #endif
 );
+			PrintPos(-1, hpos, 
+#ifdef DS34
+" DS34=0"
+#else
+" DS34=1"
+#endif
+);
+
 			PrintPos(-1, hpos, "Mod Release site:");
 			PrintPos(-1, hpos, "   github.com/israpps/wLaunchELF_ISR/releases");
 
@@ -1269,6 +1285,7 @@ static void loadUsbDModule(void)
 //------------------------------
 //endfunc loadUsbDModule
 //---------------------------------------------------------------------------
+#ifdef DS34
 static void loadDs34Modules(void)
 {
     if (!have_ds34) {
@@ -1277,7 +1294,10 @@ static void loadDs34Modules(void)
                 have_ds34 = 1;
     }
 }
-
+//------------------------------
+//endfunc loadDs34Modules
+//---------------------------------------------------------------------------
+#endif
 static void loadUsbModules(void)
 #ifdef EXFAT
 {
@@ -1299,7 +1319,9 @@ static void loadUsbModules(void)
         USB_mass_max_drives = USB_MASS_MAX_DRIVES;  // allow multiple drives
     else
         USB_mass_max_drives = 1;  // else allow only one mass drive
+#ifdef DS34
 	loadDs34Modules();
+#endif
 }
 #else
 {
@@ -1312,8 +1334,10 @@ static void loadUsbModules(void)
 		USB_mass_max_drives = USB_MASS_MAX_DRIVES;  //allow multiple drives
 	else
 		USB_mass_max_drives = 1;  //else allow only one mass drive
-		
+
+#ifdef DS34
 	loadDs34Modules();
+#endif
 }
 #endif
 //------------------------------
