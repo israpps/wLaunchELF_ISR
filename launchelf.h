@@ -291,8 +291,10 @@ int loadFont(char *path_arg);
 
 extern u32 joy_value;
 extern u32 new_pad;
+#ifdef DS34
 extern int semRunning,semFinish;
 extern int isRunning;
+#endif
 int setupPad(void);
 int readpad(void);
 int readpad_no_KB(void);
