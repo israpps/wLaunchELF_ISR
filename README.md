@@ -29,6 +29,7 @@ It features:
 - `NO_IOP_RESET`: build of wLaunchELF wich does not reset the I/O CPU upon startup, __DON'T USE IF YOU DON'T KNOW WHAT IT MEANS__
 - `DVRP`: support for accessing encrypted portion of the PSX-DESR Internal HDD memory (in filebrowser represented as `dvr_hdd0:`)
 - `EXFAT`: support for accessing EXFAT filesystems from USB devices
+- `DS34`: Support for use of PlayStation 3 and PlayStation 4 controllers
 
 # **original readme**
 wLaunchELF, formerly known as uLaunchELF, also known as wLE or uLE (abbreviated), is an open source file manager and executable launcher for the Playstation 2 console based off of the original LaunchELF. It contains many different features, including a text editor, hard drive manager, as well as network support, and much more.
