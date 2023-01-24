@@ -143,7 +143,7 @@ static u8 have_Flash_modules = 0;
 //State of whether DEV9 was successfully loaded or not.
 static u8 ps2dev9_loaded = 0;
 
-static u8 console_is_PSX = 0;
+u8 console_is_PSX = 0;
 #ifdef DVRP
 static u8 have_DVRP_HDD_modules = 0;
 static u8 have_dvrdrv = 0;
