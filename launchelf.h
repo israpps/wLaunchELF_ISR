@@ -221,6 +221,7 @@ int uLE_InitializeRegion(void);
 int uLE_cdDiscValid(void);
 int uLE_cdStop(void);
 int IsSupportedFileType(char *path);
+void loadFlashModules(void);
 
 /* elf.c */
 int checkELFheader(char *filename);

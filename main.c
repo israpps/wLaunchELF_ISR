@@ -139,9 +139,11 @@ static u8 have_ps2hdd = 0;
 static u8 have_ps2fs = 0;
 static u8 have_smbman = 0;
 static u8 have_vmc_fs = 0;
+static u8 have_Flash_modules = 0;
 //State of whether DEV9 was successfully loaded or not.
 static u8 ps2dev9_loaded = 0;
 
+static u8 console_is_PSX = 0;
 #ifdef DVRP
 static u8 have_DVRP_HDD_modules = 0;
 static u8 have_dvrdrv = 0;
@@ -382,8 +384,6 @@ static void Show_build_info(void)
 #else
 " SMB:0"
 #endif
-);
-			PrintPos(-1, hpos, 
 #ifdef ETH
 " ETH:1"
 #else
@@ -391,12 +391,11 @@ static void Show_build_info(void)
 #endif	
 );
 			PrintPos(-1, hpos, 
-#ifdef NO_IOP_RESET
-" IOP_RESET=0"
+#ifdef XFROM
+" XFROM=1"
 #else
-" IOP_RESET=1"
+" XFROM=0"
 #endif
-
 #ifdef DVRP
 " DVRP_HDD=1"
 #else
@@ -410,12 +409,17 @@ static void Show_build_info(void)
 #else
 " EXFAT=0"
 #endif
-);
-			PrintPos(-1, hpos, 
 #ifdef DS34
 " DS34=1"
 #else
 " DS34=0"
+#endif
+);
+			PrintPos(-1, hpos, 
+#ifdef NO_IOP_RESET
+" IOP_RESET=0"
+#else
+" IOP_RESET=1"
 #endif
 );
 
@@ -836,6 +840,16 @@ static void load_ps2atad(void)
 //------------------------------
 //endfunc load_ps2atad
 //---------------------------------------------------------------------------
+#ifdef XFROM
+static void load_pflash(void)
+{
+	SifLoadModule("rom0:PFLASH", 0, NULL);
+	SifLoadModule("rom0:PXFROMMAN", 0, NULL);
+}
+//------------------------------
+//endfunc load_pflash
+//---------------------------------------------------------------------------
+#endif
 #ifdef ETH
 void load_ps2host(void)
 {
@@ -1426,6 +1440,21 @@ void loadHddModules(void)
 //------------------------------
 //endfunc loadHddModules
 //---------------------------------------------------------------------------
+#ifdef XFROM
+void loadFlashModules(void)
+{
+	if (!have_Flash_modules) {
+		if (!is_early_init)  //Do not draw any text before the UI is initialized.
+			drawMsg(LNG(Loading_Flash_Modules));
+		setupPowerOff();
+		load_pflash();
+		have_Flash_modules = TRUE;
+	}
+}
+//------------------------------
+//endfunc loadFlashModules
+//---------------------------------------------------------------------------
+#endif
 #ifdef DVRP
 void loadDVRPHddModules(void)
 {
@@ -1946,6 +1975,14 @@ Recurse_for_ESR:  //Recurse here for PS2Disc command with ESR disc
 		*p = 0;
 		goto ELFchecked;
 #endif
+#ifdef XFROM
+	} else if (!strncmp(path, "xfrom:/", 6)) {
+		loadFlashModules();
+		if ((t = checkELFheader(path)) <= 0)
+			goto ELFnotFound;
+		strcpy(fullpath, path);
+		goto ELFchecked;
+#endif
 	} else if (!strncmp(path, "mass", 4)) {
 		if ((t = checkELFheader(path)) <= 0)
 			goto ELFnotFound;
@@ -2275,7 +2312,9 @@ static void Reset()
 	have_ps2kbd = 0;
 	have_NetModules = 0;
 	have_HDD_modules = 0;
-
+#ifdef XFROM
+	have_Flash_modules = 0;
+#endif
 	loadBasicModules();
 	loadCdModules();
 
@@ -2411,7 +2450,8 @@ int main(int argc, char *argv[])
 
 	Reset();
 	Init_Default_Language();
-
+	if (exists("rom0:PSXVER"))
+		console_is_PSX = 1;
 	LaunchElfDir[0] = 0;
 	boot_path[0] = 0;
 	if ((argc > 0) && argv[0]) {

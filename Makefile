@@ -9,9 +9,10 @@ ETH ?= 1
 EXFAT ?= 0
 DVRP ?= 0
 IOP_RESET ?= 1
+XFROM ?= 0
 # ----------------------------- #
 
-BIN_NAME = BOOT$(HAS_EXFAT)$(HAS_DS34)$(HAS_ETH)$(HAS_IOP_RESET)$(HAS_SMB)$(HAS_DVRP)$(HAS_EESIO)
+BIN_NAME = BOOT$(HAS_EXFAT)$(HAS_DS34)$(HAS_ETH)$(HAS_IOP_RESET)$(HAS_SMB)$(HAS_DVRP)$(HAS_XFROM)$(HAS_EESIO)
 EE_BIN = UNC-$(BIN_NAME).ELF
 EE_BIN_PKD = $(BIN_NAME).ELF
 EE_OBJS = main.o config.o elf.o draw.o loader_elf.o filer.o \
@@ -32,6 +33,11 @@ ifeq ($(SMB),1)
     EE_OBJS += smbman.o
     HAS_SMB = -SMB
     EE_CFLAGS += -DSMB
+endif
+
+ifeq ($(XFROM),1)
+    HAS_XFROM = -XFROM
+    EE_CFLAGS += -DXFROM
 endif
 
 ifeq ($(DS34),1)
