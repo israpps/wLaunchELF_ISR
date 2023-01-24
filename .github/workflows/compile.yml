@@ -12,12 +12,12 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        language: ["ENGLISH", "SPANISH"]
         eth: ["ETH=0", "ETH=1"]
         exfat: ["EXFAT=0", "EXFAT=1"]
         sior: ["SIO_DEBUG=0", "SIO_DEBUG=1"]
         ds34: ["DS34=0", "DS34=1"]
         xfrom: ["XFROM=0", "XFROM=1"]
+        #dvrp: ["DVRP=0", "DVRP=1"]
     runs-on: ubuntu-latest
     container: ps2dev/ps2dev:v1.0
     steps:
@@ -36,29 +36,16 @@ jobs:
         git clone https://github.com/ps2dev/ps2eth.git
         cd ps2eth && make clean all install
 
-    - name: hardcode spanish language
-      if: matrix.language == 'SPANISH'
-      run: |
-        echo "#include \"Lang/SPA.LNG\"">lang.h
-
     - name: Compile wLaunchELF without network
       run: |
         make rebuild ${{ matrix.eth }} ${{ matrix.sior }} ${{ matrix.dvrp }} ${{ matrix.exfat }} ${{ matrix.ds34 }} ${{ matrix.xfrom }}
 
     - name: Upload variants artifact ELF
-      if: matrix.language == 'ENGLISH'
       uses: actions/upload-artifact@v3
       with:
         name: WLE
         path: BOOT*.ELF
-
-    - name: Upload variants artifact ELF
-      if: matrix.language == 'SPANISH'
-      uses: actions/upload-artifact@v3
-      with:
-        name: WLE-SPA
-        path: BOOT*.ELF
-
+    
 ####################################################### 
   release:
     if: github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main'
@@ -82,16 +69,6 @@ jobs:
         title: "Latest automated build"
         files: |
                WLE/*.ELF
-
-    - name: Create release for hardcoded spanish builds
-      if: github.ref == 'refs/heads/master'
-      uses: marvinpinto/action-automatic-releases@latest
-      with:
-        repo_token: "${{ secrets.GITHUB_TOKEN }}"
-        automatic_release_tag: "español"
-        title: "español integrado"
-        files: |
-               WLE-SPA/*.ELF
 
   trigger-auto-update:
     if: github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main'
