@@ -966,7 +966,8 @@ static void ShowDebugInfo(void)
 				sprintf(TextRow, "argv[%d] == \"%s\"", i, boot_argv[i]);
 				PrintRow(-1, TextRow);
 			}
-			sprintf(TextRow,     "Main System Update KELF == \"%s\"",strchr(default_OSDSYS_path2,'/')+ 1);
+			
+			sprintf(TextRow,     "Main System Update KELF == \"%s\"", (console_is_PSX) ? "BIEXEC-SYSTEM/xosdmain.elf" : (strchr(default_OSDSYS_path2,'/')+ 1));
 			PrintRow(-1, TextRow);
 			if ((ROMVersion < 0x230) && (ROMVersion > 0x130))
 			{
