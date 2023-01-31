@@ -24,6 +24,10 @@ IMPORT_BIN2C(ps2ftpd_irx);
 IMPORT_BIN2C(smbman_irx);
 #endif
 
+#ifdef MX4SIO
+IMPORT_BIN2C(mx4sio_bd_irx);
+#endif
+
 #ifdef SIO_DEBUG
 IMPORT_BIN2C(sior_irx);
 #endif
@@ -1271,15 +1275,17 @@ static int loadExternalModule(char *modPath, void *defBase, int defSize)
 	char filePath[MAX_PATH];
 	int ext_OK, def_OK;  //Flags success for external and default module
 	int dummy;
-
+	DPRINTF("%s: looking for [%s]\n", __FUNCTION__, modPath);
 	ext_OK = 0;
 	def_OK = 0;
 	getExternalFilePath(modPath, filePath);
 
 	ext_OK = (SifLoadModule(filePath, 0, NULL) >= 0);
 	if (!ext_OK) {
+		DPRINTF("\tNot found!\n");
 		if (defBase && defSize) {
 			def_OK = SifExecModuleBuffer(defBase, defSize, 0, NULL, &dummy);
+			DPRINTF("\tLoaded default embedded version: ID=%d, ret=%d\n", def_OK, dummy);
 		}
 	}
 	if (ext_OK)
@@ -1303,8 +1309,8 @@ static void loadUsbDModule(void)
 static void loadDs34Modules(void)
 {
     if (!have_ds34) {
-        if (loadExternalModule("", &ds34usb_irx, size_ds34usb_irx))
-            if (loadExternalModule("", &ds34bt_irx, size_ds34bt_irx))
+        if (loadExternalModule("DS34USB.IRX", &ds34usb_irx, size_ds34usb_irx))
+            if (loadExternalModule("DS34BT.IRX", &ds34bt_irx, size_ds34bt_irx))
                 have_ds34 = 1;
     }
 }
@@ -1315,16 +1321,19 @@ static void loadDs34Modules(void)
 static void loadUsbModules(void)
 #ifdef EXFAT
 {
-    int ret;
+    int ret, ID;
 
     loadUsbDModule();
     if (have_usbd && !have_usb_mass && (USB_mass_loaded = loadExternalModule(setting->usbmass_file, NULL, 0))) {
         delay(3);
         have_usb_mass = 1;
     } else if (have_usbd && !have_usb_mass) {
-        SifExecModuleBuffer(bdm_irx, size_bdm_irx, 0, NULL, &ret);
-        SifExecModuleBuffer(bdmfs_fatfs_irx, size_bdmfs_fatfs_irx, 0, NULL, &ret);
-        SifExecModuleBuffer(usbmass_bd_irx, size_usbmass_bd_irx, 0, NULL, &ret);
+        ID = SifExecModuleBuffer(bdm_irx, size_bdm_irx, 0, NULL, &ret);
+		DPRINTF(" [BDM.IRX] ID=%d, ret=%d\n", ID, ret);
+        ID = SifExecModuleBuffer(bdmfs_fatfs_irx, size_bdmfs_fatfs_irx, 0, NULL, &ret);
+		DPRINTF(" [BDMFS_FATFS.IRX] ID=%d, ret=%d\n", ID, ret);
+        ID = SifExecModuleBuffer(usbmass_bd_irx, size_usbmass_bd_irx, 0, NULL, &ret);
+		DPRINTF(" [USBMASS_BD.IRX] ID=%d, ret=%d\n", ID, ret);
         delay(3);
         USB_mass_loaded = 1;
         have_usb_mass = 1;
@@ -1335,6 +1344,10 @@ static void loadUsbModules(void)
         USB_mass_max_drives = 1;  // else allow only one mass drive
 #ifdef DS34
 	loadDs34Modules();
+#endif
+#ifdef MX4SIO
+	ID = SifExecModuleBuffer(mx4sio_bd_irx, size_mx4sio_bd_irx, 0, NULL, &ret);
+		DPRINTF(" [MX4SIO_BD.IRX] ID=%d, ret=%d\n", ID, ret);
 #endif
 }
 #else

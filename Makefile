@@ -12,7 +12,7 @@ IOP_RESET ?= 1
 XFROM ?= 0
 # ----------------------------- #
 
-BIN_NAME = BOOT$(HAS_EXFAT)$(HAS_DS34)$(HAS_ETH)$(HAS_IOP_RESET)$(HAS_SMB)$(HAS_DVRP)$(HAS_XFROM)$(HAS_EESIO)
+BIN_NAME = BOOT$(HAS_EXFAT)$(HAS_DS34)$(HAS_ETH)$(HAS_IOP_RESET)$(HAS_SMB)$(HAS_DVRP)$(HAS_XFROM)$(HAS_MX4SIO)$(HAS_EESIO)
 EE_BIN = UNC-$(BIN_NAME).ELF
 EE_BIN_PKD = $(BIN_NAME).ELF
 EE_OBJS = main.o config.o elf.o draw.o loader_elf.o filer.o \
@@ -54,6 +54,12 @@ ifeq ($(DVRP),1)
     HAS_DVRP = -DVRP
 endif
 
+ifeq ($(MX4SIO),1)
+    EE_OBJS += mx4sio_bd.o
+    EE_CFLAGS += -DMX4SIO
+    HAS_MX4SIO = -MX4SIO
+endif
+
 ifeq ($(SIO_DEBUG),1)
     EE_CFLAGS += -DSIO_DEBUG
     EE_OBJS += sior_irx.o
@@ -81,7 +87,6 @@ ifeq ($(TMANIP),2)
     EE_CFLAGS += -DTMANIP
     EE_CFLAGS += -DTMANIP_MORON
 endif
-
 
 ifeq ($(EXFAT),1)
     EE_OBJS += bdm_irx.o bdmfs_fatfs_irx.o usbmass_bd_irx.o
@@ -168,6 +173,9 @@ filexio_irx.s: $(PS2SDK)/iop/irx/fileXio.irx
 ps2dev9_irx.s: $(PS2SDK)/iop/irx/ps2dev9.irx
 	bin2s $< $@ ps2dev9_irx
 	
+mx4sio_bd.s: iop/mx4sio_bd.irx
+	bin2s $< $@ mx4sio_bd_irx
+
 ifeq ($(ETH),1)
 ps2ip_irx.s: $(PS2SDK)/iop/irx/ps2ip.irx
 	bin2s $< $@ ps2ip_irx
