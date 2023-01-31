@@ -17,7 +17,7 @@ jobs:
         sior: ["SIO_DEBUG=0", "SIO_DEBUG=1"]
         ds34: ["DS34=0", "DS34=1"]
         xfrom: ["XFROM=0", "XFROM=1"]
-        #dvrp: ["DVRP=0", "DVRP=1"]
+        mx4sio: ["MX4SIO=0", "MX4SIO=1"]
     runs-on: ubuntu-latest
     container: ps2dev/ps2dev:v1.0
     steps:
@@ -38,7 +38,7 @@ jobs:
 
     - name: Compile wLaunchELF without network
       run: |
-        make rebuild ${{ matrix.eth }} ${{ matrix.sior }} ${{ matrix.dvrp }} ${{ matrix.exfat }} ${{ matrix.ds34 }} ${{ matrix.xfrom }}
+        make rebuild ${{ matrix.eth }} ${{ matrix.sior }} ${{ matrix.mx4sio }} ${{ matrix.exfat }} ${{ matrix.ds34 }} ${{ matrix.xfrom }}
 
     - name: Upload variants artifact ELF
       uses: actions/upload-artifact@v3
