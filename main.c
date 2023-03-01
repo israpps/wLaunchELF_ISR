@@ -24,6 +24,10 @@ IMPORT_BIN2C(ps2ftpd_irx);
 IMPORT_BIN2C(smbman_irx);
 #endif
 
+#ifdef UDPTTY
+IMPORT_BIN2C(udptty_irx);
+#endif
+
 #ifdef MX4SIO
 IMPORT_BIN2C(mx4sio_bd_irx);
 #endif
@@ -1347,7 +1351,7 @@ static void loadUsbModules(void)
 #endif
 #ifdef MX4SIO
 	ID = SifExecModuleBuffer(mx4sio_bd_irx, size_mx4sio_bd_irx, 0, NULL, &ret);
-		DPRINTF(" [MX4SIO_BD.IRX] ID=%d, ret=%d\n", ID, ret);
+	DPRINTF(" [MX4SIO_BD.IRX] ID=%d, ret=%d\n", ID, ret);
 #endif
 }
 #else
@@ -2455,7 +2459,7 @@ int main(int argc, char *argv[])
 	int RunELF_index, nElfs = 0;
 	enum BOOT_DEVICE boot = BOOT_DEV_UNKNOWN;
 	int CNF_error = -1;  //assume error until CNF correctly loaded
-	int i;
+	int i, d;
 
 	boot_argc = argc;
 	for (i = 0; (i < argc) && (i < 8); i++)
@@ -2467,6 +2471,11 @@ int main(int argc, char *argv[])
 		console_is_PSX = 1;
 	LaunchElfDir[0] = 0;
 	boot_path[0] = 0;
+#ifdef UDPTTY
+	load_ps2ip();
+	i = SifExecModuleBuffer(&udptty_irx, size_udptty_irx, 0, NULL, &d);
+    DPRINTF("[USBD.IRX]: ret=%d, stat=%d\n", i, d);
+#endif
 	if ((argc > 0) && argv[0]) {
 		strcpy(LaunchElfDir, argv[0]);  //Default LaunchElfDir to the boot path.
 		strcpy(boot_path, argv[0]);

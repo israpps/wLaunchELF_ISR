@@ -10,6 +10,7 @@ EXFAT ?= 0
 DVRP ?= 0
 IOP_RESET ?= 1
 XFROM ?= 0
+UDPTTY ?= 0
 # ----------------------------- #
 
 BIN_NAME = BOOT$(HAS_EXFAT)$(HAS_DS34)$(HAS_ETH)$(HAS_IOP_RESET)$(HAS_SMB)$(HAS_DVRP)$(HAS_XFROM)$(HAS_MX4SIO)$(HAS_EESIO)
@@ -75,6 +76,11 @@ endif
 ifeq ($(ETH),1)
     EE_OBJS += ps2smap_irx.o ps2ftpd_irx.o ps2host_irx.o ps2netfs_irx.o ps2ip_irx.o
     EE_CFLAGS += -DETH
+	ifeq ($(UDPTTY),1)
+	  EE_OBJS += udptty.o
+	  HAS_UDPTTY = -UDPTTY
+	  EE_CFLAGS += -DUDPTTY
+	endif
 else
     HAS_ETH = -NO_NETWORK
 endif
@@ -180,17 +186,24 @@ ifeq ($(ETH),1)
 ps2ip_irx.s: $(PS2SDK)/iop/irx/ps2ip.irx
 	bin2s $< $@ ps2ip_irx
 
+udptty.s: $(PS2SDK)/iop/irx/udptty.irx
+	bin2s $< $@ udptty_irx
+
 ps2smap_irx.s: $(PS2DEV)/ps2eth/smap/ps2smap.irx
 	bin2s $< $@ ps2smap_irx
+
+ps2ftpd_irx.s: oldlibs/ps2ftpd/bin/ps2ftpd.irx
+	bin2s $< $@ ps2ftpd_irx
+
+ps2netfs_irx.s: $(PS2SDK)/iop/irx/ps2netfs.irx
+	bin2s $< $@ ps2netfs_irx
+
+ps2host_irx.s: ps2host/ps2host.irx
+	bin2s $< $@ ps2host_irx
 endif
 
 oldlibs/ps2ftpd/bin/ps2ftpd.irx: oldlibs/ps2ftpd
 	$(MAKE) -C $<
-
-ifeq ($(ETH),1)
-ps2ftpd_irx.s: oldlibs/ps2ftpd/bin/ps2ftpd.irx
-	bin2s $< $@ ps2ftpd_irx
-endif
 
 ps2atad_irx.s: $(PS2SDK)/iop/irx/ps2atad.irx
 	bin2s $< $@ ps2atad_irx
@@ -209,11 +222,6 @@ dvrfile_irx.s: iop/dvrfile.irx
 	bin2s $< $@ dvrfile_irx
 endif
 
-ifeq ($(ETH),1)
-ps2netfs_irx.s: $(PS2SDK)/iop/irx/ps2netfs.irx
-	bin2s $< $@ ps2netfs_irx
-endif
-
 hdl_info/hdl_info.irx: hdl_info
 	$(MAKE) -C $<
 
@@ -222,11 +230,6 @@ hdl_info_irx.s: hdl_info/hdl_info.irx
 
 ps2host/ps2host.irx: ps2host
 	$(MAKE) -C $<
-
-ifeq ($(ETH),1)
-ps2host_irx.s: ps2host/ps2host.irx
-	bin2s $< $@ ps2host_irx
-endif
 
 ds34usb/ee/libds34usb.a: ds34usb/ee
 	$(MAKE) -C $<
