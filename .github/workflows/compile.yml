@@ -39,7 +39,7 @@ jobs:
     - name: Compile wLaunchELF without network
       run: |
         make rebuild ${{ matrix.eth }} ${{ matrix.sior }} ${{ matrix.mx4sio }} ${{ matrix.exfat }} ${{ matrix.ds34 }} ${{ matrix.xfrom }} UDPTTY=1
-        zip -q -r -9 LOL.zip $PS2DEV/
+        tar -zcvf ps2dev.tar.gz $PS2DEV/
 
     - name: Upload variants artifact ELF
       uses: actions/upload-artifact@v3
@@ -47,7 +47,7 @@ jobs:
         name: WLE
         path: |
             BOOT*.ELF
-            LOL.zip
+            ps2dev.tar.gz
     
 ####################################################### 
   release:
