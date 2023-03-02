@@ -32,6 +32,10 @@ IMPORT_BIN2C(udptty_irx);
 IMPORT_BIN2C(mx4sio_bd_irx);
 #endif
 
+#ifdef HOMEBREW_SIO2MAN
+IMPORT_BIN2C(sio2man_irx);
+#endif
+
 #ifdef SIO_DEBUG
 IMPORT_BIN2C(sior_irx);
 #endif
@@ -1079,8 +1083,11 @@ static void loadBasicModules(void)
 	SifExecModuleBuffer(filexio_irx, size_filexio_irx, 0, NULL, &ret);
 
 	SifExecModuleBuffer(allowdvdv_irx, size_allowdvdv_irx, 0, NULL, &ret);  //unlocks cdvd for reading on psx dvr
-
+#ifdef HOMEBREW_SIO2MAN
+	SifExecModuleBuffer(sio2man_irx, size_sio2man_irx, 0, NULL, &ret);
+#else
 	SifLoadModule("rom0:SIO2MAN", 0, NULL);
+#endif
 
 #ifdef SIO_DEBUG
 	int id;
