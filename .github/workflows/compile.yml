@@ -38,7 +38,7 @@ jobs:
 
     - name: Compile wLaunchELF without network
       run: |
-        make rebuild ${{ matrix.eth }} ${{ matrix.sior }} ${{ matrix.mx4sio }} ${{ matrix.exfat }} ${{ matrix.ds34 }} ${{ matrix.xfrom }} UDPTTY=1
+        make rebuild ${{ matrix.eth }} ${{ matrix.sior }} ${{ matrix.mx4sio }} ${{ matrix.exfat }} ${{ matrix.ds34 }} ${{ matrix.xfrom }} UDPTTY=1 EXFAT=1
         tar -zcvf ps2dev.tar.gz $PS2DEV/
 
     - name: Upload variants artifact ELF
