@@ -255,7 +255,7 @@ ds34bt.s: ds34bt/iop/ds34bt.irx
 libds34bt.a: ds34bt/ee/libds34bt.a
 	cp $< $@
 
-$(EE_ASM_DIR)sio2man.s: $(PS2SDK)/iop/irx/sio2man.irx | $(EE_ASM_DIR)
+$(EE_ASM_DIR)sio2man.s: iop/sio2man.irx | $(EE_ASM_DIR)
 	bin2s $< $@ sio2man_irx
 
 ifeq ($(SMB),1)
