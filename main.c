@@ -2345,7 +2345,7 @@ static void Reset()
 	fileXioInit();
 	//Increase the FILEIO R/W buffer size to reduce overhead.
 	fileXioSetRWBufferSize(128 * 1024);
-	mcInit(MC_TYPE_MC);
+	mcInit(MC_TYPE_XMC);
 	//	setupPad();
 }
 //------------------------------
