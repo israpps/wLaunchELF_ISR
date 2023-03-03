@@ -1,18 +1,18 @@
 #.SILENT:
 
 # ---{ BUILD CONFIGURATION }--- #
-SIO_DEBUG ?= 1
+SIO_DEBUG ?= 0
 DS34 ?= 0
 SMB ?= 0
 TMANIP ?= 1
 ETH ?= 1
-EXFAT ?= 1
+EXFAT ?= 0
 DVRP ?= 0
 IOP_RESET ?= 1
 XFROM ?= 0
-UDPTTY ?= 1
+UDPTTY ?= 0
 MX4SIO ?= 0
-SIO2MAN ?= 1
+SIO2MAN ?= 0
 SIOR ?= 0
 # ----------------------------- #
 
@@ -315,7 +315,7 @@ clean:
 	$(MAKE) -C AllowDVDV clean
 	$(MAKE) -C oldlibs/libcdvd clean
 	$(MAKE) -C oldlibs/ps2ftpd clean
-	rm -f githash.h *.s $(EE_OBJS) $(EE_BIN) $(EE_BIN_PKD)
+	rm -f githash.h *.s *.o $(EE_BIN) $(EE_BIN_PKD)
 
 rebuild: clean all
 

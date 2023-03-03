@@ -225,7 +225,7 @@ DiscType DiscTypes[] = {
 
 //Static function declarations
 static int PrintRow(int row_f, char *text_p);
-static int PrintPos(int row_f, int column, char *text_p);
+static int PrintPos(int row_f, int column, char *text_p, int COLORID);
 static void Show_About_uLE(void);
 static void getIpConfig(void);
 static void setLaunchKeys(void);
@@ -289,7 +289,7 @@ static int PrintRow(int row_f, char *text_p)
 //---------------------------------------------------------------------------
 //Function to print a text row with text positioning
 //------------------------------
-static int PrintPos(int row_f, int column, char *text_p)
+static int PrintPos(int row_f, int column, char *text_p, int COLORID)
 {
 	static int row;
 	int x = (Menu_start_x + 4 + column * FONT_WIDTH);
@@ -298,7 +298,7 @@ static int PrintPos(int row_f, int column, char *text_p)
 	if (row_f >= 0)
 		row = row_f;
 	y = (Menu_start_y + FONT_HEIGHT * row++);
-	printXY(text_p, x, y, setting->color[COLOR_TEXT], TRUE, 0);
+	printXY(text_p, x, y, setting->color[COLORID], TRUE, 0);
 	return row;
 }
 //------------------------------
@@ -330,27 +330,27 @@ static void Show_About_uLE(void)
 		if (event || post_event) {  //NB: We need to update two frame buffers per event
 			clrScr(setting->color[COLOR_BACKGR]);
 			sprintf(TextRow, "About wLaunchELF %s  %s", ULE_VERSION, ULE_VERDATE);
-			PrintPos(03, hpos, TextRow);
+			PrintPos(03, hpos, TextRow, COLOR_SELECT);
 			sprintf(TextRow, " commit: %s (based on commit 41e4ebe)", GIT_HASH);
-			PrintPos(04, hpos, TextRow);
-			PrintPos(05, hpos, "Mod created by: Matias Israelson");
-			PrintPos(-1, hpos, "DS3/DS4 support by Alex Parrado");
-			PrintPos(-1, hpos, "Project maintainers:  sp193 & AKuHAK");
-			PrintPos(-1, hpos, "  ");
-			PrintPos(-1, hpos, "uLaunchELF Project maintainers:");
-			PrintPos(-1, hpos, "  Eric Price       (aka: 'E P')");
-			PrintPos(-1, hpos, "  Ronald Andersson (aka: 'dlanor')");
-			PrintPos(-1, hpos, " ");
-			PrintPos(-1, hpos, "Other contributors:");
-			PrintPos(-1, hpos, "  Polo35, radad, Drakonite, sincro");
-			PrintPos(-1, hpos, "  kthu, Slam-Tilt, chip, pixel, Hermes");
-			PrintPos(-1, hpos, "  and others in the PS2Dev community");
-			PrintPos(-1, hpos, " ");
-			PrintPos(-1, hpos, "Main release site:");
-			PrintPos(-1, hpos, "   github.com/ps2homebrew/wLaunchELF/releases");
-			PrintPos(-1, hpos, "Mod Release site:");
-			PrintPos(-1, hpos, "   github.com/israpps/wLaunchELF_ISR/releases");
-			PrintPos(-1, hpos, "Ancestral project: LaunchELF v3.41 by Mirakichi");
+			PrintPos(04, hpos, TextRow, COLOR_TEXT);
+			PrintPos(05, hpos, "Mod created by: Matias Israelson", COLOR_TEXT);
+			PrintPos(-1, hpos, "DS3/DS4 support by Alex Parrado", COLOR_TEXT);
+			PrintPos(-1, hpos, "Project maintainers:  sp193 & AKuHAK", COLOR_TEXT);
+			PrintPos(-1, hpos, "  ", COLOR_TEXT);
+			PrintPos(-1, hpos, "uLaunchELF Project maintainers:", COLOR_TEXT);
+			PrintPos(-1, hpos, "  Eric Price       (aka: 'E P')", COLOR_TEXT);
+			PrintPos(-1, hpos, "  Ronald Andersson (aka: 'dlanor')", COLOR_TEXT);
+			PrintPos(-1, hpos, " ", COLOR_TEXT);
+			PrintPos(-1, hpos, "Other contributors:", COLOR_TEXT);
+			PrintPos(-1, hpos, "  Polo35, radad, Drakonite, sincro", COLOR_TEXT);
+			PrintPos(-1, hpos, "  kthu, Slam-Tilt, chip, pixel, Hermes", COLOR_TEXT);
+			PrintPos(-1, hpos, "  and others in the PS2Dev community", COLOR_TEXT);
+			PrintPos(-1, hpos, " ", COLOR_TEXT);
+			PrintPos(-1, hpos, "Main release site:", COLOR_TEXT);
+			PrintPos(-1, hpos, "   github.com/ps2homebrew/wLaunchELF/releases", COLOR_TEXT);
+			PrintPos(-1, hpos, "Mod Release site:", COLOR_SELECT);
+			PrintPos(-1, hpos, "   github.com/israpps/wLaunchELF_ISR/releases", COLOR_TEXT);
+			PrintPos(-1, hpos, "Ancestral project: LaunchELF v3.41 by Mirakichi", COLOR_TEXT);
 			//PrintPos(-1, hpos, "Created by:        Mirakichi");
 		}  //ends if(event||post_event)
 		drawScr();// https://github.com/israpps/wLaunchELF_ISR/tree/41e43b3-mod
@@ -384,8 +384,8 @@ static void Show_build_info(void)
 		if (event || post_event) {  //NB: We need to update two frame buffers per event
 			clrScr(setting->color[COLOR_BACKGR]);
 			sprintf(TextRow, " wLaunchELF %s (%s)", ULE_VERSION, GIT_HASH);
-			PrintPos(03, hpos, TextRow);
-			PrintPos(-1, hpos, "Build features:");
+			PrintPos(03, hpos, TextRow, COLOR_TEXT);
+			PrintPos(-1, hpos, "Build features:", COLOR_SELECT);
 			
 			PrintPos(-1, hpos, 
 #ifdef SMB
@@ -398,7 +398,7 @@ static void Show_build_info(void)
 #else
 " ETH:0"
 #endif	
-);
+, COLOR_TEXT);
 			PrintPos(-1, hpos, 
 #ifdef XFROM
 " XFROM=1"
@@ -410,7 +410,7 @@ static void Show_build_info(void)
 #else
 " DVRP_HDD=0"
 #endif
-);
+, COLOR_TEXT);
 
 			PrintPos(-1, hpos, 
 #ifdef EXFAT
@@ -423,18 +423,18 @@ static void Show_build_info(void)
 #else
 " DS34=0"
 #endif
-);
+, COLOR_TEXT);
 			PrintPos(-1, hpos, 
 #ifdef MX4SIO
 " MX4SIO=1"
 #else
 " MX4SIO=0"
 #endif
-);
+, COLOR_TEXT);
 #if defined(UDPTTY) || defined(SIO_DEBUG) || defined(SIOR) || defined(NO_IOP_RESET)
 
 
-			PrintPos(-1, hpos, "Debug Features:");
+			PrintPos(-1, hpos, "Debug Features:", COLOR_SELECT);
 			PrintPos(-1, hpos, 
 #ifdef NO_IOP_RESET
 " IOP_RESET=0"
@@ -446,7 +446,7 @@ static void Show_build_info(void)
 #else
 " UDPTTY=0"
 #endif
-);
+, COLOR_TEXT);
 			PrintPos(-1, hpos, 
 #ifdef SIO_DEBUG
 " SIO_DEBUG=1"
@@ -458,10 +458,10 @@ static void Show_build_info(void)
 #else
 " SIOR=0"
 #endif
-);
+, COLOR_TEXT);
 #endif
-			PrintPos(-1, hpos, "Mod Release site:");
-			PrintPos(-1, hpos, "   github.com/israpps/wLaunchELF_ISR/releases");
+			PrintPos(-1, hpos, "Mod Release site:", COLOR_TEXT);
+			PrintPos(-1, hpos, "   github.com/israpps/wLaunchELF_ISR/releases", COLOR_TEXT);
 
 
 		}  //ends if(event||post_event)
