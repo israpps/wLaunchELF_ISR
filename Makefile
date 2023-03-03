@@ -160,13 +160,6 @@ githash.h:
 	git rev-parse --short HEAD | tr -d "\n" >> $@ && \
 	printf '"\n#endif\n' >> $@
 
-current_flags:
-	@echo "SMB: set to 1 to build wLe with smb support"
-	@echo "DEFAULT_COLORS - set to 1 to use default uLaunchELF colors, otherwise, custom values will be used"
-	@echo "TMANIP: set to 1 to compile with time manipulation function, if set to 2 the function will manipulate the date of a specific folder (to avoid issues caused by noobs) (the specific folder name used is the macro HACK_FOLDER, wich is defined at launchelf.h)"
-	@echo "LANG: use a custom language file to compile wLe (by now only SPA and ENG are available)"
-	@echo "DVRP: support for PSX DESR encrypted HDD area"
-
 clean:
 	$(MAKE) -C hdl_info clean
 	$(MAKE) -C ps2host clean
