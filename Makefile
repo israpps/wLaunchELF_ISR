@@ -56,9 +56,14 @@ ifeq ($(DVRP),1)
 endif
 
 ifeq ($(MX4SIO),1)
-    EE_OBJS += mx4sio_bd.o sio2man.o
-    EE_CFLAGS += -DMX4SIO -DHOMEBREW_SIO2MAN
-    HAS_MX4SIO = -MX4SIO
+    EE_OBJS += mx4sio_bd.o
+    EE_CFLAGS += -DMX4SIO
+    SIO2MAN = 1
+endif
+
+ifeq ($(SIO2MAN),1)
+    EE_OBJS += sio2man.o
+    EE_CFLAGS += -DHOMEBREW_SIO2MAN
 endif
 
 ifeq ($(SIO_DEBUG),1)
