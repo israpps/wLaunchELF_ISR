@@ -15,6 +15,7 @@ MX4SIO ?= 0
 SIO2MAN ?= 0
 SIOR ?= 0
 # ----------------------------- #
+.SILENT:
 
 BIN_NAME = BOOT$(HAS_EXFAT)$(HAS_DS34)$(HAS_ETH)$(HAS_IOP_RESET)$(HAS_SMB)$(HAS_DVRP)$(HAS_XFROM)$(HAS_MX4SIO)$(HAS_EESIO)
 EE_BIN = UNC-$(BIN_NAME).ELF
@@ -125,6 +126,11 @@ else
 EE_CFLAGS += -DCUSTOM_COLORS
 endif
 
+
+EE_OBJS_DIR = obj/
+EE_ASM_DIR = asm/
+EE_OBJS := $(EE_OBJS:%=$(EE_OBJS_DIR)%) # remap all EE_OBJ to obj subdir
+
 .PHONY: all run reset clean rebuild
 
 all: githash.h $(EE_BIN_PKD)
@@ -134,6 +140,12 @@ $(EE_BIN_PKD): $(EE_BIN)
 ifeq ($(IOP_RESET),0)
 	@echo "-------------{COMPILATION PERFORMED WITHOUT IOP RESET}-------------"
 endif
+
+$(EE_OBJS_DIR):
+	mkdir $@
+
+$(EE_ASM_DIR):
+	mkdir $@
 
 run: all
 	ps2client -h 192.168.0.10 -t 1 execee host:$(EE_BIN)
@@ -155,158 +167,6 @@ current_flags:
 	@echo "LANG: use a custom language file to compile wLe (by now only SPA and ENG are available)"
 	@echo "DVRP: support for PSX DESR encrypted HDD area"
 
-mcman_irx.s: $(PS2SDK)/iop/irx/mcman.irx
-	$(BIN2S) $< $@ mcman_irx
-
-mcserv_irx.s: $(PS2SDK)/iop/irx/mcserv.irx
-	$(BIN2S) $< $@ mcserv_irx
-
-usbd_irx.s: $(PS2SDK)/iop/irx/usbd.irx
-	$(BIN2S) $< $@ usbd_irx
-
-ifeq ($(EXFAT),1)
-bdm_irx.s: iop/bdm.irx
-	$(BIN2S) $< $@ bdm_irx
-
-bdmfs_fatfs_irx.s: iop/bdmfs_fatfs.irx
-	$(BIN2S) $< $@ bdmfs_fatfs_irx
-
-usbmass_bd_irx.s: iop/usbmass_bd.irx
-	$(BIN2S) $< $@ usbmass_bd_irx
-else
-usbhdfsd_irx.s: $(PS2SDK)/iop/irx/usbhdfsd.irx
-	$(BIN2S) $< $@ usb_mass_irx
-endif
-
-oldlibs/libcdvd/lib/cdvd.irx: oldlibs/libcdvd
-	$(MAKE) -C $<
-
-cdvd_irx.s: oldlibs/libcdvd/lib/cdvd.irx
-	$(BIN2S) $< $@ cdvd_irx
-
-poweroff_irx.s: $(PS2SDK)/iop/irx/poweroff.irx
-	$(BIN2S) $< $@ poweroff_irx
-
-iomanx_irx.s: $(PS2SDK)/iop/irx/iomanX.irx
-	$(BIN2S) $< $@ iomanx_irx
-
-filexio_irx.s: $(PS2SDK)/iop/irx/fileXio.irx
-	$(BIN2S) $< $@ filexio_irx
-
-ps2dev9_irx.s: $(PS2SDK)/iop/irx/ps2dev9.irx
-	$(BIN2S) $< $@ ps2dev9_irx
-	
-mx4sio_bd.s: iop/mx4sio_bd.irx
-	$(BIN2S) $< $@ mx4sio_bd_irx
-
-ifeq ($(ETH),1)
-ps2ip_irx.s: $(PS2SDK)/iop/irx/ps2ip.irx
-	$(BIN2S) $< $@ ps2ip_irx
-
-udptty.s: $(PS2SDK)/iop/irx/udptty.irx
-	$(BIN2S) $< $@ udptty_irx
-
-ps2smap_irx.s: $(PS2DEV)/ps2eth/smap/ps2smap.irx
-	$(BIN2S) $< $@ ps2smap_irx
-
-ps2ftpd_irx.s: oldlibs/ps2ftpd/bin/ps2ftpd.irx
-	$(BIN2S) $< $@ ps2ftpd_irx
-
-ps2netfs_irx.s: $(PS2SDK)/iop/irx/ps2netfs.irx
-	$(BIN2S) $< $@ ps2netfs_irx
-
-ps2host_irx.s: ps2host/ps2host.irx
-	$(BIN2S) $< $@ ps2host_irx
-endif
-
-oldlibs/ps2ftpd/bin/ps2ftpd.irx: oldlibs/ps2ftpd
-	$(MAKE) -C $<
-
-ps2atad_irx.s: $(PS2SDK)/iop/irx/ps2atad.irx
-	$(BIN2S) $< $@ ps2atad_irx
-
-ps2hdd_irx.s: $(PS2SDK)/iop/irx/ps2hdd-osd.irx
-	$(BIN2S) $< $@ ps2hdd_irx
-
-ps2fs_irx.s: $(PS2SDK)/iop/irx/ps2fs.irx
-	$(BIN2S) $< $@ ps2fs_irx
-	
-ifeq ($(DVRP),1)
-dvrdrv_irx.s: iop/dvrdrv.irx
-	$(BIN2S) $< $@ dvrdrv_irx
-
-dvrfile_irx.s: iop/dvrfile.irx
-	$(BIN2S) $< $@ dvrfile_irx
-endif
-
-hdl_info/hdl_info.irx: hdl_info
-	$(MAKE) -C $<
-
-hdl_info_irx.s: hdl_info/hdl_info.irx
-	$(BIN2S) $< $@ hdl_info_irx
-
-ps2host/ps2host.irx: ps2host
-	$(MAKE) -C $<
-
-ds34usb/ee/libds34usb.a: ds34usb/ee
-	$(MAKE) -C $<
-
-ds34usb/iop/ds34usb.irx: ds34usb/iop
-	$(MAKE) -C $<
-
-ds34bt/ee/libds34bt.a: ds34bt/ee
-	$(MAKE) -C $<
-
-ds34bt/iop/ds34bt.irx: ds34bt/iop
-	$(MAKE) -C $<
-
-ds34usb.s: ds34usb/iop/ds34usb.irx
-	@$(BIN2S) $< $@ ds34usb_irx
-
-libds34usb.a: ds34usb/ee/libds34usb.a
-	cp $< $@	
-
-ds34bt.s: ds34bt/iop/ds34bt.irx
-	@$(BIN2S) $< $@ ds34bt_irx
-
-libds34bt.a: ds34bt/ee/libds34bt.a
-	cp $< $@
-
-padman.s: $(PS2SDK)/iop/irx/padman.irx
-	$(BIN2S) $< $@ padman_irx
-
-sio2man.s: $(PS2SDK)/iop/irx/sio2man.irx
-	$(BIN2S) $< $@ sio2man_irx
-
-ifeq ($(SMB),1)
-smbman_irx.s: $(PS2SDK)/iop/irx/smbman.irx
-	$(BIN2S) $< $@ smbman_irx
-endif
-
-vmc_fs/vmc_fs.irx: vmc_fs
-	$(MAKE) -C $<
-
-vmc_fs_irx.s: vmc_fs/vmc_fs.irx
-	$(BIN2S) $< $@ vmc_fs_irx
-
-loader/loader.elf: loader
-	$(MAKE) -C $<
-
-loader_elf.s: loader/loader.elf
-	$(BIN2S) $< $@ loader_elf
-
-ps2kbd_irx.s: $(PS2SDK)/iop/irx/ps2kbd.irx
-	$(BIN2S) $< $@ ps2kbd_irx
-
-sior_irx.s: $(PS2SDK)/iop/irx/sior.irx
-	$(BIN2S) $< $@ sior_irx
-
-AllowDVDV/AllowDVDV.irx: AllowDVDV
-	$(MAKE) -C $<
-
-allowdvdv_irx.s: AllowDVDV/AllowDVDV.irx
-	$(BIN2S) $< $@ allowdvdv_irx
-
 clean:
 	$(MAKE) -C hdl_info clean
 	$(MAKE) -C ps2host clean
@@ -319,5 +179,20 @@ clean:
 
 rebuild: clean all
 
+
+$(EE_OBJS_DIR)%.o: $(EE_SRC_DIR)%.c | $(EE_OBJS_DIR)
+	@echo " CC  - $@"
+	$(EE_CC) $(EE_CFLAGS) $(EE_INCS) -c $< -o $@
+
+$(EE_OBJS_DIR)%.o: $(EE_ASM_DIR)%.s | $(EE_OBJS_DIR)
+	@echo " ASM - $@"
+	$(EE_AS) $(EE_ASFLAGS) $< -o $@
+
+$(EE_OBJS_DIR)%.o: $(EE_SRC_DIR)%.cpp | $(EE_OBJS_DIR)
+	@echo " CXX - $@"
+	$(EE_CXX) $(EE_CXXFLAGS) $(EE_INCS) -c $< -o $@
+
+
+include embed.make
 include $(PS2SDK)/samples/Makefile.pref
 include $(PS2SDK)/samples/Makefile.eeglobal
