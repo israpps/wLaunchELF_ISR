@@ -34,9 +34,10 @@ IMPORT_BIN2C(mx4sio_bd_irx);
 
 #ifdef HOMEBREW_SIO2MAN
 IMPORT_BIN2C(sio2man_irx);
+IMPORT_BIN2C(padman_irx);
 #endif
 
-#ifdef SIO_DEBUG
+#ifdef SIOR
 IMPORT_BIN2C(sior_irx);
 #endif
 
@@ -382,12 +383,8 @@ static void Show_build_info(void)
 		//Display section
 		if (event || post_event) {  //NB: We need to update two frame buffers per event
 			clrScr(setting->color[COLOR_BACKGR]);
-			sprintf(TextRow, "About wLaunchELF %s  %s", ULE_VERSION, ULE_VERDATE);
+			sprintf(TextRow, " wLaunchELF %s (%s)", ULE_VERSION, GIT_HASH);
 			PrintPos(03, hpos, TextRow);
-			sprintf(TextRow, " commit: %s (based on commit 41e4ebe)", GIT_HASH);
-			PrintPos(04, hpos, TextRow);
-			PrintPos(05, hpos, "Mod created by: Matias Israelson");
-			PrintPos(-1, hpos, "DS3/DS4 support by Alex Parrado");
 			PrintPos(-1, hpos, "Build features:");
 			
 			PrintPos(-1, hpos, 
@@ -428,13 +425,41 @@ static void Show_build_info(void)
 #endif
 );
 			PrintPos(-1, hpos, 
+#ifdef MX4SIO
+" MX4SIO=1"
+#else
+" MX4SIO=0"
+#endif
+);
+#if defined(UDPTTY) || defined(SIO_DEBUG) || defined(SIOR) || defined(NO_IOP_RESET)
+
+
+			PrintPos(-1, hpos, "Debug Features:");
+			PrintPos(-1, hpos, 
 #ifdef NO_IOP_RESET
 " IOP_RESET=0"
 #else
 " IOP_RESET=1"
 #endif
+#ifdef UDPTTY
+" UDPTTY=1"
+#else
+" UDPTTY=0"
+#endif
 );
-
+			PrintPos(-1, hpos, 
+#ifdef SIO_DEBUG
+" SIO_DEBUG=1"
+#else
+" SIO_DEBUG=0"
+#endif
+#ifdef SIOR
+" SIOR=1"
+#else
+" SIOR=0"
+#endif
+);
+#endif
 			PrintPos(-1, hpos, "Mod Release site:");
 			PrintPos(-1, hpos, "   github.com/israpps/wLaunchELF_ISR/releases");
 
@@ -1077,46 +1102,59 @@ static void load_ps2netfs(void)
 //---------------------------------------------------------------------------
 static void loadBasicModules(void)
 {
-	int ret;
+	int ret, id;
 
-	SifExecModuleBuffer(iomanx_irx, size_iomanx_irx, 0, NULL, &ret);
-	SifExecModuleBuffer(filexio_irx, size_filexio_irx, 0, NULL, &ret);
+	id = SifExecModuleBuffer(iomanx_irx, size_iomanx_irx, 0, NULL, &ret);
+	DPRINTF("IOMANX.IRX id=%d ret=%d\n", id, ret);
+	id = SifExecModuleBuffer(filexio_irx, size_filexio_irx, 0, NULL, &ret);
+	DPRINTF("FILEXIO.IRX id=%d ret=%d\n", id, ret);
 
-	SifExecModuleBuffer(allowdvdv_irx, size_allowdvdv_irx, 0, NULL, &ret);  //unlocks cdvd for reading on psx dvr
+	id = SifExecModuleBuffer(allowdvdv_irx, size_allowdvdv_irx, 0, NULL, &ret);  //unlocks cdvd for reading on psx dvr
+	DPRINTF("ALLOWDVD.IRX id=%d ret=%d\n", id, ret);
 #ifdef HOMEBREW_SIO2MAN
-	SifExecModuleBuffer(sio2man_irx, size_sio2man_irx, 0, NULL, &ret);
+	id = SifExecModuleBuffer(sio2man_irx, size_sio2man_irx, 0, NULL, &ret);
+	DPRINTF("SIO2MAN.IRX id=%d ret=%d\n", id, ret);
 #else
-	SifLoadModule("rom0:SIO2MAN", 0, NULL);
+	id = SifLoadModule("rom0:SIO2MAN", 0, NULL);
+	DPRINTF("rom0:PADMAN id=%d\n", id);
 #endif
 
 #ifdef SIO_DEBUG
-	int id;
 	// I call this just after SIO2MAN have been loaded
 	sio_init(38400, 0, 0, 0, 0);
 	DPRINTF("Hello from EE SIO!\n");
-
+#ifdef SIOR
 	SIOR_Init(0x20);
 
 	id = SifExecModuleBuffer(sior_irx, size_sior_irx, 0, NULL, &ret);
-	printf("\t sior id=%d _start ret=%d\n", id, ret);
-	DPRINTF("sior id=%d _start ret=%d\n", id, ret);
+	DPRINTF("SIOR.IRX id=%d ret=%d\n", id, ret);
+#endif
 #endif
 
-	SifExecModuleBuffer(mcman_irx, size_mcman_irx, 0, NULL, &ret);  //Home
+	id = SifExecModuleBuffer(mcman_irx, size_mcman_irx, 0, NULL, &ret);  //Home
+	DPRINTF("MCMAN.IRX id=%d ret=%d\n", id, ret);
 	//SifLoadModule("rom0:MCMAN", 0, NULL); //Sony
-	SifExecModuleBuffer(mcserv_irx, size_mcserv_irx, 0, NULL, &ret);  //Home
+	id = SifExecModuleBuffer(mcserv_irx, size_mcserv_irx, 0, NULL, &ret);  //Home
+	DPRINTF("MCSERV.IRX id=%d ret=%d\n", id, ret);
 	//SifLoadModule("rom0:MCSERV", 0, NULL); //Sony
-	SifLoadModule("rom0:PADMAN", 0, NULL);
+#ifdef HOMEBREW_SIO2MAN
+	id = SifExecModuleBuffer(padman_irx, size_padman_irx, 0, NULL, &ret);  //Home
+	DPRINTF("PADMAN.IRX id=%d ret=%d\n", id, ret);
+#else
+	id = SifLoadModule("rom0:PADMAN", 0, NULL);
+	DPRINTF("rom0:PADMAN id=%d\n", id);
+#endif
 }
 //------------------------------
 //endfunc loadBasicModules
 //---------------------------------------------------------------------------
 static void loadCdModules(void)
 {
-	int ret;
+	int ret, id;
 
 	if (!have_cdvd) {
-		SifExecModuleBuffer(cdvd_irx, size_cdvd_irx, 0, NULL, &ret);
+		id = SifExecModuleBuffer(cdvd_irx, size_cdvd_irx, 0, NULL, &ret);
+		DPRINTF("CDVD.IRX id=%d, ret=%d\n", id, ret);
 		sceCdInit(SCECdINoD);  // SCECdINoD init without check for a disc. Reduces risk of a lockup if the drive is in a erroneous state.
 		CDVD_Init();
 		have_cdvd = 1;
@@ -1319,6 +1357,7 @@ static void loadUsbDModule(void)
 #ifdef DS34
 static void loadDs34Modules(void)
 {
+	DPRINTF("Loading DS34\n");
     if (!have_ds34) {
         if (loadExternalModule("DS34USB.IRX", &ds34usb_irx, size_ds34usb_irx))
             if (loadExternalModule("DS34BT.IRX", &ds34bt_irx, size_ds34bt_irx))
@@ -1428,6 +1467,7 @@ static void closeAllAndPoweroff(void)
 //---------------------------------------------------------------------------
 static void poweroffHandler(int i)
 {
+	if (!is_early_init) drawMsg(LNG(Powering_Off_Console));
 	closeAllAndPoweroff();
 }
 //------------------------------
@@ -2339,13 +2379,25 @@ static void Reset()
 #ifdef XFROM
 	have_Flash_modules = 0;
 #endif
+#ifdef UDPTTY
+int i, d;
+	load_ps2ip();
+	i = SifExecModuleBuffer(&udptty_irx, size_udptty_irx, 0, NULL, &d);
+    DPRINTF("[UDPTTY.IRX]: id=%d, ret=%d\n", i, d);
+#endif
 	loadBasicModules();
 	loadCdModules();
 
 	fileXioInit();
 	//Increase the FILEIO R/W buffer size to reduce overhead.
 	fileXioSetRWBufferSize(128 * 1024);
+	DPRINTF("Initializing mc rpc\n");
+#ifdef HOMEBREW_SIO2MAN
 	mcInit(MC_TYPE_XMC);
+#else
+	mcInit(MC_TYPE_MC);
+#endif
+	DPRINTF("RESET FINISHED\n");
 	//	setupPad();
 }
 //------------------------------
@@ -2478,11 +2530,7 @@ int main(int argc, char *argv[])
 		console_is_PSX = 1;
 	LaunchElfDir[0] = 0;
 	boot_path[0] = 0;
-#ifdef UDPTTY
-	load_ps2ip();
-	i = SifExecModuleBuffer(&udptty_irx, size_udptty_irx, 0, NULL, &d);
-    DPRINTF("[USBD.IRX]: ret=%d, stat=%d\n", i, d);
-#endif
+
 	if ((argc > 0) && argv[0]) {
 		strcpy(LaunchElfDir, argv[0]);  //Default LaunchElfDir to the boot path.
 		strcpy(boot_path, argv[0]);
@@ -2600,11 +2648,15 @@ int main(int argc, char *argv[])
 	swapKeys = setting->swapKeys;
 
 	//It's time to load and init drivers
+	DPRINTF("Getting IPCONFIG\n");
 	getIpConfig();
+	DPRINTF("Loading USB modules\n");
 	loadUsbModules();
 
 	WaitTime = Timer();
+	DPRINTF("setup pad\n");
 	setupPad();  //Comment out this line when using early setupPad above
+	DPRINTF("Starting keyboard\n");
 	startKbd();
 	WaitTime = Timer();
 
