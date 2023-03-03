@@ -22,14 +22,16 @@ It features:
 
 > release filename changes according to the included features:
 
-- `BOOT`: base filename, means nothing
-- `UNC`: executable is Uncompressed
-- `SIO_DEBUG`: supports printing debug information via the EmotionEngine serial port (useless unless your PS2 has serial port attached)
-- `NO_NETWORK`: network features are disabled and network IRX drivers stripped away, with the purpose of making a smaller wLaunchELF for users who don't use network
-- `NO_IOP_RESET`: build of wLaunchELF wich does not reset the I/O CPU upon startup, __DON'T USE IF YOU DON'T KNOW WHAT IT MEANS__
-- `DVRP`: support for accessing encrypted portion of the [PSX-DESR](https://upload.wikimedia.org/wikipedia/commons/f/fa/Console_psx.jpg) Internal HDD memory (in filebrowser represented as `dvr_hdd0:`)
+- `BOOT`: Base filename, means nothing
+- `UNC`: Executable is Uncompressed
+- `SIO_DEBUG`: Supports printing debug information via the EmotionEngine serial port (useless unless your PS2 has serial port attached)
+- `NO_NETWORK`: Network features are disabled and network IRX drivers stripped away, with the purpose of making a smaller wLaunchELF for users who don't use network
+- `NO_IOP_RESET`: Build of wLaunchELF wich does not reset the I/O CPU upon startup, __DON'T USE IF YOU DON'T KNOW WHAT IT MEANS__
+- `DVRP`: Support for accessing encrypted portion of the [PSX-DESR](https://upload.wikimedia.org/wikipedia/commons/f/fa/Console_psx.jpg) Internal HDD memory (in filebrowser represented as `dvr_hdd0:`)
 - `XFROM`: Support for accessing the [PSX-DESR](https://upload.wikimedia.org/wikipedia/commons/f/fa/Console_psx.jpg) internal flash memory
-- `EXFAT`: support for accessing EXFAT filesystems from USB devices
+- `EXFAT`: Support for accessing EXFAT filesystems from USB devices
 - `DS34`: Support for use of PlayStation 3 and PlayStation 4 controllers
+- `MX4SIO`: Support for browsing the contents of SD Cards connected via mx4sio
+
 # **original readme**
 wLaunchELF, formerly known as uLaunchELF, also known as wLE or uLE (abbreviated), is an open source file manager and executable launcher for the Playstation 2 console based off of the original LaunchELF. It contains many different features, including a text editor, hard drive manager, as well as network support, and much more.

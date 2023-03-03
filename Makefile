@@ -168,11 +168,13 @@ clean:
 	$(MAKE) -C AllowDVDV clean
 	$(MAKE) -C oldlibs/libcdvd clean
 	$(MAKE) -C oldlibs/ps2ftpd clean
-	rm -f githash.h *.s *.o $(EE_BIN) $(EE_BIN_PKD)
+	rm -f githash.h $(EE_BIN) $(EE_BIN_PKD)
+	rm -rf $(EE_OBJS_DIR)
+	rm -rf $(EE_ASM_DIR)
 
 rebuild: clean all
 
-
+#special recipe for compiling and dumping obj to subfolder
 $(EE_OBJS_DIR)%.o: $(EE_SRC_DIR)%.c | $(EE_OBJS_DIR)
 	@echo " CC  - $@"
 	$(EE_CC) $(EE_CFLAGS) $(EE_INCS) -c $< -o $@
