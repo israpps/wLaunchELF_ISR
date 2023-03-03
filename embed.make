@@ -107,14 +107,14 @@ ds34bt/iop/ds34bt.irx: ds34bt/iop
 $(EE_ASM_DIR)ds34usb.s: ds34usb/iop/ds34usb.irx | $(EE_ASM_DIR)
 	$(BIN2S) $< $@ ds34usb_irx
 
-libds34usb.a: ds34usb/ee/libds34usb.a
+$(EE_OBJS_DIR)libds34usb.a: ds34usb/ee/libds34usb.a
 	cp $< $@	
+
+$(EE_OBJS_DIR)libds34bt.a: ds34bt/ee/libds34bt.a
+	cp $< $@
 
 $(EE_ASM_DIR)ds34bt.s: ds34bt/iop/ds34bt.irx | $(EE_ASM_DIR)
 	$(BIN2S) $< $@ ds34bt_irx
-
-libds34bt.a: ds34bt/ee/libds34bt.a
-	cp $< $@
 
 $(EE_ASM_DIR)padman.s: $(PS2SDK)/iop/irx/padman.irx | $(EE_ASM_DIR)
 	$(BIN2S) $< $@ padman_irx
