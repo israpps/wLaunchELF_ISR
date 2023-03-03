@@ -1,16 +1,18 @@
 #.SILENT:
 
 # ---{ BUILD CONFIGURATION }--- #
-SIO_DEBUG ?= 0
+SIO_DEBUG ?= 1
 DS34 ?= 0
 SMB ?= 0
 TMANIP ?= 1
 ETH ?= 1
-EXFAT ?= 0
+EXFAT ?= 1
 DVRP ?= 0
 IOP_RESET ?= 1
 XFROM ?= 0
 UDPTTY ?= 0
+MX4SIO ?= 0
+SIO2MAN ?= 1
 # ----------------------------- #
 
 BIN_NAME = BOOT$(HAS_EXFAT)$(HAS_DS34)$(HAS_ETH)$(HAS_IOP_RESET)$(HAS_SMB)$(HAS_DVRP)$(HAS_XFROM)$(HAS_MX4SIO)$(HAS_EESIO)
