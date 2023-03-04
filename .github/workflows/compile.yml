@@ -38,7 +38,7 @@ jobs:
 
     - name: Compile wLaunchELF without network
       run: |
-        make rebuild ${{ matrix.eth }} ${{ matrix.sior }} ${{ matrix.bdmstuff }} ${{ matrix.ds34 }} ${{ matrix.xfrom }} UDPTTY=1 EXFAT=1
+        make rebuild ${{ matrix.eth }} ${{ matrix.sior }} ${{ matrix.bdmstuff }} ${{ matrix.ds34 }} ${{ matrix.xfrom }}
 
     - name: Upload variants artifact ELF
       uses: actions/upload-artifact@v3
