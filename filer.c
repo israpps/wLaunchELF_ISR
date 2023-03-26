@@ -73,6 +73,11 @@ int ndvrpparties;
 char mountedDVRPParty[MOUNT_LIMIT][MAX_NAME];
 int latestDVRPMount = -1;
 #endif
+
+#ifdef MX4SIO
+int mx4sio_idx = -1; // To keep track of wich mass#:/ device represents MX4SIO
+#endif
+
 int file_show = 1;  //dlanor: 0==name_only, 1==name+size+time, 2==title+size+time
 int file_sort = 1;  //dlanor: 0==none, 1==name, 2==title, 3==mtime
 int size_valid = 0;
@@ -1267,13 +1272,16 @@ int readXFROM(const char *path, FILEINFO *info, int max)
 //------------------------------
 //endfunc readXFROM
 //--------------------------------------------------------------
-
+#ifndef USBMASS_IOCTL_GET_DRIVERNAME
+#define USBMASS_IOCTL_GET_DRIVERNAME 0x0003
+#endif
 void scan_USB_mass(void)
 {
-	int i;
+	static char DEVID[5];
+	int i, dd;
 	iox_stat_t chk_stat;
 	char mass_path[8] = "mass0:/";
-
+	mx4sio_idx = -1; //assume none is mx4sio
 	if ((USB_mass_max_drives < 2)  //No need for dynamic lists with only one drive
 	    || (USB_mass_scanned && ((Timer() - USB_mass_scan_time) < 5000)))
 		return;
@@ -1284,6 +1292,14 @@ void scan_USB_mass(void)
 			USB_mass_ix[i] = 0;
 			continue;
 		}
+    	if ((dd = fileXioDopen(mass_path)) >= 0) {
+    	    int *intptr_ctl = (int *)DEVID;
+    	    *intptr_ctl = fileXioIoctl(dd, USBMASS_IOCTL_GET_DRIVERNAME, "");
+    	    fileXioDclose(dd);
+			if (!strncmp(DEVID, "sdc", 3))
+				mx4sio_idx = i;
+    	}
+
 		USB_mass_ix[i] = '0' + i;
 		USB_mass_scanned = 1;
 		USB_mass_scan_time = Timer();
@@ -3442,7 +3458,6 @@ int setFileList(const char *path, const char *ext, FILEINFO *files, int cnfmode)
 
 	size_valid = 0;
 	time_valid = 0;
-
 	nfiles = 0;
 	if (path[0] == 0) {
 		//-- Start case for browser root pseudo folder with device links --
@@ -4309,10 +4324,18 @@ int getFilePath(char *out, int cnfmode)
 
 				if (!strcmp(files[top + i].name, ".."))
 					strcpy(tmp, "..");
+
 				else if ((file_show == 2) && files[top + i].title[0] != 0) {
 					mcTitle = files[top + i].title;
 				} else {  //Show normal file/folder names
-					strcpy(tmp, files[top + i].name);
+#ifdef MX4SIO
+					if ((!strncmp(files[top + i].name, "mass", 4)) && (files[top + i].name[4] == ('0' + mx4sio_idx)))
+						strcpy(tmp, "mx4sio:"); 
+					else 
+						strcpy(tmp, files[top + i].name);
+#else
+				strcpy(tmp, files[top + i].name);
+#endif
 					if (file_show > 0) {  //Does display mode include file details ?
 						name_limit = 43 * 8;
 					} else {  //Filenames are shown without file details

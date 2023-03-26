@@ -176,17 +176,17 @@ rebuild: clean all
 
 #special recipe for compiling and dumping obj to subfolder
 $(EE_OBJS_DIR)%.o: $(EE_SRC_DIR)%.c | $(EE_OBJS_DIR)
-	@echo " CC  - $@"
+	@echo -e "\033[1m CC  - $@\033[0m"
 	$(EE_CC) $(EE_CFLAGS) $(EE_INCS) -c $< -o $@
 
 $(EE_OBJS_DIR)%.o: $(EE_ASM_DIR)%.s | $(EE_OBJS_DIR)
-	@echo " ASM - $@"
+	@echo -e "\033[1m ASM - $@\033[0m"
 	$(EE_AS) $(EE_ASFLAGS) $< -o $@
 
 $(EE_OBJS_DIR)%.o: $(EE_SRC_DIR)%.cpp | $(EE_OBJS_DIR)
-	@echo " CXX - $@"
+	@echo -e "\033[1m CXX - $@\033[0m"
 	$(EE_CXX) $(EE_CXXFLAGS) $(EE_INCS) -c $< -o $@
-
+#'\033[1m \033[0m'
 
 include embed.make
 include $(PS2SDK)/samples/Makefile.pref
