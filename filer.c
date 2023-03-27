@@ -173,7 +173,7 @@ int PSU_content;  //Used to count PSU content headers for the main header
 char USB_mass_ix[10] = {'0', 0, 0, 0, 0, 0, 0, 0, 0, 0};
 int USB_mass_max_drives = USB_MASS_MAX_DRIVES;
 u64 USB_mass_scan_time = 0;
-int USB_mass_scanned = 0;  //0==Not_found_OR_No_Multi 1==found_Multi_mass_once
+int USB_mass_scanned = 1;  //0==Not_found_OR_No_Multi 1==found_Multi_mass_once
 int USB_mass_loaded = 0;   //0==none, 1==internal, 2==external
 
 
@@ -1298,8 +1298,11 @@ void scan_USB_mass(void)
     	    int *intptr_ctl = (int *)DEVID;
     	    *intptr_ctl = fileXioIoctl(dd, USBMASS_IOCTL_GET_DRIVERNAME, "");
     	    fileXioDclose(dd);
-			if (!strncmp(DEVID, "sdc", 3))
-				mx4sio_idx = i;
+		if (!strncmp(DEVID, "sdc", 3))
+		{
+			mx4sio_idx = i;
+			DPRINTF("%s: Found MX4SIO device at mass%d:/\n", __func__, i);
+		}
     	}
 #endif
 		USB_mass_ix[i] = '0' + i;
