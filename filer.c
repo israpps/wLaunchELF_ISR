@@ -1281,17 +1281,19 @@ void scan_USB_mass(void)
 	int i, dd;
 	iox_stat_t chk_stat;
 	char mass_path[8] = "mass0:/";
-	mx4sio_idx = -1; //assume none is mx4sio
 	if ((USB_mass_max_drives < 2)  //No need for dynamic lists with only one drive
 	    || (USB_mass_scanned && ((Timer() - USB_mass_scan_time) < 5000)))
 		return;
-
+#ifdef MX4SIO
+	mx4sio_idx = -1; //assume none is mx4sio // this MUST ALWAYS be after the USB_mass_scan_time check
+#endif
 	for (i = 0; i < USB_mass_max_drives; i++) {
 		mass_path[4] = '0' + i;
 		if (fileXioGetStat(mass_path, &chk_stat) < 0) {
 			USB_mass_ix[i] = 0;
 			continue;
 		}
+#ifdef MX4SIO
     	if ((dd = fileXioDopen(mass_path)) >= 0) {
     	    int *intptr_ctl = (int *)DEVID;
     	    *intptr_ctl = fileXioIoctl(dd, USBMASS_IOCTL_GET_DRIVERNAME, "");
@@ -1299,7 +1301,7 @@ void scan_USB_mass(void)
 			if (!strncmp(DEVID, "sdc", 3))
 				mx4sio_idx = i;
     	}
-
+#endif
 		USB_mass_ix[i] = '0' + i;
 		USB_mass_scanned = 1;
 		USB_mass_scan_time = Timer();
@@ -4330,9 +4332,9 @@ int getFilePath(char *out, int cnfmode)
 				} else {  //Show normal file/folder names
 #ifdef MX4SIO
 					if ((!strncmp(files[top + i].name, "mass", 4)) && (files[top + i].name[4] == ('0' + mx4sio_idx)))
-						strcpy(tmp, "mx4sio:"); 
+						strcpy(tmp, "mx4sio:");
 					else 
-						strcpy(tmp, files[top + i].name);
+						strcpy(tmp, files[top + i].name); // it was NOT an mx4sio, so dont forget to copy normal name!
 #else
 				strcpy(tmp, files[top + i].name);
 #endif
