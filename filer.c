@@ -4331,10 +4331,16 @@ int getFilePath(char *out, int cnfmode)
 					mcTitle = files[top + i].title;
 				} else {  //Show normal file/folder names
 #ifdef MX4SIO
-					if ((!strncmp(files[top + i].name, "mass", 4)) && (files[top + i].name[4] == ('0' + mx4sio_idx)))
-						strcpy(tmp, "mx4sio:");
-					else 
-						strcpy(tmp, files[top + i].name); // it was NOT an mx4sio, so dont forget to copy normal name!
+					if (path[0] == 0) { // we are on root. apply the unique "alias" here
+						if ((!strncmp(files[top + i].name, "mass", 4)) //
+						&& (files[top + i].name[4] == ('0' + mx4sio_idx) || (mx4sio_idx == 0 && files[top + i].name[4] == ':')) //index corresponds to mx4sio index, also assume that if device path index 4 is equal to ':' then it is index 0
+						)
+							strcpy(tmp, "mx4sio:");
+						else 
+							strcpy(tmp, files[top + i].name);
+				} else {
+					strcpy(tmp, files[top + i].name);
+				}
 #else
 				strcpy(tmp, files[top + i].name);
 #endif
