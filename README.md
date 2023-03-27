@@ -31,6 +31,7 @@ It features:
 - `EXFAT`: Support for accessing EXFAT filesystems from BDM devices (USB & MX4SIO)
 - `DS34`: Support for use of PlayStation 3 and PlayStation 4 controllers
 - `MX4SIO`: Support for browsing the contents of SD Cards connected via mx4sio
+- `ILINK`: Support for browsing storage devices connected into the IEE1394 found on PS2 models from `SCPH-10000` up to `SCPH-39xxx`
 
 # **original readme**
 wLaunchELF, formerly known as uLaunchELF, also known as wLE or uLE (abbreviated), is an open source file manager and executable launcher for the Playstation 2 console based off of the original LaunchELF. It contains many different features, including a text editor, hard drive manager, as well as network support, and much more.
