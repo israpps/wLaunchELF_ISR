@@ -13,7 +13,7 @@ jobs:
       fail-fast: false
       matrix:
         eth: ["ETH=0", "ETH=1"]
-        bdmstuff: ["EXFAT=0", "EXFAT=1", "EXFAT=1 MX4SIO=1"]
+        bdmstuff: ["EXFAT=0", "EXFAT=1", "EXFAT=1 MX4SIO=1 ILINK=0", "EXFAT=1 MX4SIO=0 ILINK=1", "EXFAT=1 MX4SIO=1 ILINK=1",]
         ds34: ["DS34=0", "DS34=1"]
         xfrom: ["XFROM=0", "XFROM=1"]
 #        sior: ["SIO_DEBUG=0", "SIO_DEBUG=1"]
