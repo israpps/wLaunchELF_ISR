@@ -42,6 +42,14 @@ $(EE_ASM_DIR)usbhdfsd_irx.s: $(PS2SDK)/iop/irx/usbhdfsd.irx | $(EE_ASM_DIR)
 	$(BIN2S) $< $@ usb_mass_irx
 endif
 
+ifeq ($(ILINK), 1)
+$(EE_ASM_DIR)IEEE1394_bd_irx.s: iop/IEEE1394_bd.irx | $(EE_ASM_DIR)
+	$(BIN2S) $< $@ IEEE1394_bd
+	
+$(EE_ASM_DIR)iLinkman_irx.s: iop/iLinkman.irx | $(EE_ASM_DIR)
+	$(BIN2S) $< $@ iLinkman_irx
+endif
+
 # ----- #
 
 oldlibs/libcdvd/lib/cdvd.irx: oldlibs/libcdvd

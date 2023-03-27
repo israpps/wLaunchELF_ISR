@@ -14,10 +14,11 @@ UDPTTY ?= 0
 MX4SIO ?= 0
 SIO2MAN ?= 0
 SIOR ?= 0
+ILINK ?= 0
 # ----------------------------- #
 .SILENT:
 
-BIN_NAME = BOOT$(HAS_EXFAT)$(HAS_DS34)$(HAS_ETH)$(HAS_IOP_RESET)$(HAS_SMB)$(HAS_DVRP)$(HAS_XFROM)$(HAS_MX4SIO)$(HAS_EESIO)
+BIN_NAME = BOOT$(HAS_EXFAT)$(HAS_DS34)$(HAS_ETH)$(HAS_IOP_RESET)$(HAS_SMB)$(HAS_DVRP)$(HAS_XFROM)$(HAS_MX4SIO)$(HAS_ILINK)$(HAS_EESIO)
 EE_BIN = UNC-$(BIN_NAME).ELF
 EE_BIN_PKD = $(BIN_NAME).ELF
 EE_OBJS = main.o config.o elf.o draw.o loader_elf.o filer.o \
@@ -62,10 +63,24 @@ ifeq ($(DVRP),1)
 endif
 
 ifeq ($(MX4SIO),1)
-    EE_OBJS += mx4sio_bd.o
-    EE_CFLAGS += -DMX4SIO
-    HAS_MX4SIO = -MX4SIO
-    SIO2MAN = 1
+	ifeq ($(EXFAT), 1)
+		EE_OBJS += mx4sio_bd.o
+		EE_CFLAGS += -DMX4SIO
+		HAS_MX4SIO = -MX4SIO
+		SIO2MAN = 1
+	else
+		$(error ERROR: Requested MX4SIO with EXFAT DISABLED.)
+	endif
+endif
+
+ifeq ($(ILINK), 1)
+	ifeq ($(EXFAT), 1)
+		EE_OBJS += IEEE1394_bd_irx.o iLinkman_irx.o
+		EE_CFLAGS += -DILINK
+		HAS_ILINK = -ILINK
+	else
+		$(error ERROR: Requested iLink with EXFAT DISABLED.)
+	endif
 endif
 
 ifeq ($(SIO2MAN),1)

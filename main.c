@@ -50,6 +50,11 @@ IMPORT_BIN2C(usbmass_bd_irx);
 IMPORT_BIN2C(usb_mass_irx);
 #endif
 
+#ifdef ILINK
+IMPORT_BIN2C(iLinkman_irx);
+IMPORT_BIN2C(IEEE1394_bd);
+#endif
+
 #ifdef DS34
 IMPORT_BIN2C(ds34usb_irx);
 IMPORT_BIN2C(ds34bt_irx);
@@ -2655,6 +2660,14 @@ int main(int argc, char *argv[])
 	getIpConfig();
 	DPRINTF("Loading USB modules\n");
 	loadUsbModules();
+
+#ifdef ILINK
+	i = SifExecModuleBuffer(iLinkman_irx, size_iLinkman_irx, 0, NULL, &d);
+	DPRINTF(" [ILINKMAN.IRX]: ret=%d, id=%d", d, i);
+	i = SifExecModuleBuffer(IEEE1394_bd, size_IEEE1394_bd, 0, NULL, &d);
+	DPRINTF(" [IEEE1394_BD.IRX]: ret=%d, id=%d", d, i);
+	d = 0;
+#endif
 
 	WaitTime = Timer();
 	DPRINTF("setup pad\n");
