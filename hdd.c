@@ -874,8 +874,9 @@ void hddManager(void)
 
 			y = Menu_start_y;
 
-			x = ((((SCREEN_WIDTH / 2 - 25) - Menu_start_x) / 2) + Menu_start_x) - (strlen(LNG(HDD_STATUS)) * FONT_WIDTH) / 2;
-			printXY(LNG(HDD_STATUS), x, y, setting->color[COLOR_TEXT], TRUE, 0);
+			sprintf(c, "%s: %d", LNG(HDD_STATUS), hddRealStatus);
+			x = ((((SCREEN_WIDTH / 2 - 25) - Menu_start_x) / 2) + Menu_start_x) - (strlen(c) * FONT_WIDTH) / 2;
+			printXY(c, x, y, setting->color[COLOR_TEXT], TRUE, 0);
 
 			if (TV_mode != TV_mode_PAL)
 				y += FONT_HEIGHT + 10;
@@ -887,8 +888,8 @@ void hddManager(void)
 			             SCREEN_WIDTH / 2 - 20, y - 4);
 
 			if (hddConnected == 0)
-				sprintf(c, "%s:  %s / %s:  %s (%d)",
-				        LNG(CONNECTED), LNG(NO), LNG(FORMATED), LNG(NO), hddRealStatus);
+				sprintf(c, "%s:  %s / %s:  %s",
+				        LNG(CONNECTED), LNG(NO), LNG(FORMATED), LNG(NO));
 			else if ((hddConnected == 1) && (hddFormated == 0))
 				sprintf(c, "%s:  %s / %s:  %s",
 				        LNG(CONNECTED), LNG(YES), LNG(FORMATED), LNG(NO));
