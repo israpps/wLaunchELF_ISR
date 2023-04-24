@@ -41,7 +41,7 @@ enum {  //For menu commands
 static PARTYINFO PartyInfo[MAX_PARTITIONS];
 static int numParty;
 static u32 hddSize, hddFree, hddFreeSpace, hddUsed;
-static int hddConnected, hddFormated;
+static int hddConnected, hddFormated, hddRealStatus;
 
 static char DbgMsg[MAX_TEXT_LINE * 30];
 
@@ -106,7 +106,7 @@ void GetHddInfo(void)
 	tooManyPartitions = 0;
 
 	drawMsg(LNG(Reading_HDD_Information));
-
+	hddRealStatus = = fileXioDevctl("hdd0:", HDIOC_STATUS, NULL, 0, NULL, 0);
 	if (hddCheckPresent() < 0) {
 		hddConnected = 0;
 		goto end;
@@ -886,8 +886,8 @@ void hddManager(void)
 			             SCREEN_WIDTH / 2 - 20, y - 4);
 
 			if (hddConnected == 0)
-				sprintf(c, "%s:  %s / %s:  %s",
-				        LNG(CONNECTED), LNG(NO), LNG(FORMATED), LNG(NO));
+				sprintf(c, "%s:  %s / %s:  %s (status %d)",
+				        LNG(CONNECTED), LNG(NO), LNG(FORMATED), LNG(NO), hddRealStatus);
 			else if ((hddConnected == 1) && (hddFormated == 0))
 				sprintf(c, "%s:  %s / %s:  %s",
 				        LNG(CONNECTED), LNG(YES), LNG(FORMATED), LNG(NO));
