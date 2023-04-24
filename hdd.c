@@ -887,7 +887,7 @@ void hddManager(void)
 			             SCREEN_WIDTH / 2 - 20, y - 4);
 
 			if (hddConnected == 0)
-				sprintf(c, "%s:  %s / %s:  %s (status %d)",
+				sprintf(c, "%s:  %s / %s:  %s (%d)",
 				        LNG(CONNECTED), LNG(NO), LNG(FORMATED), LNG(NO), hddRealStatus);
 			else if ((hddConnected == 1) && (hddFormated == 0))
 				sprintf(c, "%s:  %s / %s:  %s",
