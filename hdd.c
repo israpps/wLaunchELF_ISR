@@ -106,7 +106,7 @@ void GetHddInfo(void)
 	tooManyPartitions = 0;
 
 	drawMsg(LNG(Reading_HDD_Information));
-	hddRealStatus = = fileXioDevctl("hdd0:", HDIOC_STATUS, NULL, 0, NULL, 0);
+	hddRealStatus = fileXioDevctl("hdd0:", HDIOC_STATUS, NULL, 0, NULL, 0);
 	if (hddCheckPresent() < 0) {
 		hddConnected = 0;
 		goto end;
