@@ -107,6 +107,7 @@ void GetHddInfo(void)
 
 	drawMsg(LNG(Reading_HDD_Information));
 	hddRealStatus = fileXioDevctl("hdd0:", HDIOC_STATUS, NULL, 0, NULL, 0);
+	DPRINTF("HDIOC_STATUS: %d\n", hddRealStatus);
 	if (hddCheckPresent() < 0) {
 		hddConnected = 0;
 		goto end;
