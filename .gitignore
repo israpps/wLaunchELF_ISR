@@ -7,7 +7,10 @@
 *.swp
 *.tmp
 *.irx
-*.s
+
+asm/*
+obj/*
+
 githash.h
 !iop/bdm.irx
 !iop/bdmfs_fatfs.irx
