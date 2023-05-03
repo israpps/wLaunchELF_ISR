@@ -1,5 +1,5 @@
 //--------------------------------------------------------------
-//File name:    editor.c
+// File name:    editor.c
 //--------------------------------------------------------------
 #include "launchelf.h"
 
@@ -94,7 +94,7 @@ static char *KEY = "  01ABCDEFGHIJKLM:; "
                    "  67nopqrstuvwxyz[] "
                    "  89+-=!#\\/?$%&@_^' ";  // Virtual KeyBoard Matrix.
 
-//Function Prototypes
+// Function Prototypes
 static int MenuEditor(void);
 static void Virt_KeyBoard_Entry(void);
 static int KeyBoard_Entry(void);
@@ -125,12 +125,12 @@ static int MenuEditor(void)
 	menu_len = strlen(LNG(Windows)) > menu_len ? strlen(LNG(Windows)) : menu_len;
 	menu_len = strlen(LNG(Exit)) > menu_len ? strlen(LNG(Exit)) : menu_len;
 
-	int menu_ch_w = menu_len + 1;                                 //Total characters in longest menu string.
-	int menu_ch_h = NUM_MENU;                                     //Total number of menu lines.
-	int mSprite_Y1 = 64;                                          //Top edge of sprite.
-	int mSprite_X2 = SCREEN_WIDTH - 35;                           //Right edge of sprite.
-	int mSprite_X1 = mSprite_X2 - (menu_ch_w + 3) * FONT_WIDTH;   //Left edge of sprite
-	int mSprite_Y2 = mSprite_Y1 + (menu_ch_h + 1) * FONT_HEIGHT;  //Bottom edge of sprite
+	int menu_ch_w = menu_len + 1;                                 // Total characters in longest menu string.
+	int menu_ch_h = NUM_MENU;                                     // Total number of menu lines.
+	int mSprite_Y1 = 64;                                          // Top edge of sprite.
+	int mSprite_X2 = SCREEN_WIDTH - 35;                           // Right edge of sprite.
+	int mSprite_X1 = mSprite_X2 - (menu_ch_w + 3) * FONT_WIDTH;   // Left edge of sprite
+	int mSprite_Y2 = mSprite_Y1 + (menu_ch_h + 1) * FONT_HEIGHT;  // Bottom edge of sprite
 
 	memset(enable, TRUE, NUM_MENU);
 
@@ -149,20 +149,20 @@ static int MenuEditor(void)
 		if (enable[Menu_Sel] == TRUE)
 			break;
 
-	event = 1;  //event = initial entry.
+	event = 1;  // event = initial entry.
 	while (1) {
-		//Pad response section.
+		// Pad response section.
 		waitPadReady(0, 0);
 		if (readpad()) {
 			if (new_pad & PAD_UP && Menu_Sel < NUM_MENU) {
-				event |= 2;  //event |= valid pad command.
+				event |= 2;  // event |= valid pad command.
 				do {
 					Menu_Sel--;
 					if (Menu_Sel < 0)
 						Menu_Sel = NUM_MENU - 1;
 				} while (!enable[Menu_Sel]);
 			} else if (new_pad & PAD_DOWN && Menu_Sel < NUM_MENU) {
-				event |= 2;  //event |= valid pad command.
+				event |= 2;  // event |= valid pad command.
 				do {
 					Menu_Sel++;
 					if (Menu_Sel == NUM_MENU)
@@ -171,14 +171,14 @@ static int MenuEditor(void)
 			} else if ((new_pad & PAD_TRIANGLE) || (!swapKeys && new_pad & PAD_CROSS) || (swapKeys && new_pad & PAD_CIRCLE)) {
 				return -1;
 			} else if ((swapKeys && new_pad & PAD_CROSS) || (!swapKeys && new_pad & PAD_CIRCLE)) {
-				event |= 2;  //event |= valid pad command.
+				event |= 2;  // event |= valid pad command.
 				break;
 			}
 		}
 
-		if (event || post_event) {  //NB: We need to update two frame buffers per event.
+		if (event || post_event) {  // NB: We need to update two frame buffers per event.
 
-			//Display section.
+			// Display section.
 			drawPopSprite(setting->color[COLOR_BACKGR],
 			              mSprite_X1, mSprite_Y1,
 			              mSprite_X2, mSprite_Y2);
@@ -211,7 +211,7 @@ static int MenuEditor(void)
 			if (Menu_Sel < NUM_MENU)
 				drawChar(LEFT_CUR, mSprite_X1 + FONT_WIDTH, mSprite_Y1 + (FONT_HEIGHT / 2 + Menu_Sel * FONT_HEIGHT), setting->color[COLOR_TEXT]);
 
-			//Tooltip section.
+			// Tooltip section.
 			x = SCREEN_MARGIN;
 			y = Menu_tooltip_y;
 			drawSprite(setting->color[COLOR_BACKGR],
@@ -230,13 +230,13 @@ static int MenuEditor(void)
 				             "3:%s",
 				        LNG(OK), LNG(Cancel), LNG(Back));
 			printXY(tmp, x, y, setting->color[COLOR_SELECT], TRUE, 0);
-		}  //ends if(event||post_event).
+		}  // ends if(event||post_event).
 		drawScr();
 		post_event = event;
 		event = 0;
-	}  //ends while.
+	}  // ends while.
 	return Menu_Sel;
-}  //ends menu.
+}  // ends menu.
 //--------------------------------------------------------------
 static void Virt_KeyBoard_Entry(void)
 {
@@ -253,7 +253,7 @@ static void Virt_KeyBoard_Entry(void)
 			if ((KeyBoard_Cur -= WFONTS) < 0)
 				KeyBoard_Cur = 0;
 		}
-		//ends Virtual KeyBoard move up.
+		// ends Virtual KeyBoard move up.
 	} else if (new_pad & PAD_DOWN) {  // Virtual KeyBoard move down.
 		if (KeyBoard_Cur == WFONTS * HFONTS - 1)
 			KeyBoard_Cur = WFONTS - 1;
@@ -263,19 +263,19 @@ static void Virt_KeyBoard_Entry(void)
 			if ((KeyBoard_Cur += WFONTS) > WFONTS * HFONTS - 1)
 				KeyBoard_Cur = WFONTS * HFONTS - 1;
 		}
-		//ends Virtual KeyBoard move down.
+		// ends Virtual KeyBoard move down.
 	} else if (new_pad & PAD_LEFT) {  // Virtual KeyBoard move left.
 		if (!KeyBoard_Cur)
 			KeyBoard_Cur = WFONTS * HFONTS - 1;
 		else
 			KeyBoard_Cur--;
-		//ends Virtual KeyBoard move left.
+		// ends Virtual KeyBoard move left.
 	} else if (new_pad & PAD_RIGHT) {  // Virtual KeyBoard move right.
 		if (KeyBoard_Cur == WFONTS * HFONTS - 1)
 			KeyBoard_Cur = 0;
 		else
 			KeyBoard_Cur++;
-		//ends Virtual KeyBoard move right.
+		// ends Virtual KeyBoard move right.
 	} else if (new_pad & PAD_L2) {  // Text move left.
 		if (Editor_Cur > 0)
 			Editor_Cur--;
@@ -288,7 +288,7 @@ static void Virt_KeyBoard_Entry(void)
 	} else if ((!swapKeys && new_pad & PAD_CROSS) || (swapKeys && new_pad & PAD_CIRCLE)) {  // Virtual KeyBoard Backspace
 		if (Editor_Cur > 0) {
 			if (TextMode[Active_Window] == OTHER && TextBuffer[Active_Window][Editor_Cur] == '\n' && TextBuffer[Active_Window][Editor_Cur - 1] == '\r') {
-				Editor_Cur += 1;  //Backspace at LF of CRLF must work after LF instead
+				Editor_Cur += 1;  // Backspace at LF of CRLF must work after LF instead
 			}
 			if (Mark[MARK_ON]) {
 				Mark[MARK_OUT] = Editor_Cur;
@@ -302,19 +302,19 @@ static void Virt_KeyBoard_Entry(void)
 				del1 = -Mark[MARK_SIZE], del2 = 0, del3 = -Mark[MARK_SIZE], del4 = -Mark[MARK_SIZE];
 				Mark[MARK_ON] = 0;
 			} else if (TextMode[Active_Window] == OTHER && TextBuffer[Active_Window][Editor_Cur - 1] == '\n' && Editor_Cur > 1 && TextBuffer[Active_Window][Editor_Cur - 2] == '\r') {
-				del1 = -2, del2 = 0, del3 = -2, del4 = -2;  //Backspace CRLF
+				del1 = -2, del2 = 0, del3 = -2, del4 = -2;  // Backspace CRLF
 			} else {
-				del1 = -1, del2 = 0, del3 = -1, del4 = -1;  //Backspace single char
+				del1 = -1, del2 = 0, del3 = -1, del4 = -1;  // Backspace single char
 			}
 			Operation = -1;
 		}
-		//ends Virtual KeyBoard Backspace
+		// ends Virtual KeyBoard Backspace
 	} else if ((swapKeys && new_pad & PAD_CROSS) || (!swapKeys && new_pad & PAD_CIRCLE)) {  // Virtual KeyBoard Select.
 		if (!KeyBoard_Cur) {                                                                // Virtual KeyBoard MARK.
 			Mark[MARK_ON] = !Mark[MARK_ON];
 			if (Mark[MARK_ON]) {
 				if (TextMode[Active_Window] == OTHER && TextBuffer[Active_Window][Editor_Cur] == '\n' && Editor_Cur > 0 && TextBuffer[Active_Window][Editor_Cur - 1] == '\r') {
-					Editor_Cur -= 1;  //Marking at LF of CRLF must start at CR instead
+					Editor_Cur -= 1;  // Marking at LF of CRLF must start at CR instead
 				}
 				if (Mark[MARK_COPY] || Mark[MARK_CUT])
 					free(TextBuffer[EDIT]);
@@ -324,11 +324,11 @@ static void Virt_KeyBoard_Entry(void)
 				Mark[MARK_IN] = Mark[MARK_OUT] = Editor_Cur;
 			}
 			Mark[MARK_START] = 1;
-			//ends Virtual KeyBoard MARK.
+			// ends Virtual KeyBoard MARK.
 		} else if (KeyBoard_Cur == WFONTS) {  // Virtual KeyBoard COPY.
 			if (Mark[MARK_ON]) {
 				if (TextMode[Active_Window] == OTHER && TextBuffer[Active_Window][Editor_Cur] == '\n' && Editor_Cur > 0 && TextBuffer[Active_Window][Editor_Cur - 1] == '\r') {
-					Editor_Cur += 1;  //Mark end at LF of CRLF must include LF as well
+					Editor_Cur += 1;  // Mark end at LF of CRLF must include LF as well
 				}
 				Mark[MARK_OUT] = Editor_Cur;
 				if (Mark[MARK_OUT] < Mark[MARK_IN]) {
@@ -345,11 +345,11 @@ static void Virt_KeyBoard_Entry(void)
 					TextBuffer[EDIT][i] = TextBuffer[Active_Window][i + Mark[MARK_IN]];
 				Mark[MARK_COPY] = 1, Mark[MARK_CUT] = 0, Mark[MARK_ON] = 0;
 			}
-			//ends Virtual KeyBoard COPY.
+			// ends Virtual KeyBoard COPY.
 		} else if (KeyBoard_Cur == 2 * WFONTS) {  // Virtual KeyBoard CUT.
 			if (Mark[MARK_ON]) {
 				if (TextMode[Active_Window] == OTHER && TextBuffer[Active_Window][Editor_Cur] == '\n' && Editor_Cur > 0 && TextBuffer[Active_Window][Editor_Cur - 1] == '\r') {
-					Editor_Cur += 1;  //Mark end at LF of CRLF must include LF as well
+					Editor_Cur += 1;  // Mark end at LF of CRLF must include LF as well
 				}
 				Mark[MARK_OUT] = Editor_Cur;
 				if (Mark[MARK_OUT] < Mark[MARK_IN]) {
@@ -370,7 +370,7 @@ static void Virt_KeyBoard_Entry(void)
 			}
 		abort:
 			Mark[MARK_TMP] = 0;                   // just for compiler warning.
-			                                      //ends Virtual KeyBoard CUT.
+			                                      // ends Virtual KeyBoard CUT.
 		} else if (KeyBoard_Cur == 3 * WFONTS) {  // Virtual KeyBoard PASTE.
 			if (Mark[MARK_COPY] || Mark[MARK_CUT]) {
 				if (TextMode[Active_Window] == OTHER && TextBuffer[Active_Window][Editor_Cur] == '\n') {
@@ -380,7 +380,7 @@ static void Virt_KeyBoard_Entry(void)
 				ins1 = Mark[MARK_SIZE], ins2 = Mark[MARK_SIZE], ins3 = Mark[MARK_SIZE], ins4 = 0, ins5 = Mark[MARK_SIZE];
 				Operation = 1;
 			}
-			//ends Virtual KeyBoard PASTE.
+			// ends Virtual KeyBoard PASTE.
 		} else if (KeyBoard_Cur == 4 * WFONTS) {  // Virtual KeyBoard HOME.
 			Editor_Home = 1;
 		} else if (KeyBoard_Cur == 1) {  // Virtual KeyBoard LINE UP.
@@ -405,37 +405,37 @@ static void Virt_KeyBoard_Entry(void)
 		} else if (KeyBoard_Cur == 5 * WFONTS - 1) {  // Virtual KeyBoard RETURN.
 
 			if (TextMode[Active_Window] == OTHER && TextBuffer[Active_Window][Editor_Cur] == '\n' && Editor_Cur > 0 && TextBuffer[Active_Window][Editor_Cur - 1] == '\r') {
-				Editor_Cur -= 1;  //Entry at LF of CRLF must work at CR instead
+				Editor_Cur -= 1;  // Entry at LF of CRLF must work at CR instead
 			}
 			if (Editor_Insert || TextBuffer[Active_Window][Editor_Cur] == '\0')
 				if (Editor_RetMode == OTHER)
-					ins1 = 2, ins2 = 0, ins3 = 2, ins4 = 0, ins5 = 2;  //Insert CRLF
+					ins1 = 2, ins2 = 0, ins3 = 2, ins4 = 0, ins5 = 2;  // Insert CRLF
 				else
-					ins1 = 1, ins2 = 0, ins3 = 1, ins4 = 0, ins5 = 1;                                                                                           //Insert LF/CR
-			else if (TextMode[Active_Window] == OTHER && TextBuffer[Active_Window][Editor_Cur] == '\r' && TextBuffer[Active_Window][Editor_Cur + 1] == '\n') {  //OWrite Return at CRLF
+					ins1 = 1, ins2 = 0, ins3 = 1, ins4 = 0, ins5 = 1;                                                                                           // Insert LF/CR
+			else if (TextMode[Active_Window] == OTHER && TextBuffer[Active_Window][Editor_Cur] == '\r' && TextBuffer[Active_Window][Editor_Cur + 1] == '\n') {  // OWrite Return at CRLF
 				if (Editor_RetMode == OTHER)
-					ins1 = 0, ins2 = 0, ins3 = 2, ins4 = 2, ins5 = 2;  //OWrite CRLF at CRLF
+					ins1 = 0, ins2 = 0, ins3 = 2, ins4 = 2, ins5 = 2;  // OWrite CRLF at CRLF
 				else
-					ins1 = 0, ins2 = 0, ins3 = 1, ins4 = 2, ins5 = 1;  //OWrite LF/CR at CRLF
-			} else {                                                   //OWrite return at normal char
+					ins1 = 0, ins2 = 0, ins3 = 1, ins4 = 2, ins5 = 1;  // OWrite LF/CR at CRLF
+			} else {                                                   // OWrite return at normal char
 				if (Editor_RetMode == OTHER)
-					ins1 = 1, ins2 = 0, ins3 = 2, ins4 = 1, ins5 = 2;  //OWrite CRLF at char
+					ins1 = 1, ins2 = 0, ins3 = 2, ins4 = 1, ins5 = 2;  // OWrite CRLF at char
 				else
-					ins1 = 0, ins2 = 0, ins3 = 1, ins4 = 1, ins5 = 1;  //OWrite LF/CR at char
+					ins1 = 0, ins2 = 0, ins3 = 1, ins4 = 1, ins5 = 1;  // OWrite LF/CR at char
 			}
 			Operation = 2;
-			//ends Virtual KeyBoard RETURN.
+			// ends Virtual KeyBoard RETURN.
 		} else {  // Virtual KeyBoard Any other char + Space + Tabulation.
 			if (TextMode[Active_Window] == OTHER && TextBuffer[Active_Window][Editor_Cur] == '\n' && Editor_Cur > 0 && TextBuffer[Active_Window][Editor_Cur - 1] == '\r') {
-				Editor_Cur -= 1;  //Entry at LF of CRLF must work at CR instead
+				Editor_Cur -= 1;  // Entry at LF of CRLF must work at CR instead
 			}
 			if (Editor_Insert || TextBuffer[Active_Window][Editor_Cur] == '\0') {
-				ins1 = 1, ins2 = 0, ins3 = 1, ins4 = 0, ins5 = 1;  //Insert char normally
+				ins1 = 1, ins2 = 0, ins3 = 1, ins4 = 0, ins5 = 1;  // Insert char normally
 			} else {
-				if (TextMode[Active_Window] == OTHER && TextBuffer[Active_Window][Editor_Cur] == '\r' && TextBuffer[Active_Window][Editor_Cur + 1] == '\n') {  //OWrite char at CRLF
-					ins1 = 0, ins2 = 0, ins3 = 1, ins4 = 2, ins5 = 1;                                                                                          //OWrite at CR of CRLF
-				} else {                                                                                                                                       //OWrite return at normal char
-					ins1 = 0, ins2 = 0, ins3 = 1, ins4 = 1, ins5 = 1;                                                                                          //OWrite normal char
+				if (TextMode[Active_Window] == OTHER && TextBuffer[Active_Window][Editor_Cur] == '\r' && TextBuffer[Active_Window][Editor_Cur + 1] == '\n') {  // OWrite char at CRLF
+					ins1 = 0, ins2 = 0, ins3 = 1, ins4 = 2, ins5 = 1;                                                                                          // OWrite at CR of CRLF
+				} else {                                                                                                                                       // OWrite return at normal char
+					ins1 = 0, ins2 = 0, ins3 = 1, ins4 = 1, ins5 = 1;                                                                                          // OWrite normal char
 				}
 			}
 			if (KeyBoard_Cur == 3 * WFONTS - 1)  // Tabulation.
@@ -445,13 +445,13 @@ static void Virt_KeyBoard_Entry(void)
 			else  // Any other char.
 				Operation = 5;
 		}
-		//ends Virtual KeyBoard Select.
+		// ends Virtual KeyBoard Select.
 	}
 
 	if (Operation > 0) {                                                 // Perform Add Char / Paste. Can Be Simplify???
 		TextBuffer[TMP] = malloc(TextSize[Active_Window] + ins1 + 256);  // 256 To Avoid Crash 256???
 		strcpy(TextBuffer[TMP], TextBuffer[Active_Window]);
-		//memset(TextBuffer[Active_Window], 0, TextSize[Active_Window]+256); // 256 To Avoid Crash 256???		free(TextBuffer[Active_Window]);
+		// memset(TextBuffer[Active_Window], 0, TextSize[Active_Window]+256); // 256 To Avoid Crash 256???		free(TextBuffer[Active_Window]);
 		TextBuffer[Active_Window] = malloc(TextSize[Active_Window] + ins1 + 256);  // 256 To Avoid Crash 256???
 		strcpy(TextBuffer[Active_Window], TextBuffer[TMP]);
 	}
@@ -465,11 +465,11 @@ static void Virt_KeyBoard_Entry(void)
 			TextBuffer[Active_Window][Editor_Cur + del1] = '\0';
 			strcat(TextBuffer[Active_Window], TextBuffer[TMP] + (Editor_Cur + del2));
 			strcpy(TextBuffer[TMP], TextBuffer[Active_Window]);
-			//memset(TextBuffer[Active_Window], 0, TextSize[Active_Window]+256); // 256 To Avoid Crash 256???
+			// memset(TextBuffer[Active_Window], 0, TextSize[Active_Window]+256); // 256 To Avoid Crash 256???
 			free(TextBuffer[Active_Window]);
 			TextBuffer[Active_Window] = malloc(TextSize[Active_Window] + del3 + 256);  // 256 To Avoid Crash 256???
 			strcpy(TextBuffer[Active_Window], TextBuffer[TMP]);
-			//memset(TextBuffer[TMP], 0, TextSize[Active_Window]+256); // 256 To Avoid Crash 256???
+			// memset(TextBuffer[TMP], 0, TextSize[Active_Window]+256); // 256 To Avoid Crash 256???
 			free(TextBuffer[TMP]);
 			Editor_Cur += del3, TextSize[Active_Window] += del4;
 			t = 0;
@@ -500,7 +500,7 @@ static void Virt_KeyBoard_Entry(void)
 		common:
 			TextBuffer[Active_Window][Editor_Cur + ins3] = '\0';
 			strcat(TextBuffer[Active_Window], TextBuffer[TMP] + (Editor_Cur + ins4));
-			//memset(TextBuffer[TMP], 0, TextSize[Active_Window]+256); // 256 To Avoid Crash 256???
+			// memset(TextBuffer[TMP], 0, TextSize[Active_Window]+256); // 256 To Avoid Crash 256???
 			free(TextBuffer[TMP]);
 			Editor_Cur += ins5, TextSize[Active_Window] += ins1;
 			t = 0;
@@ -508,7 +508,7 @@ static void Virt_KeyBoard_Entry(void)
 	}
 }
 //------------------------------
-//endfunc Virt_KeyBoard_Entry
+// endfunc Virt_KeyBoard_Entry
 //--------------------------------------------------------------
 static int KeyBoard_Entry(void)
 {
@@ -517,7 +517,7 @@ static int KeyBoard_Entry(void)
 
 	Operation = 0;
 
-	if (PS2KbdRead(&KeyPress)) {  //KeyBoard Response Section.
+	if (PS2KbdRead(&KeyPress)) {  // KeyBoard Response Section.
 
 		ret = 1;  // Equal To event |= pad command.
 
@@ -552,7 +552,7 @@ static int KeyBoard_Entry(void)
 			else if (KeyPress == 0x26) {  // Key Delete.
 				if (Editor_Cur < Editor_nChar) {
 					if (TextMode[Active_Window] == OTHER && TextBuffer[Active_Window][Editor_Cur] == '\n' && Editor_Cur > 0 && TextBuffer[Active_Window][Editor_Cur - 1] == '\r') {
-						Editor_Cur -= 1;  //Delete at LF of CRLF must work at CR instead
+						Editor_Cur -= 1;  // Delete at LF of CRLF must work at CR instead
 					}
 					if (Mark[MARK_ON]) {
 						Mark[MARK_OUT] = Editor_Cur;
@@ -565,12 +565,12 @@ static int KeyBoard_Entry(void)
 						Mark[MARK_SIZE] = Mark[MARK_OUT] - Mark[MARK_IN];
 						del1 = -Mark[MARK_SIZE], del2 = 0, del3 = -Mark[MARK_SIZE], del4 = -Mark[MARK_SIZE];
 						Mark[MARK_ON] = 0;
-					} else if (TextMode[Active_Window] == OTHER && TextBuffer[Active_Window][Editor_Cur] == '\r' && TextBuffer[Active_Window][Editor_Cur + 1] == '\n') {  //Delete at CRLF
-						del1 = 0, del2 = 2, del3 = 0, del4 = -2;                                                                                                          //delete CRLF
+					} else if (TextMode[Active_Window] == OTHER && TextBuffer[Active_Window][Editor_Cur] == '\r' && TextBuffer[Active_Window][Editor_Cur + 1] == '\n') {  // Delete at CRLF
+						del1 = 0, del2 = 2, del3 = 0, del4 = -2;                                                                                                          // delete CRLF
 					} else if (TextMode[Active_Window] == OTHER && TextBuffer[Active_Window][Editor_Cur] == '\n') {
 						del1 = -1, del2 = 1, del3 = -1, del4 = -2;
 					} else {
-						del1 = 0, del2 = 1, del3 = 0, del4 = -1;  //delete single char
+						del1 = 0, del2 = 1, del3 = 0, del4 = -1;  // delete single char
 					}
 					Operation = -1;
 				}
@@ -587,7 +587,7 @@ static int KeyBoard_Entry(void)
 				Mark[MARK_ON] = !Mark[MARK_ON];
 				if (Mark[MARK_ON]) {
 					if (TextMode[Active_Window] == OTHER && TextBuffer[Active_Window][Editor_Cur] == '\n' && Editor_Cur > 0 && TextBuffer[Active_Window][Editor_Cur - 1] == '\r') {
-						Editor_Cur -= 1;  //Marking at LF of CRLF must start at CR instead
+						Editor_Cur -= 1;  // Marking at LF of CRLF must start at CR instead
 					}
 					if (Mark[MARK_COPY] || Mark[MARK_CUT])
 						free(TextBuffer[EDIT]);
@@ -597,10 +597,10 @@ static int KeyBoard_Entry(void)
 					Mark[MARK_IN] = Mark[MARK_OUT] = Editor_Cur;
 				}
 				Mark[MARK_START] = 1;
-				//ends Key Ctrl+b MARK.
+				// ends Key Ctrl+b MARK.
 			} else if (KeyPress == 0x03) {  // Key Ctrl+c COPY.
 				if (TextMode[Active_Window] == OTHER && TextBuffer[Active_Window][Editor_Cur] == '\n' && Editor_Cur > 0 && TextBuffer[Active_Window][Editor_Cur - 1] == '\r') {
-					Editor_Cur += 1;  //Mark end at LF of CRLF must include LF as well
+					Editor_Cur += 1;  // Mark end at LF of CRLF must include LF as well
 				}
 				if (Mark[MARK_ON]) {
 					Mark[MARK_OUT] = Editor_Cur;
@@ -618,11 +618,11 @@ static int KeyBoard_Entry(void)
 						TextBuffer[EDIT][i] = TextBuffer[Active_Window][i + Mark[MARK_IN]];
 					Mark[MARK_COPY] = 1, Mark[MARK_CUT] = 0, Mark[MARK_ON] = 0, Mark[MARK_TMP] = 0;
 				}
-				//ends Key Ctrl+c COPY.
+				// ends Key Ctrl+c COPY.
 			} else if (KeyPress == 0x18) {  // Key Ctrl+x CUT.
 				if (Mark[MARK_ON]) {
 					if (TextMode[Active_Window] == OTHER && TextBuffer[Active_Window][Editor_Cur] == '\n' && Editor_Cur > 0 && TextBuffer[Active_Window][Editor_Cur - 1] == '\r') {
-						Editor_Cur += 1;  //Mark end at LF of CRLF must include LF as well
+						Editor_Cur += 1;  // Mark end at LF of CRLF must include LF as well
 					}
 					Mark[MARK_OUT] = Editor_Cur;
 					if (Mark[MARK_OUT] < Mark[MARK_IN]) {
@@ -641,7 +641,7 @@ static int KeyBoard_Entry(void)
 					Mark[MARK_CUT] = 1, Mark[MARK_COPY] = 0, Mark[MARK_ON] = 0, Mark[MARK_TMP] = 0;
 					Operation = -2;
 				}
-				//ends Key Ctrl+x CUT.
+				// ends Key Ctrl+x CUT.
 			} else if (KeyPress == 0x16) {  // Key Ctrl+v PASTE.
 				if (Mark[MARK_COPY] || Mark[MARK_CUT]) {
 					if (TextMode[Active_Window] == OTHER && TextBuffer[Active_Window][Editor_Cur] == '\n') {
@@ -651,11 +651,11 @@ static int KeyBoard_Entry(void)
 					ins1 = Mark[MARK_SIZE], ins2 = Mark[MARK_SIZE], ins3 = Mark[MARK_SIZE], ins4 = 0, ins5 = Mark[MARK_SIZE];
 					Operation = 1;
 				}
-				//ends Key Ctrl+v PASTE.
+				// ends Key Ctrl+v PASTE.
 			} else if (KeyPress == 0x07) {  // Key BackSpace.
 				if (Editor_Cur > 0) {
 					if (TextMode[Active_Window] == OTHER && TextBuffer[Active_Window][Editor_Cur] == '\n' && TextBuffer[Active_Window][Editor_Cur - 1] == '\r') {
-						Editor_Cur += 1;  //Backspace at LF of CRLF must work after LF
+						Editor_Cur += 1;  // Backspace at LF of CRLF must work after LF
 					}
 					if (Mark[MARK_ON]) {
 						Mark[MARK_OUT] = Editor_Cur;
@@ -669,47 +669,47 @@ static int KeyBoard_Entry(void)
 						del1 = -Mark[MARK_SIZE], del2 = 0, del3 = -Mark[MARK_SIZE], del4 = -Mark[MARK_SIZE];
 						Mark[MARK_ON] = 0;
 					} else if (TextMode[Active_Window] == OTHER && TextBuffer[Active_Window][Editor_Cur - 1] == '\n' && Editor_Cur > 1 && TextBuffer[Active_Window][Editor_Cur - 2] == '\r') {
-						del1 = -2, del2 = 0, del3 = -2, del4 = -2;  //Backspace CRLF
+						del1 = -2, del2 = 0, del3 = -2, del4 = -2;  // Backspace CRLF
 					} else {
-						del1 = -1, del2 = 0, del3 = -1, del4 = -1;  //Backspace single char
+						del1 = -1, del2 = 0, del3 = -1, del4 = -1;  // Backspace single char
 					}
 					Operation = -3;
 				}
-				//ends Key BackSpace.
+				// ends Key BackSpace.
 			} else if (KeyPress == 0x0A) {  // Key Return.
 
 				if (TextMode[Active_Window] == OTHER && TextBuffer[Active_Window][Editor_Cur] == '\n' && Editor_Cur > 0 && TextBuffer[Active_Window][Editor_Cur - 1] == '\r') {
-					Editor_Cur -= 1;  //Entry at LF of CRLF must work at CR instead
+					Editor_Cur -= 1;  // Entry at LF of CRLF must work at CR instead
 				}
 				if (Editor_Insert || TextBuffer[Active_Window][Editor_Cur] == '\0')
 					if (Editor_RetMode == OTHER)
-						ins1 = 2, ins2 = 0, ins3 = 2, ins4 = 0, ins5 = 2;  //Insert CRLF
+						ins1 = 2, ins2 = 0, ins3 = 2, ins4 = 0, ins5 = 2;  // Insert CRLF
 					else
-						ins1 = 1, ins2 = 0, ins3 = 1, ins4 = 0, ins5 = 1;                                                                                           //Insert LF/CR
-				else if (TextMode[Active_Window] == OTHER && TextBuffer[Active_Window][Editor_Cur] == '\r' && TextBuffer[Active_Window][Editor_Cur + 1] == '\n') {  //OWrite Return at CRLF
+						ins1 = 1, ins2 = 0, ins3 = 1, ins4 = 0, ins5 = 1;                                                                                           // Insert LF/CR
+				else if (TextMode[Active_Window] == OTHER && TextBuffer[Active_Window][Editor_Cur] == '\r' && TextBuffer[Active_Window][Editor_Cur + 1] == '\n') {  // OWrite Return at CRLF
 					if (Editor_RetMode == OTHER)
-						ins1 = 0, ins2 = 0, ins3 = 2, ins4 = 2, ins5 = 2;  //OWrite CRLF at CRLF
+						ins1 = 0, ins2 = 0, ins3 = 2, ins4 = 2, ins5 = 2;  // OWrite CRLF at CRLF
 					else
-						ins1 = 0, ins2 = 0, ins3 = 1, ins4 = 2, ins5 = 1;  //OWrite LF/CR at CRLF
-				} else {                                                   //OWrite return at normal char
+						ins1 = 0, ins2 = 0, ins3 = 1, ins4 = 2, ins5 = 1;  // OWrite LF/CR at CRLF
+				} else {                                                   // OWrite return at normal char
 					if (Editor_RetMode == OTHER)
-						ins1 = 1, ins2 = 0, ins3 = 2, ins4 = 1, ins5 = 2;  //OWrite CRLF at char
+						ins1 = 1, ins2 = 0, ins3 = 2, ins4 = 1, ins5 = 2;  // OWrite CRLF at char
 					else
-						ins1 = 0, ins2 = 0, ins3 = 1, ins4 = 1, ins5 = 1;  //OWrite LF/CR at char
+						ins1 = 0, ins2 = 0, ins3 = 1, ins4 = 1, ins5 = 1;  // OWrite LF/CR at char
 				}
 				Operation = 2;
-				//ends Key Return.
+				// ends Key Return.
 			} else {  // All Other Keys.
 				if (TextMode[Active_Window] == OTHER && TextBuffer[Active_Window][Editor_Cur] == '\n' && Editor_Cur > 0 && TextBuffer[Active_Window][Editor_Cur - 1] == '\r') {
-					Editor_Cur -= 1;  //Entry at LF of CRLF must work at CR instead
+					Editor_Cur -= 1;  // Entry at LF of CRLF must work at CR instead
 				}
 				if (Editor_Insert || TextBuffer[Active_Window][Editor_Cur] == '\0') {
-					ins1 = 1, ins2 = 0, ins3 = 1, ins4 = 0, ins5 = 1;  //Insert char normally
+					ins1 = 1, ins2 = 0, ins3 = 1, ins4 = 0, ins5 = 1;  // Insert char normally
 				} else {
-					if (TextMode[Active_Window] == OTHER && TextBuffer[Active_Window][Editor_Cur] == '\r' && TextBuffer[Active_Window][Editor_Cur + 1] == '\n') {  //OWrite char at CRLF
-						ins1 = 0, ins2 = 0, ins3 = 1, ins4 = 2, ins5 = 1;                                                                                          //OWrite at CR of CRLF
-					} else {                                                                                                                                       //OWrite return at normal char
-						ins1 = 0, ins2 = 0, ins3 = 1, ins4 = 1, ins5 = 1;                                                                                          //OWrite normal char
+					if (TextMode[Active_Window] == OTHER && TextBuffer[Active_Window][Editor_Cur] == '\r' && TextBuffer[Active_Window][Editor_Cur + 1] == '\n') {  // OWrite char at CRLF
+						ins1 = 0, ins2 = 0, ins3 = 1, ins4 = 2, ins5 = 1;                                                                                          // OWrite at CR of CRLF
+					} else {                                                                                                                                       // OWrite return at normal char
+						ins1 = 0, ins2 = 0, ins3 = 1, ins4 = 1, ins5 = 1;                                                                                          // OWrite normal char
 					}
 				}
 				Operation = 3;
@@ -719,7 +719,7 @@ static int KeyBoard_Entry(void)
 		if (Operation > 0) {                                                 // Perform Add Char / Paste. Can Be Simplify???
 			TextBuffer[TMP] = malloc(TextSize[Active_Window] + ins1 + 256);  // 256 To Avoid Crash 256???
 			strcpy(TextBuffer[TMP], TextBuffer[Active_Window]);
-			//memset(TextBuffer[Active_Window], 0, TextSize[Active_Window]+256); // 256 To Avoid Crash 256???		free(TextBuffer[Active_Window]);
+			// memset(TextBuffer[Active_Window], 0, TextSize[Active_Window]+256); // 256 To Avoid Crash 256???		free(TextBuffer[Active_Window]);
 			TextBuffer[Active_Window] = malloc(TextSize[Active_Window] + ins1 + 256);  // 256 To Avoid Crash 256???
 			strcpy(TextBuffer[Active_Window], TextBuffer[TMP]);
 		}
@@ -735,11 +735,11 @@ static int KeyBoard_Entry(void)
 				TextBuffer[Active_Window][Editor_Cur + del1] = '\0';
 				strcat(TextBuffer[Active_Window], TextBuffer[TMP] + (Editor_Cur + del2));
 				strcpy(TextBuffer[TMP], TextBuffer[Active_Window]);
-				//memset(TextBuffer[Active_Window], 0, TextSize[Active_Window]+256); // 256 To Avoid Crash 256???
+				// memset(TextBuffer[Active_Window], 0, TextSize[Active_Window]+256); // 256 To Avoid Crash 256???
 				free(TextBuffer[Active_Window]);
 				TextBuffer[Active_Window] = malloc(TextSize[Active_Window] + del3 + 256);  // 256 To Avoid Crash 256???
 				strcpy(TextBuffer[Active_Window], TextBuffer[TMP]);
-				//memset(TextBuffer[TMP], 0, TextSize[Active_Window]+256); // 256 To Avoid Crash 256???
+				// memset(TextBuffer[TMP], 0, TextSize[Active_Window]+256); // 256 To Avoid Crash 256???
 				free(TextBuffer[TMP]);
 				Editor_Cur += del3, TextSize[Active_Window] += del4;
 				t = 0;
@@ -763,7 +763,7 @@ static int KeyBoard_Entry(void)
 			common:
 				TextBuffer[Active_Window][Editor_Cur + ins3] = '\0';
 				strcat(TextBuffer[Active_Window], TextBuffer[TMP] + (Editor_Cur + ins4));
-				//memset(TextBuffer[TMP], 0, TextSize[Active_Window]+256); // 256 To Avoid Crash 256???
+				// memset(TextBuffer[TMP], 0, TextSize[Active_Window]+256); // 256 To Avoid Crash 256???
 				free(TextBuffer[TMP]);
 				Editor_Cur += ins5, TextSize[Active_Window] += ins1;
 				t = 0;
@@ -772,11 +772,11 @@ static int KeyBoard_Entry(void)
 
 	abort:
 		KeyPress = '\0';
-	}  //ends if(PS2KbdRead(&KeyPress)).
+	}  // ends if(PS2KbdRead(&KeyPress)).
 	return ret;
 }
 //------------------------------
-//endfunc KeyBoard_Entry
+// endfunc KeyBoard_Entry
 //--------------------------------------------------------------
 static void Editor_Rules(void)
 {
@@ -900,39 +900,39 @@ static int Windows_Selector(void)
 	int x, y, i, Window_Sel = Active_Window;
 	int event, post_event = 0;
 
-	int Window_ch_w = 36;                                               //Total characters in longest Window Name.
-	int Window_ch_h = 10;                                               //Total number of Window Menu lines.
-	int wSprite_Y1 = 200;                                               //Top edge of sprite.
-	int wSprite_X2 = SCREEN_WIDTH - 35;                                 //Right edge of sprite.
-	int wSprite_X1 = wSprite_X2 - (Window_ch_w + 3) * FONT_WIDTH - 3;   //Left edge of sprite.
-	int wSprite_Y2 = wSprite_Y1 + (Window_ch_h + 1) * FONT_HEIGHT + 3;  //Bottom edge of sprite.
+	int Window_ch_w = 36;                                               // Total characters in longest Window Name.
+	int Window_ch_h = 10;                                               // Total number of Window Menu lines.
+	int wSprite_Y1 = 200;                                               // Top edge of sprite.
+	int wSprite_X2 = SCREEN_WIDTH - 35;                                 // Right edge of sprite.
+	int wSprite_X1 = wSprite_X2 - (Window_ch_w + 3) * FONT_WIDTH - 3;   // Left edge of sprite.
+	int wSprite_Y2 = wSprite_Y1 + (Window_ch_h + 1) * FONT_HEIGHT + 3;  // Bottom edge of sprite.
 
 	char tmp[64];
 
-	event = 1;  //event = initial entry.
+	event = 1;  // event = initial entry.
 	while (1) {
-		//Pad response section.
+		// Pad response section.
 		waitPadReady(0, 0);
 		if (readpad()) {
 			if (new_pad & PAD_UP) {
-				event |= 2;  //event |= valid pad command.
+				event |= 2;  // event |= valid pad command.
 				if ((Window_Sel--) <= 0)
 					Window_Sel = 9;
 			} else if (new_pad & PAD_DOWN) {
-				event |= 2;  //event |= valid pad command.
+				event |= 2;  // event |= valid pad command.
 				if ((Window_Sel++) >= 9)
 					Window_Sel = 0;
 			} else if ((new_pad & PAD_TRIANGLE) || (!swapKeys && new_pad & PAD_CROSS) || (swapKeys && new_pad & PAD_CIRCLE)) {
 				return -1;
 			} else if ((swapKeys && new_pad & PAD_CROSS) || (!swapKeys && new_pad & PAD_CIRCLE)) {
-				event |= 2;  //event |= valid pad command.
+				event |= 2;  // event |= valid pad command.
 				break;
 			}
 		}
 
-		if (event || post_event) {  //NB: We need to update two frame buffers per event.
+		if (event || post_event) {  // NB: We need to update two frame buffers per event.
 
-			//Display section.
+			// Display section.
 			drawPopSprite(setting->color[COLOR_BACKGR],
 			              wSprite_X1, wSprite_Y1,
 			              wSprite_X2, wSprite_Y2);
@@ -957,7 +957,7 @@ static int Windows_Selector(void)
 			if (Window_Sel <= 10)
 				drawChar(LEFT_CUR, wSprite_X1 + FONT_WIDTH, wSprite_Y1 + (FONT_HEIGHT / 2 + Window_Sel * FONT_HEIGHT), setting->color[COLOR_TEXT]);
 
-			//Tooltip section.
+			// Tooltip section.
 			x = SCREEN_MARGIN;
 			y = Menu_tooltip_y;
 			drawSprite(setting->color[COLOR_BACKGR],
@@ -976,13 +976,13 @@ static int Windows_Selector(void)
 				             "3:%s",
 				        LNG(OK), LNG(Cancel), LNG(Back));
 			printXY(tmp, x, y, setting->color[COLOR_SELECT], TRUE, 0);
-		}  //ends if(event||post_event).
+		}  // ends if(event||post_event).
 		drawScr();
 		post_event = event;
 		event = 0;
-	}  //ends while.
+	}  // ends while.
 	return Window_Sel;
-}  //ends Window_Selector.
+}  // ends Window_Selector.
 //--------------------------------------------------------------
 static void Init(void)
 {
@@ -1115,7 +1115,7 @@ static void Close(int Win)
 {
 	char msg[MAX_PATH];
 
-	//memset(TextBuffer[Win], 0, TextSize[Win]+256); // 256 To Avoid Crash 256???
+	// memset(TextBuffer[Win], 0, TextSize[Win]+256); // 256 To Avoid Crash 256???
 	free(TextBuffer[Win]);
 
 	if (Window[Win][CREATED])
@@ -1198,10 +1198,10 @@ static void Save_As(int Win)
 	drawMsg(LNG(Enter_File_Name));
 
 	if (keyboard(tmp, 36) > 0) {
-		//strcat(Path[Win], tmp); //This is what we want, but malfunctions for MC!
-		//sprintf(&Path[Win][strlen(Path[Win])], "%s", tmp); //This always works
-		strcpy(&Path[Win][strlen(Path[Win])], tmp);  //And this one works too
-		                                             //Note that the strcat call SHOULD have done the same thing, but won't.
+		// strcat(Path[Win], tmp); //This is what we want, but malfunctions for MC!
+		// sprintf(&Path[Win][strlen(Path[Win])], "%s", tmp); //This always works
+		strcpy(&Path[Win][strlen(Path[Win])], tmp);  // And this one works too
+		                                             // Note that the strcat call SHOULD have done the same thing, but won't.
 	} else
 		goto abort;
 
@@ -1274,7 +1274,7 @@ void TextEditor(char *path)
 
 	t = 0;
 
-	event = 1;  //event = initial entry.
+	event = 1;  // event = initial entry.
 
 	Rows_Width = (SCREEN_WIDTH - SCREEN_MARGIN - LINE_THICKNESS - 26 - Menu_start_x) / FONT_WIDTH;
 	Rows_Num = (Menu_end_y - Menu_start_y) / FONT_HEIGHT;
@@ -1297,11 +1297,11 @@ void TextEditor(char *path)
 
 	while (1) {
 
-		//Pad response section.
+		// Pad response section.
 		waitPadReady(0, 0);
 		if (readpad_no_KB()) {
 			if (new_pad) {
-				event |= 2;  //event |= pad command.
+				event |= 2;  // event |= pad command.
 			}
 			if (!KeyBoard_Active) {      // Pad Response Without KeyBoard.
 				if (new_pad & PAD_UP) {  // Text move up.
@@ -1441,7 +1441,7 @@ void TextEditor(char *path)
 					goto exit;
 				}
 			}
-		}  //ends pad response section.
+		}  // ends pad response section.
 
 		if (!Num_Window)
 			Editor_Start++;
@@ -1466,11 +1466,11 @@ void TextEditor(char *path)
 		t++;
 
 		if (t & 0x0F)
-			event |= 4;  //repetitive timer event.
+			event |= 4;  // repetitive timer event.
 
-		if (event || post_event) {  //NB: We need to update two frame buffers per event.
+		if (event || post_event) {  // NB: We need to update two frame buffers per event.
 
-			//Display section.
+			// Display section.
 			clrScr(setting->color[COLOR_BACKGR]);
 
 			if (TextSize[Active_Window] == 0)
@@ -1480,7 +1480,7 @@ void TextEditor(char *path)
 			             SCREEN_MARGIN, Frame_start_y,
 			             SCREEN_WIDTH - SCREEN_MARGIN, Frame_end_y);
 
-			if (KeyBoard_Active) {  //Display Virtual KeyBoard Section.
+			if (KeyBoard_Active) {  // Display Virtual KeyBoard Section.
 
 				drawPopSprite(setting->color[COLOR_BACKGR],
 				              SCREEN_MARGIN, KEY_Y + 6,
@@ -1560,7 +1560,7 @@ void TextEditor(char *path)
 					         setting->color[COLOR_TEXT]);
 				}
 
-				//Virtual KeyBoard Cursor positioning section.
+				// Virtual KeyBoard Cursor positioning section.
 				if (!KeyBoard_Cur || KeyBoard_Cur % WFONTS == 0)
 					x = KEY_X + 2 + 4 - 128;
 				else if (KeyBoard_Cur == 1 || (KeyBoard_Cur - 1) % WFONTS == 0)
@@ -1585,7 +1585,7 @@ void TextEditor(char *path)
 				for (j = 0; j < Editor_nRowsWidth[i]; j++) {
 					Mark[MARK_COLOR] = 0;
 
-					if (Mark[MARK_ON] && Mark[MARK_PRINT] > 0) {  //Mark Text.
+					if (Mark[MARK_ON] && Mark[MARK_PRINT] > 0) {  // Mark Text.
 						if (Mark[MARK_SIZE] > 0) {
 							if (Top_Width + tmpLen + j == (Editor_Cur - Mark[MARK_PRINT])) {
 								drawOpSprite(COL_MARK_BG, x, y - 1, x + FONT_WIDTH, y + FONT_HEIGHT - 1);
@@ -1602,7 +1602,7 @@ void TextEditor(char *path)
 						}
 					}  // end mark.
 
-					if (Top_Width + tmpLen + j == Editor_Cur) {  //Text Cursor.
+					if (Top_Width + tmpLen + j == Editor_Cur) {  // Text Cursor.
 						if (Editor_Insert)
 							color = COL_CUR_INSERT;
 						else
@@ -1626,7 +1626,7 @@ void TextEditor(char *path)
 						Editor_TextEnd = 1;
 					} else {
 						ch = TextBuffer[Active_Window][Top_Width + tmpLen + j];
-						if (Mark[MARK_ON] && Mark[MARK_COLOR])  //Text Color Black / White If Mark.
+						if (Mark[MARK_ON] && Mark[MARK_COLOR])  // Text Color Black / White If Mark.
 							color = COL_MARK_TEXT;
 						else
 							color = COL_NORM_TEXT;
@@ -1645,9 +1645,9 @@ void TextEditor(char *path)
 				x = Menu_start_x;
 				y += FONT_HEIGHT;
 
-			}  //ends for, so all editor Rows_Num were fixed above.
+			}  // ends for, so all editor Rows_Num were fixed above.
 		end:
-			if (Editor_nRowsNum > Rows_Num) {  //if more lines than available Rows_Num, use scrollbar.
+			if (Editor_nRowsNum > Rows_Num) {  // if more lines than available Rows_Num, use scrollbar.
 				if (KeyBoard_Active) {
 					drawFrame(SCREEN_WIDTH - SCREEN_MARGIN - LINE_THICKNESS * 8, Frame_start_y,
 					          SCREEN_WIDTH - SCREEN_MARGIN, KEY_Y + 6, setting->color[COLOR_FRAME]);
@@ -1664,12 +1664,12 @@ void TextEditor(char *path)
 					drawOpSprite(setting->color[COLOR_FRAME],
 					             SCREEN_WIDTH - SCREEN_MARGIN - LINE_THICKNESS * 6, (y0 + Menu_start_y - 2),
 					             SCREEN_WIDTH - SCREEN_MARGIN - LINE_THICKNESS * 2, (y1 + Menu_start_y - 6));
-				}  //ends clause for scrollbar with KeyBoard.
-			}      //ends clause for scrollbar.
+				}  // ends clause for scrollbar with KeyBoard.
+			}      // ends clause for scrollbar.
 
-			//Tooltip section.
+			// Tooltip section.
 			tmp[0] = '\0', tmp1[0] = '\0', tmp2[0] = '\0';
-			if (KeyBoard_Active) {  //Display Virtual KeyBoard Tooltip.
+			if (KeyBoard_Active) {  // Display Virtual KeyBoard Tooltip.
 				if (swapKeys)
 					sprintf(tmp1, "R1:%s \xFF"
 					              "3:%s \xFF"
@@ -1684,7 +1684,7 @@ void TextEditor(char *path)
 					              "1:%s L2:%s R2:%s Sel:%s",
 					        LNG(Menu), LNG(Exit), LNG(Sel), LNG(BackSpace),
 					        LNG(Left), LNG(Right), LNG(Close_KB));
-			} else if (setting->usbkbd_used) {  //Display KeyBoard Tooltip.
+			} else if (setting->usbkbd_used) {  // Display KeyBoard Tooltip.
 				if (Window[Active_Window][OPENED]) {
 					if (Mark[MARK_ON])
 						sprintf(tmp1, "F1/R1:%s Esc/\xFF"
@@ -1712,7 +1712,7 @@ void TextEditor(char *path)
 					sprintf(tmp1, "F1/R1:%s Esc/\xFF"
 					              "3:%s",
 					        LNG(Menu), LNG(Exit));
-			} else {  //Display Basic Tooltip.
+			} else {  // Display Basic Tooltip.
 				if (Window[Active_Window][OPENED])
 					sprintf(tmp1, "R1:%s \xFF"
 					              "3:%s Select:%s",
@@ -1729,14 +1729,14 @@ void TextEditor(char *path)
 			else
 				strcpy(tmp, LNG(PS2_TEXT_EDITOR));
 			setScrTmp(tmp, tmp1);
-		}  //ends if(event||post_event).
+		}  // ends if(event||post_event).
 		drawScr();
 		post_event = event;
 		event = 0;
-	}  //ends while.
+	}  // ends while.
 
 	return;
 }
 //--------------------------------------------------------------
-//End of file: editor.c
+// End of file: editor.c
 //--------------------------------------------------------------

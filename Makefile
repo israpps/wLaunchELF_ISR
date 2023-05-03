@@ -187,6 +187,12 @@ clean:
 
 rebuild: clean all
 
+format:
+	find . -type f -a \( -iname \*.h -o -iname \*.c \) | xargs clang-format -i
+
+format-check:
+	@! find . -type f -a \( -iname \*.h -o -iname \*.c \) | xargs clang-format -style=file -output-replacements-xml | grep "<replacement " >/dev/null
+
 #special recipe for compiling and dumping obj to subfolder
 $(EE_OBJS_DIR)%.o: $(EE_SRC_DIR)%.c | $(EE_OBJS_DIR)
 	@echo -e "\033[1m CC  - $@\033[0m"

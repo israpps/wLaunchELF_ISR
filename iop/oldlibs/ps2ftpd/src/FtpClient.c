@@ -286,7 +286,7 @@ void FtpClient_OnCommand(FtpClient *pClient, const char *pString)
 					FtpClient_OnCmdList(pClient, "", 1);
 			} break;
 
-			// these all share the same setup
+				// these all share the same setup
 
 			case FTPCMD_TYPE:
 			case FTPCMD_RETR:
@@ -358,7 +358,7 @@ void FtpClient_OnCommand(FtpClient *pClient, const char *pString)
 				} else
 					FtpClient_Send(pClient, 501, pClient->m_pMessages[FTPMSG_REQUIRES_PARAMETERS]);
 			} break;
-			// TYPE <type>
+				// TYPE <type>
 
 			case FTPCMD_PWD:
 			case FTPCMD_XPWD: {
@@ -432,8 +432,8 @@ void FtpClient_OnDataConnect(FtpClient *pClient, int *ip, int port)
 
 	if( fcntl( s, F_SETFL, O_NONBLOCK ) < 0 )
 	{
-		FtpClient_OnDataFailed(pClient,NULL);
-		return;
+	    FtpClient_OnDataFailed(pClient,NULL);
+	    return;
 	}
 */
 
@@ -580,7 +580,8 @@ void FtpClient_OnDataWrite(FtpClient *pClient)
 					char size[21] = " ";
 
 					/* UNIX-style LIST format */
-					strcat(buffer, (FT_DIRECTORY == pInfo->m_eType) ? "d" : (FT_LINK == pInfo->m_eType) ? "l" : "-");
+					strcat(buffer, (FT_DIRECTORY == pInfo->m_eType) ? "d" : (FT_LINK == pInfo->m_eType) ? "l" :
+					                                                                                      "-");
 					for (i = 0; i < 9; i++) {
 						if (pInfo->m_iProtection & (1 << (8 - i))) {
 							switch (i % 3) {
@@ -671,52 +672,52 @@ void FtpClient_OnDataWrite(FtpClient *pClient)
 					}
 					// end of UNIX-style LIST format
 
-					/* MS-style LIST format: To use uncomment this format after commenting out UNIX-style LIST format 
-						and making changes to FtpCommands.c's method FtpClient_OnCmdSyst
+					/* MS-style LIST format: To use uncomment this format after commenting out UNIX-style LIST format
+					    and making changes to FtpCommands.c's method FtpClient_OnCmdSyst
 					i = pInfo->m_TS.m_iMonth;
 					if( i > 12 )
-						i = 1;
+					    i = 1;
 					if( i < 10 )
-						strcat( buffer, "0" );
+					    strcat( buffer, "0" );
 					itoa( buffer + strlen(buffer), i );
 
 					strcat( buffer, "-" );
 					if( pInfo->m_TS.m_iDay < 10 )
-						strcat( buffer, "0" );
+					    strcat( buffer, "0" );
 					itoa( buffer + strlen(buffer), pInfo->m_TS.m_iDay );
 
 					strcat( buffer, "-" );
 					if( pInfo->m_TS.m_iYear%100 < 10 )
-						strcat( buffer, "0" );
+					    strcat( buffer, "0" );
 					itoa( buffer + strlen(buffer), pInfo->m_TS.m_iYear%100 );
 
 					strcat( buffer, "  " );
 					i = pInfo->m_TS.m_iHour;
 					if( i > 12 )
-						i -= 12;
+					    i -= 12;
 					if( i == 0 )
-						i = 12;
+					    i = 12;
 					if( i < 10 )
-						strcat( buffer, "0" );
+					    strcat( buffer, "0" );
 					itoa( buffer + strlen(buffer), i );
 
 					strcat( buffer, ":" );
 					if( pInfo->m_TS.m_iMinute < 10 )
-						strcat( buffer, "0" );
+					    strcat( buffer, "0" );
 					itoa( buffer + strlen(buffer), pInfo->m_TS.m_iMinute );
 					if( pInfo->m_TS.m_iHour < 12 )
-						strcat( buffer, "AM       " );
+					    strcat( buffer, "AM       " );
 					else
-						strcat( buffer, "PM       " );
+					    strcat( buffer, "PM       " );
 
 					if( FT_DIRECTORY == pInfo->m_eType )
-						strcat( buffer, "<DIR>         " );
+					    strcat( buffer, "<DIR>         " );
 					else
 					{
-						uitoa( size, pInfo->m_iSize );
-						for( i = 0; (i < 14 - strlen(size)) && (strlen(size) < 15); i++ )
-							strcat( buffer, " " );
-						strcat( buffer, size );
+					    uitoa( size, pInfo->m_iSize );
+					    for( i = 0; (i < 14 - strlen(size)) && (strlen(size) < 15); i++ )
+					        strcat( buffer, " " );
+					    strcat( buffer, size );
 					}
 					strcat( buffer, " " );
 					*/

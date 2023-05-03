@@ -1,5 +1,5 @@
 //---------------------------------------------------------------------------
-//File name:   main.c
+// File name:   main.c
 //---------------------------------------------------------------------------
 #include "launchelf.h"
 #ifdef SMB
@@ -8,10 +8,10 @@
 #endif
 
 #define IMPORT_BIN2C(_n) \
-    extern u8 _n[];   \
-    extern int size_##_n
+	extern u8 _n[];      \
+	extern int size_##_n
 
-//IRX for togleable features
+// IRX for togleable features
 #ifdef ETH
 IMPORT_BIN2C(ps2ip_irx);
 IMPORT_BIN2C(ps2smap_irx);
@@ -123,11 +123,11 @@ char ip[16] = "192.168.0.10";
 char netmask[16] = "255.255.255.0";
 char gw[16] = "192.168.0.1";
 
-char netConfig[IPCONF_MAX_LEN + 64];  //Adjust size as needed
+char netConfig[IPCONF_MAX_LEN + 64];  // Adjust size as needed
 
-//State of module collections
+// State of module collections
 static u8 have_HDD_modules = 0;
-//State of Uncheckable Modules (invalid header)
+// State of Uncheckable Modules (invalid header)
 static u8 have_cdvd = 0;
 static u8 have_usbd = 0;
 #ifdef DS34
@@ -144,7 +144,7 @@ static u8 have_ps2netfs = 0;
 static u8 have_ps2ftpd = 0;
 static u8 have_ps2kbd = 0;
 static u8 have_hdl_info = 0;
-//State of Checkable Modules (valid header)
+// State of Checkable Modules (valid header)
 static u8 have_poweroff = 0;
 static u8 have_ps2dev9 = 0;
 static u8 have_ps2atad = 0;
@@ -155,7 +155,7 @@ static u8 have_vmc_fs = 0;
 #ifdef XFROM
 static u8 have_Flash_modules = 0;
 #endif
-//State of whether DEV9 was successfully loaded or not.
+// State of whether DEV9 was successfully loaded or not.
 static u8 ps2dev9_loaded = 0;
 
 u8 console_is_PSX = 0;
@@ -164,11 +164,11 @@ static u8 have_DVRP_HDD_modules = 0;
 static u8 have_dvrdrv = 0;
 static u8 have_dvrfile = 0;
 #endif
-//State of whether the UI has been initialized.
-//Use this to determine whether code that loads a device's driver(s) can print onto the screen.
+// State of whether the UI has been initialized.
+// Use this to determine whether code that loads a device's driver(s) can print onto the screen.
 static u8 is_early_init = 1;
 
-static int menu_LK[SETTING_LK_BTN_COUNT];  //holds RunElf index for each valid main menu entry
+static int menu_LK[SETTING_LK_BTN_COUNT];  // holds RunElf index for each valid main menu entry
 
 static u8 done_setupPowerOff = 0;
 static u8 ps2kbd_opened = 0;
@@ -177,24 +177,24 @@ static int boot_argc;
 static char *boot_argv[8];
 static char boot_path[MAX_PATH];
 
-//Variables for SYSTEM.CNF processing
+// Variables for SYSTEM.CNF processing
 int BootDiscType = 0;
 char SystemCnf_BOOT[MAX_PATH];
 char SystemCnf_BOOT2[MAX_PATH];
-char SystemCnf_VER[10];    //Arbitrary. Real value should always be shorter
-char SystemCnf_VMODE[10];  //Arbitrary, same deal. As yet unused
+char SystemCnf_VER[10];    // Arbitrary. Real value should always be shorter
+char SystemCnf_VMODE[10];  // Arbitrary, same deal. As yet unused
 
 char default_ESR_path[] = "mc:/BOOT/ESR.ELF";
 char default_OSDSYS_path[30];
 char default_OSDSYS_path2[30];
 static unsigned short int ROMVersion;
 
-char ROMVER_data[16];  //16 byte file read from rom0:ROMVER at init
-char rough_region;     //E==Europe, A==US, I==Japan, H==Asia, C==China
+char ROMVER_data[16];  // 16 byte file read from rom0:ROMVER at init
+char rough_region;     // E==Europe, A==US, I==Japan, H==Asia, C==China
 
-int cdmode;      //Last detected disc type
-int old_cdmode;  //used for disc change detection
-int uLE_cdmode;  //used for smart disc detection
+int cdmode;      // Last detected disc type
+int old_cdmode;  // used for disc change detection
+int uLE_cdmode;  // used for smart disc detection
 
 #define SCECdESRDVD_0 0x15  // ESR-patched DVD, as seen without ESR driver active
 #define SCECdESRDVD_1 0x16  // ESR-patched DVD, as seen with ESR driver active
@@ -222,10 +222,10 @@ DiscType DiscTypes[] = {
     {SCECdCDDA, "Audio CD"},
     {SCECdDVDV, "Video DVD"},
     {SCECdIllegalMedia, "Unsupported"},
-    {0x00, ""}  //end of list
-};              //ends DiscTypes array
+    {0x00, ""}  // end of list
+};              // ends DiscTypes array
 
-//Static function declarations
+// Static function declarations
 static int PrintRow(int row_f, char *text_p);
 static int PrintPos(int row_f, int column, char *text_p, int COLORID);
 static void Show_About_uLE(void);
@@ -270,9 +270,9 @@ static void Execute(char *pathin);
 static void Reset(void);
 static void InitializeBootExecPath();
 //---------------------------------------------------------------------------
-//executable code
+// executable code
 //---------------------------------------------------------------------------
-//Function to print a text row to the 'gs' screen
+// Function to print a text row to the 'gs' screen
 //------------------------------
 static int PrintRow(int row_f, char *text_p)
 {
@@ -287,9 +287,9 @@ static int PrintRow(int row_f, char *text_p)
 	return row;
 }
 //------------------------------
-//endfunc PrintRow
+// endfunc PrintRow
 //---------------------------------------------------------------------------
-//Function to print a text row with text positioning
+// Function to print a text row with text positioning
 //------------------------------
 static int PrintPos(int row_f, int column, char *text_p, int COLORID)
 {
@@ -304,9 +304,9 @@ static int PrintPos(int row_f, int column, char *text_p, int COLORID)
 	return row;
 }
 //------------------------------
-//endfunc PrintPos
+// endfunc PrintPos
 //---------------------------------------------------------------------------
-//Function to show a screen with program credits ("About uLE")
+// Function to show a screen with program credits ("About uLE")
 //------------------------------
 static void Show_About_uLE(void)
 {
@@ -314,10 +314,10 @@ static void Show_About_uLE(void)
 	int event, post_event = 0;
 	int hpos = 16;
 
-	event = 1;  //event = initial entry
+	event = 1;  // event = initial entry
 	//----- Start of event loop -----
 	while (1) {
-		//Pad response section
+		// Pad response section
 		waitAnyPadReady();
 		if (readpad() && new_pad) {
 			event |= 2;
@@ -328,8 +328,8 @@ static void Show_About_uLE(void)
 			break;
 		}
 
-		//Display section
-		if (event || post_event) {  //NB: We need to update two frame buffers per event
+		// Display section
+		if (event || post_event) {  // NB: We need to update two frame buffers per event
 			clrScr(setting->color[COLOR_BACKGR]);
 			sprintf(TextRow, "About wLaunchELF %s  %s", ULE_VERSION, ULE_VERDATE);
 			PrintPos(03, hpos, TextRow, COLOR_SELECT);
@@ -353,12 +353,12 @@ static void Show_About_uLE(void)
 			PrintPos(-1, hpos, "Mod Release site:", COLOR_SELECT);
 			PrintPos(-1, hpos, "   github.com/israpps/wLaunchELF_ISR/releases", COLOR_TEXT);
 			PrintPos(-1, hpos, "Ancestral project: LaunchELF v3.41 by Mirakichi", COLOR_TEXT);
-			//PrintPos(-1, hpos, "Created by:        Mirakichi");
-		}  //ends if(event||post_event)
-		drawScr();// https://github.com/israpps/wLaunchELF_ISR/tree/41e43b3-mod
+			// PrintPos(-1, hpos, "Created by:        Mirakichi");
+		}           // ends if(event||post_event)
+		drawScr();  // https://github.com/israpps/wLaunchELF_ISR/tree/41e43b3-mod
 		post_event = event;
 		event = 0;
-	}  //ends while
+	}  // ends while
 	   //----- End of event loop -----
 }
 
@@ -368,10 +368,10 @@ static void Show_build_info(void)
 	int event, post_event = 0;
 	int hpos = 16;
 
-	event = 1;  //event = initial entry
+	event = 1;  // event = initial entry
 	//----- Start of event loop -----
 	while (1) {
-		//Pad response section
+		// Pad response section
 		waitAnyPadReady();
 		if (readpad() && new_pad) {
 			event |= 2;
@@ -382,99 +382,105 @@ static void Show_build_info(void)
 			break;
 		}
 
-		//Display section
-		if (event || post_event) {  //NB: We need to update two frame buffers per event
+		// Display section
+		if (event || post_event) {  // NB: We need to update two frame buffers per event
 			clrScr(setting->color[COLOR_BACKGR]);
 			sprintf(TextRow, " wLaunchELF %s (%s)", ULE_VERSION, GIT_HASH);
 			PrintPos(03, hpos, TextRow, COLOR_TEXT);
 			PrintPos(-1, hpos, "Build features:", COLOR_SELECT);
-			
-			PrintPos(-1, hpos, 
+
+			PrintPos(-1, hpos,
 #ifdef SMB
-" SMB:1"
+			         " SMB:1"
 #else
-" SMB:0"
+			         " SMB:0"
 #endif
 #ifdef ETH
-" ETH:1"
+			         " ETH:1"
 #else
-" ETH:0"
-#endif	
-, COLOR_TEXT);
-			PrintPos(-1, hpos, 
+			         " ETH:0"
+#endif
+			         ,
+			         COLOR_TEXT);
+			PrintPos(-1, hpos,
 #ifdef XFROM
-" XFROM=1"
+			         " XFROM=1"
 #else
-" XFROM=0"
+			         " XFROM=0"
 #endif
 #ifdef DVRP
-" DVRP_HDD=1"
+			         " DVRP_HDD=1"
 #else
-" DVRP_HDD=0"
+			         " DVRP_HDD=0"
 #endif
-, COLOR_TEXT);
+			         ,
+			         COLOR_TEXT);
 
-			PrintPos(-1, hpos, 
+			PrintPos(-1, hpos,
 #ifdef EXFAT
-" EXFAT=1"
+			         " EXFAT=1"
 #else
-" EXFAT=0"
+			         " EXFAT=0"
 #endif
 #ifdef DS34
-" DS34=1"
+			         " DS34=1"
 #else
-" DS34=0"
+			         " DS34=0"
 #endif
-, COLOR_TEXT);
-			PrintPos(-1, hpos, 
+			         ,
+			         COLOR_TEXT);
+			PrintPos(-1, hpos,
 #ifdef MX4SIO
-" MX4SIO=1"
+			         " MX4SIO=1"
 #else
-" MX4SIO=0"
+			         " MX4SIO=0"
 #endif
-, COLOR_TEXT);
+			         ,
+			         COLOR_TEXT);
 #if defined(UDPTTY) || defined(SIO_DEBUG) || defined(TTY2SIOR) || defined(NO_IOP_RESET)
 
 
 			PrintPos(-1, hpos, "Debug Features:", COLOR_SELECT);
-			PrintPos(-1, hpos, 
+			PrintPos(-1, hpos,
 #ifdef NO_IOP_RESET
-" IOP_RESET=0"
+			         " IOP_RESET=0"
 #else
-" IOP_RESET=1"
+			         " IOP_RESET=1"
 #endif
 #ifdef UDPTTY
-" UDPTTY=1"
+			         " UDPTTY=1"
 #else
-" UDPTTY=0"
+			         " UDPTTY=0"
 #endif
-, COLOR_TEXT);
-			PrintPos(-1, hpos, 
+			         ,
+			         COLOR_TEXT);
+			PrintPos(-1, hpos,
 #ifdef SIO_DEBUG
-" SIO_DEBUG=1"
+			         " SIO_DEBUG=1"
 #else
-" SIO_DEBUG=0"
+			         " SIO_DEBUG=0"
 #endif
 #ifdef TTY2SIOR
-" TTY2SIOR=1"
+			         " TTY2SIOR=1"
 #else
-" TTY2SIOR=0"
+			         " TTY2SIOR=0"
 #endif
-, COLOR_TEXT);
+			         ,
+			         COLOR_TEXT);
 #endif
 			PrintPos(-1, hpos, "Mod Release site:", COLOR_TEXT);
 			PrintPos(-1, hpos, "   github.com/israpps/wLaunchELF_ISR/releases", COLOR_TEXT);
 
 
-		}  //ends if(event||post_event)
-		drawScr();// https://github.com/israpps/wLaunchELF_ISR/tree/41e43b3-mod
+		}           // ends if(event||post_event)
+		drawScr();  // https://github.com/israpps/wLaunchELF_ISR/tree/41e43b3-mod
 		post_event = event;
 		event = 0;
-	}  //ends while
+	}  // ends while
 	   //----- End of event loop -----
 }
 //------------------------------
-//endfunc Show_About_uLE
+// endfunc Show_About_uLE
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
 // Parse network configuration from IPCONFIG.DAT
@@ -496,13 +502,13 @@ static void getIpConfig(void)
 
 	if (fd >= 0) {
 		bzero(buf, IPCONF_MAX_LEN);
-		len = genRead(fd, buf, IPCONF_MAX_LEN - 1);  //Save a byte for termination
+		len = genRead(fd, buf, IPCONF_MAX_LEN - 1);  // Save a byte for termination
 		genClose(fd);
 	}
 
 	if ((fd >= 0) && (len > 0)) {
-		buf[len] = '\0';                          //Ensure string termination, regardless of file content
-		for (i = 0; ((c = buf[i]) != '\0'); i++)  //Clear out spaces and any CR/LF
+		buf[len] = '\0';                          // Ensure string termination, regardless of file content
+		for (i = 0; ((c = buf[i]) != '\0'); i++)  // Clear out spaces and any CR/LF
 			if ((c == ' ') || (c == '\r') || (c == '\n'))
 				buf[i] = '\0';
 		strncpy(ip, buf, 15);
@@ -523,7 +529,7 @@ static void getIpConfig(void)
 	sprintf(netConfig, "%s:  %-15s %-15s %-15s", LNG(Net_Config), ip, netmask, gw);
 }
 //------------------------------
-//endfunc getIpConfig
+// endfunc getIpConfig
 //---------------------------------------------------------------------------
 static void setLaunchKeys(void)
 {
@@ -535,7 +541,7 @@ static void setLaunchKeys(void)
 		strcpy(setting->LK_Path[SETTING_LK_RIGHT], setting->Misc_Load_CNFnext);
 }
 //------------------------------
-//endfunc setLaunchKeys()
+// endfunc setLaunchKeys()
 //---------------------------------------------------------------------------
 static int drawMainScreen(void)
 {
@@ -567,7 +573,7 @@ static int drawMainScreen(void)
 	}
 	for (i = 0; i < SETTING_LK_BTN_COUNT; i++) {
 		if ((setting->LK_Path[i][0]) && ((i <= SETTING_LK_SELECT) || (maxCNF > 1) || setting->LK_Flag[i])) {
-			menu_LK[nElfs] = i;  //memorize RunElf index for this menu entry
+			menu_LK[nElfs] = i;  // memorize RunElf index for this menu entry
 			switch (i) {
 				case SETTING_LK_AUTO:
 					strcpy(c, "Default: ");
@@ -618,23 +624,23 @@ static int drawMainScreen(void)
 				case SETTING_LK_RIGHT:
 					sprintf(c, "%s: ", LNG(RIGHT));
 					break;
-			}                          //ends switch
-			if (setting->Show_Titles)  //Show Launch Titles ?
+			}                          // ends switch
+			if (setting->Show_Titles)  // Show Launch Titles ?
 				strcpy(f, setting->LK_Title[i]);
 			else
 				f[0] = '\0';
-			if (!f[0]) {                                          //No title present, or allowed ?
-				if (setting->Hide_Paths) {                        //Hide full path ?
+			if (!f[0]) {                                          // No title present, or allowed ?
+				if (setting->Hide_Paths) {                        // Hide full path ?
 					if ((p = strrchr(setting->LK_Path[i], '/')))  // found delimiter ?
 						strcpy(f, p + 1);
 					else  // No delimiter !
 						strcpy(f, setting->LK_Path[i]);
 					if ((p = strrchr(f, '.')))
 						*p = 0;
-				} else {  //Show full path !
+				} else {  // Show full path !
 					strcpy(f, setting->LK_Path[i]);
 				}
-			}  //ends clause for No title
+			}  // ends clause for No title
 			if (nElfs++ == selected && mode == DPAD)
 				color = setting->color[COLOR_SELECT];
 			else
@@ -660,8 +666,8 @@ static int drawMainScreen(void)
 				printXY(c, x + (len > 9 ? (len - 9) * FONT_WIDTH : 0), y, color, TRUE, 0);
 			printXY(f, x + (len > 9 ? len * FONT_WIDTH : 9 * FONT_WIDTH), y, color, TRUE, 0);
 			y += FONT_HEIGHT;
-		}  //ends clause for defined LK_Path[i] valid for menu
-	}      //ends for
+		}  // ends clause for defined LK_Path[i] valid for menu
+	}      // ends for
 
 	if (mode == BUTTON)
 		sprintf(c, "%s!", LNG(PUSH_ANY_BUTTON_or_DPAD));
@@ -683,7 +689,7 @@ static int drawMainScreen(void)
 	return nElfs;
 }
 //------------------------------
-//endfunc drawMainScreen
+// endfunc drawMainScreen
 //---------------------------------------------------------------------------
 static int drawMainScreen2(int TV_mode)
 {
@@ -735,23 +741,23 @@ static int drawMainScreen2(int TV_mode)
 
 	for (i = 0; i < SETTING_LK_BTN_COUNT; i++) {
 		if ((setting->LK_Path[i][0]) && ((i <= SETTING_LK_SELECT) || (maxCNF > 1) || setting->LK_Flag[i])) {
-			menu_LK[nElfs] = i;        //memorize RunElf index for this menu entry
-			if (setting->Show_Titles)  //Show Launch Titles ?
+			menu_LK[nElfs] = i;        // memorize RunElf index for this menu entry
+			if (setting->Show_Titles)  // Show Launch Titles ?
 				strcpy(f, setting->LK_Title[i]);
 			else
 				f[0] = '\0';
-			if (!f[0]) {                                          //No title present, or allowed ?
-				if (setting->Hide_Paths) {                        //Hide full path ?
+			if (!f[0]) {                                          // No title present, or allowed ?
+				if (setting->Hide_Paths) {                        // Hide full path ?
 					if ((p = strrchr(setting->LK_Path[i], '/')))  // found delimiter ?
 						strcpy(f, p + 1);
 					else  // No delimiter !
 						strcpy(f, setting->LK_Path[i]);
 					if ((p = strrchr(f, '.')))
 						*p = 0;
-				} else {  //Show full path !
+				} else {  // Show full path !
 					strcpy(f, setting->LK_Path[i]);
 				}
-			}  //ends clause for No title
+			}  // ends clause for No title
 			if (setting->LK_Path[i][0] && nElfs++ == selected && mode == DPAD)
 				color = setting->color[COLOR_SELECT];
 			else
@@ -769,21 +775,21 @@ static int drawMainScreen2(int TV_mode)
 				printXY(f, x + (len > 9 ? len * FONT_WIDTH : 9 * FONT_WIDTH) + xo_config, y, color, TRUE, 0);
 			else
 				printXY(f, x + (len > 9 ? len * FONT_WIDTH : 9 * FONT_WIDTH) + 10, y, color, TRUE, 0);
-		}  //ends clause for defined LK_Path[i] valid for menu
+		}  // ends clause for defined LK_Path[i] valid for menu
 		y += yo_step;
 		if (i == SETTING_LK_AUTO)
 			y += yo_first;
 		else if (i == SETTING_LK_START)
 			y += yo_config;
-	}  //ends for
+	}  // ends for
 
-	c[0] = '\0';  //dummy tooltip string (Tooltip unused for GUI menu)
+	c[0] = '\0';  // dummy tooltip string (Tooltip unused for GUI menu)
 	setScrTmp(mainMsg, c);
 
 	return nElfs;
 }
 //------------------------------
-//endfunc drawMainScreen2
+// endfunc drawMainScreen2
 //---------------------------------------------------------------------------
 static void delay(int count)
 {
@@ -796,7 +802,7 @@ static void delay(int count)
 	}
 }
 //------------------------------
-//endfunc delay
+// endfunc delay
 //---------------------------------------------------------------------------
 static void initsbv_patches(void)
 {
@@ -805,7 +811,7 @@ static void initsbv_patches(void)
 	sbv_patch_disable_prefix_check();
 }
 //------------------------------
-//endfunc initsbv_patches
+// endfunc initsbv_patches
 //---------------------------------------------------------------------------
 static void load_ps2dev9(void)
 {
@@ -814,12 +820,12 @@ static void load_ps2dev9(void)
 	if (!have_ps2dev9) {
 		ID = SifExecModuleBuffer(ps2dev9_irx, size_ps2dev9_irx, 0, NULL, &rcode);
 		DPRINTF(" [DEV9.IRX]: ID=%d, ret=%d\n", ID, rcode);
-		ps2dev9_loaded = (ID >= 0 && rcode == 0);  //DEV9.IRX must have successfully loaded and returned RESIDENT END.
+		ps2dev9_loaded = (ID >= 0 && rcode == 0);  // DEV9.IRX must have successfully loaded and returned RESIDENT END.
 		have_ps2dev9 = 1;
 	}
 }
 //------------------------------
-//endfunc load_ps2dev9
+// endfunc load_ps2dev9
 //---------------------------------------------------------------------------
 #ifdef ETH
 static void load_ps2ip(void)
@@ -834,14 +840,14 @@ static void load_ps2ip(void)
 	}
 	if (!have_ps2smap) {
 		ID = SifExecModuleBuffer(ps2smap_irx, size_ps2smap_irx,
-		                    if_conf_len, &if_conf[0], &ret);
+		                         if_conf_len, &if_conf[0], &ret);
 		DPRINTF(" [SMAP.IRX]: ID=%d, ret=%d\n", ID, ret);
 		have_ps2smap = 1;
 	}
 }
 #endif
 //------------------------------
-//endfunc load_ps2ip
+// endfunc load_ps2ip
 //---------------------------------------------------------------------------
 static void load_ps2atad(void)
 {
@@ -883,19 +889,19 @@ static void load_ps2atad(void)
 	}
 }
 //------------------------------
-//endfunc load_ps2atad
+// endfunc load_ps2atad
 //---------------------------------------------------------------------------
 #ifdef XFROM
 static void load_pflash(void)
 {
 	int ID;
 	ID = SifLoadModule("rom0:PFLASH", 0, NULL);
-		DPRINTF(" [rom0:PFLASH]: ID=%d\n", ID);
+	DPRINTF(" [rom0:PFLASH]: ID=%d\n", ID);
 	ID = SifLoadModule("rom0:PXFROMMAN", 0, NULL);
-		DPRINTF(" [rom0:PXFROMMAN]: ID=%d\n", ID);
+	DPRINTF(" [rom0:PXFROMMAN]: ID=%d\n", ID);
 }
 //------------------------------
-//endfunc load_pflash
+// endfunc load_pflash
 //---------------------------------------------------------------------------
 #endif
 #ifdef ETH
@@ -903,7 +909,7 @@ void load_ps2host(void)
 {
 	int ret, ID;
 
-	setupPowerOff();  //resolves the stall out when opening host: from LaunchELF's FileBrowser
+	setupPowerOff();  // resolves the stall out when opening host: from LaunchELF's FileBrowser
 	load_ps2ip();
 	if (!have_ps2host) {
 		ID = SifExecModuleBuffer(ps2host_irx, size_ps2host_irx, 0, NULL, &ret);
@@ -913,14 +919,14 @@ void load_ps2host(void)
 }
 #endif
 //------------------------------
-//endfunc load_ps2host
+// endfunc load_ps2host
 //---------------------------------------------------------------------------
 #ifdef SMB
 static void load_smbman(void)
 {
 	int ret, ID;
 
-	setupPowerOff();  //resolves stall out when opening smb: FileBrowser
+	setupPowerOff();  // resolves stall out when opening smb: FileBrowser
 	load_ps2ip();
 	if (!have_smbman) {
 		ID = SifExecModuleBuffer(smbman_irx, size_smbman_irx, 0, NULL, &ret);
@@ -929,7 +935,7 @@ static void load_smbman(void)
 	}
 }
 //------------------------------
-//endfunc load_smbman
+// endfunc load_smbman
 //---------------------------------------------------------------------------
 #include "SMB_test.c"
 #endif
@@ -939,14 +945,14 @@ static void load_ps2dvr(void)
 	int ret, ID;
 
 	load_ps2atad();
-	if (!is_early_init)  //Do not draw any text before the UI is initialized.
+	if (!is_early_init)  // Do not draw any text before the UI is initialized.
 		drawMsg("Loading dvrdrv");
 	if (!have_dvrdrv) {
 		ID = SifExecModuleBuffer(dvrdrv_irx, size_dvrdrv_irx, 0, NULL, &ret);
 		DPRINTF(" [DVRDRV.IRX]: ID=%d, ret=%d\n", ID, ret);
 		have_dvrdrv = 1;
 	}
-	if (!is_early_init)  //Do not draw any text before the UI is initialized.
+	if (!is_early_init)  // Do not draw any text before the UI is initialized.
 		drawMsg("Loading dvrfile");
 	if (!have_dvrfile) {
 		ID = SifExecModuleBuffer(dvrfile_irx, size_dvrfile_irx, 0, NULL, &ret);
@@ -955,12 +961,12 @@ static void load_ps2dvr(void)
 	}
 }
 //------------------------------
-//endfunc load_ps2dvr
+// endfunc load_ps2dvr
 //---------------------------------------------------------------------------
 #endif
 
 //---------------------------------------------------------------------------
-//Function to show a screen with debugging info
+// Function to show a screen with debugging info
 //------------------------------
 static void ShowDebugInfo(void)
 {
@@ -973,10 +979,10 @@ static void ShowDebugInfo(void)
 	loadSMBCNF("mc0:/SYS-CONF/SMB.CNF");
 	smbCurrentServer = 0;
 #endif
-	event = 1;  //event = initial entry
+	event = 1;  // event = initial entry
 	//----- Start of event loop -----
 	while (1) {
-		//Pad response section
+		// Pad response section
 		waitAnyPadReady();
 		if (readpad() && new_pad) {
 			event |= 2;
@@ -1006,8 +1012,8 @@ static void ShowDebugInfo(void)
 			}
 		}
 
-		//Display section
-		if (event || post_event) {  //NB: We need to update two frame buffers per event
+		// Display section
+		if (event || post_event) {  // NB: We need to update two frame buffers per event
 			clrScr(setting->color[COLOR_BACKGR]);
 			PrintRow(0, "Debug Info Screen:");
 			sprintf(TextRow, "rom0:ROMVER == \"%s\"", ROMVER_data);
@@ -1018,11 +1024,10 @@ static void ShowDebugInfo(void)
 				sprintf(TextRow, "argv[%d] == \"%s\"", i, boot_argv[i]);
 				PrintRow(-1, TextRow);
 			}
-			sprintf(TextRow,     "Main System Update KELF == \"%s\"", (console_is_PSX) ? "BIEXEC-SYSTEM/xosdmain.elf" : (strchr(default_OSDSYS_path2,'/')+ 1));
+			sprintf(TextRow, "Main System Update KELF == \"%s\"", (console_is_PSX) ? "BIEXEC-SYSTEM/xosdmain.elf" : (strchr(default_OSDSYS_path2, '/') + 1));
 			PrintRow(-1, TextRow);
-			if ((ROMVersion < 0x230) && (ROMVersion > 0x130))
-			{
-				sprintf(TextRow, "Specific System Update KELF == \"B%cEXEC-SYSTEM/osd%03x.elf\"", rough_region, (ROMVersion+10)&~0x0F);
+			if ((ROMVersion < 0x230) && (ROMVersion > 0x130)) {
+				sprintf(TextRow, "Specific System Update KELF == \"B%cEXEC-SYSTEM/osd%03x.elf\"", rough_region, (ROMVersion + 10) & ~0x0F);
 				PrintRow(-1, TextRow);
 			}
 			sprintf(TextRow, "boot_path == \"%s\"", boot_path);
@@ -1058,15 +1063,15 @@ static void ShowDebugInfo(void)
 			                 "3 Forget Logon");
 			PrintRow(-1, TextRow);
 #endif
-		}  //ends if(event||post_event)
+		}  // ends if(event||post_event)
 		drawScr();
 		post_event = event;
 		event = 0;
-	}  //ends while
+	}  // ends while
 	   //----- End of event loop -----
 }
 //------------------------------
-//endfunc ShowDebugInfo
+// endfunc ShowDebugInfo
 //---------------------------------------------------------------------------
 void load_vmc_fs(void)
 {
@@ -1079,7 +1084,7 @@ void load_vmc_fs(void)
 	}
 }
 //------------------------------
-//endfunc load_vmc_fs
+// endfunc load_vmc_fs
 //---------------------------------------------------------------------------
 #ifdef ETH
 static void load_ps2ftpd(void)
@@ -1100,7 +1105,7 @@ static void load_ps2ftpd(void)
 }
 #endif
 //------------------------------
-//endfunc load_ps2ftpd
+// endfunc load_ps2ftpd
 //---------------------------------------------------------------------------
 #ifdef ETH
 static void load_ps2netfs(void)
@@ -1116,7 +1121,7 @@ static void load_ps2netfs(void)
 }
 #endif
 //------------------------------
-//endfunc load_ps2netfs
+// endfunc load_ps2netfs
 //---------------------------------------------------------------------------
 static void loadBasicModules(void)
 {
@@ -1127,7 +1132,7 @@ static void loadBasicModules(void)
 	id = SifExecModuleBuffer(filexio_irx, size_filexio_irx, 0, NULL, &ret);
 	DPRINTF(" [FILEXIO.IRX]: id=%d ret=%d\n", id, ret);
 
-	id = SifExecModuleBuffer(allowdvdv_irx, size_allowdvdv_irx, 0, NULL, &ret);  //unlocks cdvd for reading on psx dvr
+	id = SifExecModuleBuffer(allowdvdv_irx, size_allowdvdv_irx, 0, NULL, &ret);  // unlocks cdvd for reading on psx dvr
 	DPRINTF(" [ALLOWDVD.IRX]: id=%d ret=%d\n", id, ret);
 #ifdef HOMEBREW_SIO2MAN
 	id = SifExecModuleBuffer(sio2man_irx, size_sio2man_irx, 0, NULL, &ret);
@@ -1152,14 +1157,14 @@ static void loadBasicModules(void)
 	DPRINTF("Hello from EE SIO!\n");
 #endif
 
-	id = SifExecModuleBuffer(mcman_irx, size_mcman_irx, 0, NULL, &ret);  //Home
+	id = SifExecModuleBuffer(mcman_irx, size_mcman_irx, 0, NULL, &ret);  // Home
 	DPRINTF(" [MCMAN.IRX]: id=%d ret=%d\n", id, ret);
-	//SifLoadModule("rom0:MCMAN", 0, NULL); //Sony
-	id = SifExecModuleBuffer(mcserv_irx, size_mcserv_irx, 0, NULL, &ret);  //Home
+	// SifLoadModule("rom0:MCMAN", 0, NULL); //Sony
+	id = SifExecModuleBuffer(mcserv_irx, size_mcserv_irx, 0, NULL, &ret);  // Home
 	DPRINTF(" [MCSERV.IRX]: id=%d ret=%d\n", id, ret);
-	//SifLoadModule("rom0:MCSERV", 0, NULL); //Sony
+	// SifLoadModule("rom0:MCSERV", 0, NULL); //Sony
 #ifdef HOMEBREW_SIO2MAN
-	id = SifExecModuleBuffer(padman_irx, size_padman_irx, 0, NULL, &ret);  //Home
+	id = SifExecModuleBuffer(padman_irx, size_padman_irx, 0, NULL, &ret);  // Home
 	DPRINTF(" [PADMAN.IRX]: id=%d ret=%d\n", id, ret);
 #else
 	id = SifLoadModule("rom0:PADMAN", 0, NULL);
@@ -1167,7 +1172,7 @@ static void loadBasicModules(void)
 #endif
 }
 //------------------------------
-//endfunc loadBasicModules
+// endfunc loadBasicModules
 //---------------------------------------------------------------------------
 static void loadCdModules(void)
 {
@@ -1182,9 +1187,9 @@ static void loadCdModules(void)
 	}
 }
 //------------------------------
-//endfunc loadCdModules
+// endfunc loadCdModules
 //---------------------------------------------------------------------------
-int uLE_cdDiscValid(void)  //returns 1 if disc valid, else returns 0
+int uLE_cdDiscValid(void)  // returns 1 if disc valid, else returns 0
 {
 	cdmode = sceCdGetDiskType();
 
@@ -1211,7 +1216,7 @@ int uLE_cdDiscValid(void)  //returns 1 if disc valid, else returns 0
 	}
 }
 //------------------------------
-//endfunc uLE_cdDiscValid
+// endfunc uLE_cdDiscValid
 //---------------------------------------------------------------------------
 int uLE_cdStop(void)
 {
@@ -1220,12 +1225,12 @@ int uLE_cdStop(void)
 	old_cdmode = cdmode;
 	test = uLE_cdDiscValid();
 	uLE_cdmode = cdmode;
-	if (test) {                     //if stable detection of a real disc is achieved
-		if ((cdmode != old_cdmode)  //if this was a new detection
+	if (test) {                     // if stable detection of a real disc is achieved
+		if ((cdmode != old_cdmode)  // if this was a new detection
 		    && ((cdmode == SCECdDVDV) || (cdmode == SCECdPS2DVD))) {
 			test = Check_ESR_Disc();
 			DPRINTF("Check_ESR_Disc => %d\n", test);
-			if (test > 0) {  //ESR Disc ?
+			if (test > 0) {  // ESR Disc ?
 				uLE_cdmode = (cdmode == SCECdPS2DVD) ? SCECdESRDVD_1 : SCECdESRDVD_0;
 			}
 		}
@@ -1235,7 +1240,7 @@ int uLE_cdStop(void)
 	return uLE_cdmode;
 }
 //------------------------------
-//endfunc uLE_cdStop
+// endfunc uLE_cdStop
 //---------------------------------------------------------------------------
 static void getExternalFilePath(const char *argPath, char *filePath)
 {
@@ -1244,14 +1249,14 @@ static void getExternalFilePath(const char *argPath, char *filePath)
 	pathSep = strchr(argPath, '/');
 
 	if (!strncmp(argPath, "mass", 4)) {
-		//Loading some module from USB mass:
-		//This won't be for USB drivers, as mass: must first be accessible.
+		// Loading some module from USB mass:
+		// This won't be for USB drivers, as mass: must first be accessible.
 		strcpy(filePath, argPath);
 		if (pathSep && (pathSep - argPath < 7) && pathSep[-1] == ':')
 			strcpy(filePath + (pathSep - argPath), pathSep + 1);
 
 	} else if (!strncmp(argPath, "hdd0:/", 6)) {
-		//Loading some module from HDD
+		// Loading some module from HDD
 		char party[MAX_PATH];
 		char *p;
 
@@ -1263,7 +1268,7 @@ static void getExternalFilePath(const char *argPath, char *filePath)
 		mountParty(party);
 #ifdef DVRP
 	} else if (!strncmp(argPath, "dvr_hdd0:/", 10)) {
-		//Loading some module from HDD
+		// Loading some module from HDD
 		char party[MAX_PATH];
 		char *p;
 
@@ -1284,7 +1289,7 @@ static void getExternalFilePath(const char *argPath, char *filePath)
 	}
 }
 //------------------------------
-//endfunc getExternalFilePath
+// endfunc getExternalFilePath
 //---------------------------------------------------------------------------
 // loadExternalFile below will use the given path, and read the
 // indicated file into a buffer it allocates for that purpose.
@@ -1297,7 +1302,7 @@ static void getExternalFilePath(const char *argPath, char *filePath)
 // though, of course, none is allocated if the file is not found.
 //---------------------------------------------------------------------------
 static int loadExternalFile(char *argPath, void **fileBaseP, int *fileSizeP)
-{  //The first three variables are local variants similar to the arguments
+{  // The first three variables are local variants similar to the arguments
 	char filePath[MAX_PATH];
 	void *fileBase;
 	int fileSize;
@@ -1308,8 +1313,8 @@ static int loadExternalFile(char *argPath, void **fileBaseP, int *fileSizeP)
 
 	getExternalFilePath(argPath, filePath);
 
-	//Here 'filePath' is a valid path for file I/O operations
-	//Which means we can now use generic file I/O
+	// Here 'filePath' is a valid path for file I/O operations
+	// Which means we can now use generic file I/O
 	File = fopen(filePath, "r");
 	if (File != NULL) {
 		fseek(File, 0, SEEK_END);
@@ -1328,7 +1333,7 @@ static int loadExternalFile(char *argPath, void **fileBaseP, int *fileSizeP)
 	return fileSize;
 }
 //------------------------------
-//endfunc loadExternalFile
+// endfunc loadExternalFile
 //---------------------------------------------------------------------------
 // loadExternalModule below will use the given path and attempt
 // to load the indicated module. If the file is not
@@ -1343,7 +1348,7 @@ static int loadExternalFile(char *argPath, void **fileBaseP, int *fileSizeP)
 static int loadExternalModule(char *modPath, void *defBase, int defSize)
 {
 	char filePath[MAX_PATH];
-	int ext_OK, def_OK;  //Flags success for external and default module
+	int ext_OK, def_OK;  // Flags success for external and default module
 	int dummy;
 	DPRINTF("%s: looking for [%s]\n", __FUNCTION__, modPath);
 	ext_OK = 0;
@@ -1365,7 +1370,7 @@ static int loadExternalModule(char *modPath, void *defBase, int defSize)
 	return 0;
 }
 //------------------------------
-//endfunc loadExternalModule
+// endfunc loadExternalModule
 //---------------------------------------------------------------------------
 static void loadUsbDModule(void)
 {
@@ -1374,46 +1379,46 @@ static void loadUsbDModule(void)
 		have_usbd = 1;
 }
 //------------------------------
-//endfunc loadUsbDModule
+// endfunc loadUsbDModule
 //---------------------------------------------------------------------------
 #ifdef DS34
 static void loadDs34Modules(void)
 {
 	DPRINTF("Loading DS34\n");
-    if (!have_ds34) {
-        if (loadExternalModule("DS34USB.IRX", &ds34usb_irx, size_ds34usb_irx))
-            if (loadExternalModule("DS34BT.IRX", &ds34bt_irx, size_ds34bt_irx))
-                have_ds34 = 1;
-    }
+	if (!have_ds34) {
+		if (loadExternalModule("DS34USB.IRX", &ds34usb_irx, size_ds34usb_irx))
+			if (loadExternalModule("DS34BT.IRX", &ds34bt_irx, size_ds34bt_irx))
+				have_ds34 = 1;
+	}
 }
 //------------------------------
-//endfunc loadDs34Modules
+// endfunc loadDs34Modules
 //---------------------------------------------------------------------------
 #endif
 static void loadUsbModules(void)
 #ifdef EXFAT
 {
-    int ret, ID;
+	int ret, ID;
 
-    loadUsbDModule();
-    if (have_usbd && !have_usb_mass && (USB_mass_loaded = loadExternalModule(setting->usbmass_file, NULL, 0))) {
-        delay(3);
-        have_usb_mass = 1;
-    } else if (have_usbd && !have_usb_mass) {
-        ID = SifExecModuleBuffer(bdm_irx, size_bdm_irx, 0, NULL, &ret);
+	loadUsbDModule();
+	if (have_usbd && !have_usb_mass && (USB_mass_loaded = loadExternalModule(setting->usbmass_file, NULL, 0))) {
+		delay(3);
+		have_usb_mass = 1;
+	} else if (have_usbd && !have_usb_mass) {
+		ID = SifExecModuleBuffer(bdm_irx, size_bdm_irx, 0, NULL, &ret);
 		DPRINTF(" [BDM.IRX] ID=%d, ret=%d\n", ID, ret);
-        ID = SifExecModuleBuffer(bdmfs_fatfs_irx, size_bdmfs_fatfs_irx, 0, NULL, &ret);
+		ID = SifExecModuleBuffer(bdmfs_fatfs_irx, size_bdmfs_fatfs_irx, 0, NULL, &ret);
 		DPRINTF(" [BDMFS_FATFS.IRX] ID=%d, ret=%d\n", ID, ret);
-        ID = SifExecModuleBuffer(usbmass_bd_irx, size_usbmass_bd_irx, 0, NULL, &ret);
+		ID = SifExecModuleBuffer(usbmass_bd_irx, size_usbmass_bd_irx, 0, NULL, &ret);
 		DPRINTF(" [USBMASS_BD.IRX] ID=%d, ret=%d\n", ID, ret);
-        delay(3);
-        USB_mass_loaded = 1;
-        have_usb_mass = 1;
-    }
-    if (USB_mass_loaded == 1)                       // if using the internal mass driver
-        USB_mass_max_drives = USB_MASS_MAX_DRIVES;  // allow multiple drives
-    else
-        USB_mass_max_drives = 1;  // else allow only one mass drive
+		delay(3);
+		USB_mass_loaded = 1;
+		have_usb_mass = 1;
+	}
+	if (USB_mass_loaded == 1)                       // if using the internal mass driver
+		USB_mass_max_drives = USB_MASS_MAX_DRIVES;  // allow multiple drives
+	else
+		USB_mass_max_drives = 1;  // else allow only one mass drive
 #ifdef DS34
 	loadDs34Modules();
 #endif
@@ -1429,10 +1434,10 @@ static void loadUsbModules(void)
 		delay(3);
 		have_usb_mass = 1;
 	}
-	if (USB_mass_loaded == 1)                       //if using the internal mass driver
-		USB_mass_max_drives = USB_MASS_MAX_DRIVES;  //allow multiple drives
+	if (USB_mass_loaded == 1)                       // if using the internal mass driver
+		USB_mass_max_drives = USB_MASS_MAX_DRIVES;  // allow multiple drives
 	else
-		USB_mass_max_drives = 1;  //else allow only one mass drive
+		USB_mass_max_drives = 1;  // else allow only one mass drive
 
 #ifdef DS34
 	loadDs34Modules();
@@ -1440,7 +1445,7 @@ static void loadUsbModules(void)
 }
 #endif
 //------------------------------
-//endfunc loadUsbModules
+// endfunc loadUsbModules
 //---------------------------------------------------------------------------
 static void loadKbdModules(void)
 {
@@ -1449,7 +1454,7 @@ static void loadKbdModules(void)
 		have_ps2kbd = 1;
 }
 //------------------------------
-//endfunc loadKbdModules
+// endfunc loadKbdModules
 //---------------------------------------------------------------------------
 void loadHdlInfoModule(void)
 {
@@ -1464,7 +1469,7 @@ void loadHdlInfoModule(void)
 	}
 }
 //------------------------------
-//endfunc loadHdlInfoModule
+// endfunc loadHdlInfoModule
 //---------------------------------------------------------------------------
 static void closeAllAndPoweroff(void)
 {
@@ -1486,15 +1491,16 @@ static void closeAllAndPoweroff(void)
 	poweroffShutdown();
 }
 //------------------------------
-//endfunc closeAllAndPoweroff
+// endfunc closeAllAndPoweroff
 //---------------------------------------------------------------------------
 static void poweroffHandler(int i)
 {
-	if (!is_early_init) drawMsg(LNG(Powering_Off_Console));
+	if (!is_early_init)
+		drawMsg(LNG(Powering_Off_Console));
 	closeAllAndPoweroff();
 }
 //------------------------------
-//endfunc poweroffHandler
+// endfunc poweroffHandler
 //---------------------------------------------------------------------------
 static void setupPowerOff(void)
 {
@@ -1513,26 +1519,26 @@ static void setupPowerOff(void)
 	}
 }
 //------------------------------
-//endfunc setupPowerOff
+// endfunc setupPowerOff
 //---------------------------------------------------------------------------
 void loadHddModules(void)
 {
 	if (!have_HDD_modules) {
-		if (!is_early_init)  //Do not draw any text before the UI is initialized.
+		if (!is_early_init)  // Do not draw any text before the UI is initialized.
 			drawMsg(LNG(Loading_HDD_Modules));
 		setupPowerOff();
-		load_ps2atad();  //also loads ps2hdd & ps2fs
+		load_ps2atad();  // also loads ps2hdd & ps2fs
 		have_HDD_modules = TRUE;
 	}
 }
 //------------------------------
-//endfunc loadHddModules
+// endfunc loadHddModules
 //---------------------------------------------------------------------------
 #ifdef XFROM
 void loadFlashModules(void)
 {
 	if (!have_Flash_modules) {
-		if (!is_early_init)  //Do not draw any text before the UI is initialized.
+		if (!is_early_init)  // Do not draw any text before the UI is initialized.
 			drawMsg(LNG(Loading_Flash_Modules));
 		load_ps2dev9();
 		setupPowerOff();
@@ -1541,23 +1547,23 @@ void loadFlashModules(void)
 	}
 }
 //------------------------------
-//endfunc loadFlashModules
+// endfunc loadFlashModules
 //---------------------------------------------------------------------------
 #endif
 #ifdef DVRP
 void loadDVRPHddModules(void)
 {
 	if (!have_DVRP_HDD_modules) {
-		if (!is_early_init)  //Do not draw any text before the UI is initialized.
+		if (!is_early_init)  // Do not draw any text before the UI is initialized.
 			drawMsg(LNG(Loading_HDD_Modules));
 		setupPowerOff();
 		load_ps2dvr();
-		//sceCdNoticeGameStart(0, NULL); //shouldn't this be done by the bootloader?
+		// sceCdNoticeGameStart(0, NULL); //shouldn't this be done by the bootloader?
 		have_DVRP_HDD_modules = TRUE;
 	}
 }
 //------------------------------
-//endfunc loadDVRPHddModules
+// endfunc loadDVRPHddModules
 //---------------------------------------------------------------------------
 #endif
 
@@ -1570,7 +1576,7 @@ static void loadNetModules(void)
 	if (!have_NetModules) {
 		drawMsg(LNG(Loading_NetFS_and_FTP_Server_Modules));
 
-		getIpConfig();  //RA NB: I always get that info, early in init
+		getIpConfig();  // RA NB: I always get that info, early in init
 		//             //But sometimes it is useful to do it again (HDD)
 		// Also, my module checking makes some other tests redundant
 		load_ps2netfs();  // loads ps2netfs from internal buffer
@@ -1585,7 +1591,7 @@ static void loadNetModules(void)
 }
 #endif
 //------------------------------
-//endfunc loadNetModules
+// endfunc loadNetModules
 //---------------------------------------------------------------------------
 static void startKbd(void)
 {
@@ -1617,9 +1623,9 @@ static void startKbd(void)
 	}
 }
 //------------------------------
-//endfunc startKbd
+// endfunc startKbd
 //---------------------------------------------------------------------------
-//scanSystemCnf will check for a standard variable of a SYSTEM.CNF file
+// scanSystemCnf will check for a standard variable of a SYSTEM.CNF file
 //------------------------------
 static int scanSystemCnf(char *name, char *value)
 {
@@ -1632,13 +1638,13 @@ static int scanSystemCnf(char *name, char *value)
 	else if (!strcmp(name, "VMODE"))
 		strncat(SystemCnf_VMODE, value, 9);
 	else
-		return 0;  //when no matching variable
-	return 1;      //when matching variable found
+		return 0;  // when no matching variable
+	return 1;      // when matching variable found
 }
 //------------------------------
-//endfunc scanSystemCnf
+// endfunc scanSystemCnf
 //---------------------------------------------------------------------------
-//readSystemCnf will read standard settings from a SYSTEM.CNF file
+// readSystemCnf will read standard settings from a SYSTEM.CNF file
 //------------------------------
 static int readSystemCnf(void)
 {
@@ -1668,7 +1674,7 @@ static int readSystemCnf(void)
 	if (!SystemCnf_VER[0])
 		strcpy(SystemCnf_VER, "???");
 
-	if (RAM_p == NULL) {  //if SYSTEM.CNF was not found test for PS1 special cases
+	if (RAM_p == NULL) {  // if SYSTEM.CNF was not found test for PS1 special cases
 		if (exists("cdrom0:\\PSXMYST\\MYST.CCS;1")) {
 			strcpy(SystemCnf_BOOT, "SLPS_000.24");
 			BootDiscType = 1;
@@ -1680,15 +1686,15 @@ static int readSystemCnf(void)
 		}
 	}
 
-	return BootDiscType;  //0==none, 1==PS1, 2==PS2
+	return BootDiscType;  // 0==none, 1==PS1, 2==PS2
 }
 //------------------------------
-//endfunc readSystemCnf
+// endfunc readSystemCnf
 //---------------------------------------------------------------------------
 static void ShowFont(void)
 {
 	int test_type = 0;
-	int test_types = 2;  //Patch test_types for number of test loops
+	int test_types = 2;  // Patch test_types for number of test loops
 	int i, j, event, post_event = 0;
 	char Hex[18] = "0123456789ABCDEF";
 	int ch_x_stp = 1 + FONT_WIDTH + 1 + LINE_THICKNESS;
@@ -1702,16 +1708,16 @@ static void ShowFont(void)
 	int px, ly, cy;
 	u64 col_0 = setting->color[COLOR_BACKGR], col_1 = setting->color[COLOR_FRAME], col_3 = setting->color[COLOR_TEXT];
 
-	//The next line is a patch to save font, if/when needed (needs patch in draw.c too)
+	// The next line is a patch to save font, if/when needed (needs patch in draw.c too)
 	//	WriteFont_C("mc0:/SYS-CONF/font_uLE.c");
 
-	event = 1;  //event = initial entry
+	event = 1;  // event = initial entry
 	//----- Start of event loop -----
 	while (1) {
-		//Display section
-		if (event || post_event) {  //NB: We need to update two frame buffers per event
+		// Display section
+		if (event || post_event) {  // NB: We need to update two frame buffers per event
 			drawOpSprite(col_0, mat_x, mat_y, mat_x + mat_w - 1, mat_y + mat_h - 1);
-			//Here the background rectangle has been prepared
+			// Here the background rectangle has been prepared
 			/* //Start of commented out section //Move this line as needed for tests
 			//Start of gsKit test section
 			if(test_type > 1) goto done_test;
@@ -1738,47 +1744,47 @@ static void ShowFont(void)
 			goto end_display;
 done_test:
 			//End of gsKit test section
-*/  //End of commented out section  //Move this line as needed for tests
-			//Start of font display section
-			//Now we start to draw all vertical frame lines
+*/  // End of commented out section  //Move this line as needed for tests
+			// Start of font display section
+			// Now we start to draw all vertical frame lines
 			px = mat_x;
 			drawOpSprite(col_1, px, mat_y, px + LINE_THICKNESS - 1, mat_y + mat_h - 1);
-			for (j = 0; j < 17; j++) {  //for each font column, plus the row_index column
+			for (j = 0; j < 17; j++) {  // for each font column, plus the row_index column
 				px += ch_x_stp;
 				drawOpSprite(col_1, px, mat_y, px + LINE_THICKNESS - 1, mat_y + mat_h - 1);
-			}  //ends for each font column, plus the row_index column
-			//Here all the vertical frame lines have been drawn
-			//Next we draw the top horizontal line
+			}  // ends for each font column, plus the row_index column
+			// Here all the vertical frame lines have been drawn
+			// Next we draw the top horizontal line
 			drawOpSprite(col_1, mat_x, mat_y, mat_x + mat_w - 1, mat_y + LINE_THICKNESS - 1);
 			cy = mat_y + LINE_THICKNESS + 2;
 			ly = mat_y;
-			for (i = 0; i < 17; i++) {  //for each font row
+			for (i = 0; i < 17; i++) {  // for each font row
 				px = ch_x;
-				if (!i) {                                 //if top row (which holds the column indexes)
-					drawChar('\\', px, cy, col_3);        //Display '\' at index crosspoint
-				} else {                                  //else a real font row
-					drawChar(Hex[i - 1], px, cy, col_3);  //Display row index
+				if (!i) {                                 // if top row (which holds the column indexes)
+					drawChar('\\', px, cy, col_3);        // Display '\' at index crosspoint
+				} else {                                  // else a real font row
+					drawChar(Hex[i - 1], px, cy, col_3);  // Display row index
 				}
-				for (j = 0; j < 16; j++) {  //for each font column
+				for (j = 0; j < 16; j++) {  // for each font column
 					px += ch_x_stp;
-					if (!i) {                             //if top row (which holds the column indexes)
-						drawChar(Hex[j], px, cy, col_3);  //Display Column index
+					if (!i) {                             // if top row (which holds the column indexes)
+						drawChar(Hex[j], px, cy, col_3);  // Display Column index
 					} else {
-						drawChar((i - 1) * 16 + j, px, cy, col_3);  //Display font character
+						drawChar((i - 1) * 16 + j, px, cy, col_3);  // Display font character
 					}
-				}  //ends for each font column
+				}  // ends for each font column
 				ly += ch_y_stp;
 				drawOpSprite(col_1, mat_x, ly, mat_x + mat_w - 1, ly + LINE_THICKNESS - 1);
 				cy += ch_y_stp;
-			}  //ends for each font row
-			   //End of font display section
-		}      //ends if(event||post_event)
-		       //end_display:
+			}  // ends for each font row
+			   // End of font display section
+		}  // ends if(event||post_event)
+		   // end_display:
 		drawScr();
 		post_event = event;
 		event = 0;
 
-		//Pad response section
+		// Pad response section
 		waitAnyPadReady();
 		if (readpad() && new_pad) {
 			event |= 2;
@@ -1792,11 +1798,11 @@ done_test:
 			}
 			break;
 		}
-	}  //ends while
+	}  // ends while
 	   //----- End of event loop -----
 }
 //------------------------------
-//endfunc ShowFont
+// endfunc ShowFont
 //---------------------------------------------------------------------------
 static void Validate_CNF_Path(void)
 {
@@ -1808,7 +1814,7 @@ static void Validate_CNF_Path(void)
 	}
 }
 //------------------------------
-//endfunc Validate_CNF_Path
+// endfunc Validate_CNF_Path
 //---------------------------------------------------------------------------
 static void Set_CNF_Path(void)
 {
@@ -1826,9 +1832,9 @@ static void Set_CNF_Path(void)
 	sprintf(mainMsg + 6, "%s = \"%s\"", LNG(CNF_Path), setting->CNF_Path);
 }
 //------------------------------
-//endfunc Set_CNF_Path
+// endfunc Set_CNF_Path
 //---------------------------------------------------------------------------
-//Reload CNF, possibly after a path change
+// Reload CNF, possibly after a path change
 static int reloadConfig(void)
 {
 	char tmp[MAX_PATH];
@@ -1867,7 +1873,7 @@ static int reloadConfig(void)
 	return CNF_error;
 }
 //------------------------------
-//endfunc reloadConfig
+// endfunc reloadConfig
 //---------------------------------------------------------------------------
 // Config Cycle Left  (--) by EP
 static void decConfig(void)
@@ -1880,7 +1886,7 @@ static void decConfig(void)
 	reloadConfig();
 }
 //------------------------------
-//endfunc decConfig
+// endfunc decConfig
 //---------------------------------------------------------------------------
 // Config Cycle Right (++) by EP
 static void incConfig(void)
@@ -1893,9 +1899,9 @@ static void incConfig(void)
 	reloadConfig();
 }
 //------------------------------
-//endfunc incConfig
+// endfunc incConfig
 //---------------------------------------------------------------------------
-//exists.  Tests if a file exists or not
+// exists.  Tests if a file exists or not
 //------------------------------
 static int exists(char *path)
 {
@@ -1908,9 +1914,9 @@ static int exists(char *path)
 	return 1;
 }
 //------------------------------
-//endfunc exists
+// endfunc exists
 //---------------------------------------------------------------------------
-//uLE_related.  Tests if an uLE_related file exists or not.
+// uLE_related.  Tests if an uLE_related file exists or not.
 //
 // Note: please use genFixPath() for config files instead because this will not
 //       load other device modules, even if LaunchELF actually supports the device.
@@ -1941,11 +1947,11 @@ int uLE_related(char *pathout, const char *pathin)
 			pathout[2] = '1';
 		if (exists(pathout))
 			return 1;
-		pathout[2] ^= 1;  //switch between mc0 and mc1
+		pathout[2] ^= 1;  // switch between mc0 and mc1
 		if (exists(pathout))
 			return 1;
 
-		//Default to LaunchELFDir
+		// Default to LaunchELFDir
 		sprintf(pathout, "%s%s", LaunchElfDir, pathin + 5);
 		return 0;
 	} else
@@ -1954,9 +1960,9 @@ int uLE_related(char *pathout, const char *pathin)
 	return ret;
 }
 //------------------------------
-//endfunc uLE_related
+// endfunc uLE_related
 //---------------------------------------------------------------------------
-//CleanUp releases uLE stuff preparatory to launching some other application
+// CleanUp releases uLE stuff preparatory to launching some other application
 //------------------------------
 static void CleanUp(void)
 {
@@ -1974,32 +1980,32 @@ static void CleanUp(void)
 		PS2KbdClose();
 #ifdef DS34
 	WaitSema(semRunning);
-	isRunning=0;
-	SignalSema(semRunning);	
+	isRunning = 0;
+	SignalSema(semRunning);
 	WaitSema(semFinish);
 	ds34usb_reset();
 	ds34bt_reset();
 #endif
 }
 //------------------------------
-//endfunc CleanUp
+// endfunc CleanUp
 //---------------------------------------------------------------------------
-//Indicates whether the file type is supported by LaunchELF (for any action)
+// Indicates whether the file type is supported by LaunchELF (for any action)
 //------------------------------
 int IsSupportedFileType(char *path)
 {
 	if (strchr(path, ':') != NULL) {
 		if (genCmpFileExt(path, "ELF")) {
 			return (checkELFheader(path) >= 0);
-		} else if ((genCmpFileExt(path, "TXT") || genCmpFileExt(path, "CHT") || genCmpFileExt(path, "CFG") || genCmpFileExt(path, "INI")  || genCmpFileExt(path, "CNF") ) || (genCmpFileExt(path, "JPG") || genCmpFileExt(path, "JPEG"))) {
+		} else if ((genCmpFileExt(path, "TXT") || genCmpFileExt(path, "CHT") || genCmpFileExt(path, "CFG") || genCmpFileExt(path, "INI") || genCmpFileExt(path, "CNF")) || (genCmpFileExt(path, "JPG") || genCmpFileExt(path, "JPEG"))) {
 			return 1;
 		} else
 			return 0;
-	} else  //No ':', hence no device name in path, which means it is a special action (e.g. MISC/*).
+	} else  // No ':', hence no device name in path, which means it is a special action (e.g. MISC/*).
 		return 1;
 }
 //------------------------------
-//endfunc IsSupportedFileType
+// endfunc IsSupportedFileType
 //---------------------------------------------------------------------------
 // Execute. Execute an action. May be called recursively.
 // For any path specified, its device must be accessible.
@@ -2019,10 +2025,10 @@ static void Execute(char *pathin)
 	if (pathin[0] == 0)
 		return;
 
-	if (!uLE_related(path, pathin))  //1==uLE_rel 0==missing, -1==other dev
+	if (!uLE_related(path, pathin))  // 1==uLE_rel 0==missing, -1==other dev
 		return;
 
-Recurse_for_ESR:  //Recurse here for PS2Disc command with ESR disc
+Recurse_for_ESR:  // Recurse here for PS2Disc command with ESR disc
 
 	pathSep = strchr(path, '/');
 
@@ -2046,7 +2052,7 @@ Recurse_for_ESR:  //Recurse here for PS2Disc command with ESR disc
 		loadHddModules();
 		if ((t = checkELFheader(path)) <= 0)
 			goto ELFnotFound;
-		//coming here means the ELF is fine
+		// coming here means the ELF is fine
 		sprintf(party, "hdd0:%s", path + 6);
 		p = strchr(party, '/');
 		sprintf(fullpath, "pfs0:%s", p);
@@ -2057,7 +2063,7 @@ Recurse_for_ESR:  //Recurse here for PS2Disc command with ESR disc
 		loadDVRPHddModules();
 		if ((t = checkELFheader(path)) <= 0)
 			goto ELFnotFound;
-		//coming here means the ELF is fine
+		// coming here means the ELF is fine
 		sprintf(party, "dvr_hdd0:%s", path + 10);
 		p = strchr(party, '/');
 		sprintf(fullpath, "dvr_pfs0:%s", p);
@@ -2075,7 +2081,7 @@ Recurse_for_ESR:  //Recurse here for PS2Disc command with ESR disc
 	} else if (!strncmp(path, "mass", 4)) {
 		if ((t = checkELFheader(path)) <= 0)
 			goto ELFnotFound;
-		//coming here means the ELF is fine
+		// coming here means the ELF is fine
 		party[0] = 0;
 
 		strcpy(fullpath, path);
@@ -2137,11 +2143,11 @@ Recurse_for_ESR:  //Recurse here for PS2Disc command with ESR disc
 		drawMsg(LNG(Reading_SYSTEMCNF));
 		party[0] = 0;
 		readSystemCnf();
-		if (BootDiscType == 2) {  //Boot a PS2 disc
+		if (BootDiscType == 2) {  // Boot a PS2 disc
 			strcpy(fullpath, SystemCnf_BOOT2);
 			goto CheckELF_fullpath;
 		}
-		if (BootDiscType == 1) {  //Boot a PS1 disc
+		if (BootDiscType == 1) {  // Boot a PS1 disc
 			char *args[2] = {SystemCnf_BOOT, SystemCnf_VER};
 			CleanUp();
 			LoadExecPS2("rom0:PS1DRV", 2, args);
@@ -2152,7 +2158,7 @@ Recurse_for_ESR:  //Recurse here for PS2Disc command with ESR disc
 			if (cdmode == SCECdDVDV) {
 				x = Check_ESR_Disc();
 				DPRINTF("Check_ESR_Disc => %d\n", x);
-				if (x > 0) {  //ESR Disc, so launch ESR
+				if (x > 0) {  // ESR Disc, so launch ESR
 					if (setting->LK_Flag[SETTING_LK_ESR] && setting->LK_Path[SETTING_LK_ESR][0])
 						strcpy(path, setting->LK_Path[SETTING_LK_ESR]);
 					else
@@ -2161,7 +2167,7 @@ Recurse_for_ESR:  //Recurse here for PS2Disc command with ESR disc
 					goto Recurse_for_ESR;
 				}
 
-				//DVD Video Disc, so launch DVD player
+				// DVD Video Disc, so launch DVD player
 				char arg0[20], arg1[20], arg2[20], arg3[40];
 				char *args[4] = {arg0, arg1, arg2, arg3};
 				char kelf_loader[40];
@@ -2179,7 +2185,7 @@ Recurse_for_ESR:  //Recurse here for PS2Disc command with ESR disc
 
 				strcpy(MG_region, "ACEJMORU");
 				pos = strlen(arg0) - 1;
-				for (i = 0; i < 9; i++) {  //NB: MG_region[8] is a string terminator
+				for (i = 0; i < 9; i++) {  // NB: MG_region[8] is a string terminator
 					arg0[pos] = MG_region[i];
 					tst = SifLoadModuleEncrypted(arg0 + 3, 0, NULL);
 					if (tst >= 0)
@@ -2191,9 +2197,9 @@ Recurse_for_ESR:  //Recurse here for PS2Disc command with ESR disc
 					strcpy(&arg2[pos - 3], "ELF");
 				else
 					arg2[pos - 1] = MG_region[i];
-				//At this point all args are ready to use internal DVD player
+				// At this point all args are ready to use internal DVD player
 
-				//We must check for an updated player on MC
+				// We must check for an updated player on MC
 				dvdpl_path[6] = rough_region;
 				dvdpl_update = 0;
 				for (i = 0; i < 2; i++) {
@@ -2205,7 +2211,7 @@ Recurse_for_ESR:  //Recurse here for PS2Disc command with ESR disc
 				}
 
 				if ((tst < 0) && (dvdpl_update == 0))
-					goto Fail_PS2Disc;  //We must abort if no working kelf found
+					goto Fail_PS2Disc;  // We must abort if no working kelf found
 
 				if (dvdpl_update) {  // Launch DVD player from memory card
 					strcpy(arg0, "-m rom0:SIO2MAN");
@@ -2224,7 +2230,7 @@ Recurse_for_ESR:  //Recurse here for PS2Disc command with ESR disc
 				goto Done_PS2Disc;
 			}
 			if (cdmode == SCECdCDDA) {
-				//Fail_CDDA:
+				// Fail_CDDA:
 				sprintf(mainMsg, "CDDA %s", LNG(Failed));
 				goto Done_PS2Disc;
 			}
@@ -2263,11 +2269,11 @@ Recurse_for_ESR:  //Recurse here for PS2Disc command with ESR disc
 		return;
 	} else if (!stricmp(path, setting->Misc_PS2Browser)) {
 		Exit(0);
-		//There has been a major change in the code for calling PS2Browser
-		//The method above is borrowed from PS2MP3. It's independent of ELF loader
-		//The method below was used earlier, but causes reset with new ELF loader
-		//party[0]=0;
-		//strcpy(fullpath,"rom0:OSDSYS");
+		// There has been a major change in the code for calling PS2Browser
+		// The method above is borrowed from PS2MP3. It's independent of ELF loader
+		// The method below was used earlier, but causes reset with new ELF loader
+		// party[0]=0;
+		// strcpy(fullpath,"rom0:OSDSYS");
 #ifdef ETH
 	} else if (!stricmp(path, setting->Misc_PS2Net)) {
 		mainMsg[0] = 0;
@@ -2322,7 +2328,7 @@ Recurse_for_ESR:  //Recurse here for PS2Disc command with ESR disc
 	} else if (!stricmp(path, setting->Misc_Load_CNF)) {
 		reloadConfig();
 		return;
-		//Next clause is for an optional font test routine
+		// Next clause is for an optional font test routine
 	} else if (!stricmp(path, setting->Misc_ShowFont)) {
 		ShowFont();
 		return;
@@ -2362,7 +2368,7 @@ Recurse_for_ESR:  //Recurse here for PS2Disc command with ESR disc
 	ELFchecked:
 		CleanUp();
 		RunLoaderElf(fullpath, party);
-	} else {  //Invalid path
+	} else {  // Invalid path
 		t = 0;
 	ELFnotFound:
 		if (t == 0)
@@ -2373,7 +2379,7 @@ Recurse_for_ESR:  //Recurse here for PS2Disc command with ESR disc
 	}
 }
 //------------------------------
-//endfunc Execute
+// endfunc Execute
 //---------------------------------------------------------------------------
 // reboot IOP (original source by Hermes in BOOT.c - cogswaploader)
 // dlanor: but changed now, as the original was badly bugged
@@ -2405,16 +2411,16 @@ static void Reset()
 	have_Flash_modules = 0;
 #endif
 #ifdef UDPTTY
-int i, d;
+	int i, d;
 	load_ps2ip();
 	i = SifExecModuleBuffer(&udptty_irx, size_udptty_irx, 0, NULL, &d);
-    DPRINTF(" [UDPTTY.IRX]: id=%d, ret=%d\n", i, d);
+	DPRINTF(" [UDPTTY.IRX]: id=%d, ret=%d\n", i, d);
 #endif
 	loadBasicModules();
 	loadCdModules();
 
 	fileXioInit();
-	//Increase the FILEIO R/W buffer size to reduce overhead.
+	// Increase the FILEIO R/W buffer size to reduce overhead.
 	fileXioSetRWBufferSize(128 * 1024);
 	DPRINTF("Initializing mc rpc\n");
 #ifdef HOMEBREW_SIO2MAN
@@ -2426,7 +2432,7 @@ int i, d;
 	//	setupPad();
 }
 //------------------------------
-//endfunc Reset
+// endfunc Reset
 //---------------------------------------------------------------------------
 int uLE_InitializeRegion(void)
 {
@@ -2438,7 +2444,7 @@ int uLE_InitializeRegion(void)
 		if (ROMVER_fd < 0) {
 			memset(ROMVER_data, 0, sizeof(ROMVER_data));
 			rough_region = 'X';
-			TVMode = TV_mode_NTSC;  //NTSC is default mode for unidentified console
+			TVMode = TV_mode_NTSC;  // NTSC is default mode for unidentified console
 			return TVMode;
 		}
 		genRead(ROMVER_fd, ROMVER_data, 16);
@@ -2453,7 +2459,7 @@ int uLE_InitializeRegion(void)
 				rough_region = 'E';
 				break;
 			case 'A':
-			case 'H':  //Asia shares the same letter as USA.
+			case 'H':  // Asia shares the same letter as USA.
 				rough_region = 'A';
 				break;
 			case 'C':
@@ -2464,15 +2470,15 @@ int uLE_InitializeRegion(void)
 		}
 
 		if (ROMVER_data[4] == 'E')
-			TVMode = TV_mode_PAL;  //PAL mode is identified by 'E' for Europe
+			TVMode = TV_mode_PAL;  // PAL mode is identified by 'E' for Europe
 		else
-			TVMode = TV_mode_NTSC;  //All other cases need NTSC
+			TVMode = TV_mode_NTSC;  // All other cases need NTSC
 	}
 
 	return TVMode;
 }
 //------------------------------
-//endfunc uLE_InitializeRegion
+// endfunc uLE_InitializeRegion
 //---------------------------------------------------------------------------
 static void InitializeBootExecPath()
 {
@@ -2480,10 +2486,10 @@ static void InitializeBootExecPath()
 
 	uLE_InitializeRegion();
 	char RONVER[4 + 1];
-	strncpy(RONVER,ROMVER_data,4);
+	strncpy(RONVER, ROMVER_data, 4);
 	RONVER[4] = '\0';
 	ROMVersion = strtoul(RONVER, NULL, 16);
-	//Handle special cases, before osdmain.elf was supported.
+	// Handle special cases, before osdmain.elf was supported.
 	switch (ROMVER_data[4]) {
 		case 'E':
 			if (!strncmp(ROMVER_data, "0120", 4))
@@ -2505,19 +2511,18 @@ static void InitializeBootExecPath()
 			else
 				strcpy(file, "osdmain.elf");
 			break;
-		default:  //Asia and China
+		default:  // Asia and China
 			strcpy(file, "osdmain.elf");
 	}
 
-	sprintf( default_OSDSYS_path, "mc:/B%cEXEC-SYSTEM/%s", rough_region, file);
-	if ( ROMVersion  >= 0x230 )
-		sprintf(default_OSDSYS_path2, "/Incompatible Unit (0x%03x)", (ROMVersion)&~0x0F);
+	sprintf(default_OSDSYS_path, "mc:/B%cEXEC-SYSTEM/%s", rough_region, file);
+	if (ROMVersion >= 0x230)
+		sprintf(default_OSDSYS_path2, "/Incompatible Unit (0x%03x)", (ROMVersion) & ~0x0F);
 	else
 		sprintf(default_OSDSYS_path2, "mc:/B%cEXEC-SYSTEM/%s", rough_region, file);
-
 }
 //------------------------------
-//endfunc InitializeBootExecPath
+// endfunc InitializeBootExecPath
 //---------------------------------------------------------------------------
 
 //#ifdef SMB
@@ -2542,7 +2547,7 @@ int main(int argc, char *argv[])
 	char RunPath[MAX_PATH];
 	int RunELF_index, nElfs = 0;
 	enum BOOT_DEVICE boot = BOOT_DEV_UNKNOWN;
-	int CNF_error = -1;  //assume error until CNF correctly loaded
+	int CNF_error = -1;  // assume error until CNF correctly loaded
 	int i;
 
 	boot_argc = argc;
@@ -2558,37 +2563,37 @@ int main(int argc, char *argv[])
 	boot_path[0] = 0;
 
 	if ((argc > 0) && argv[0]) {
-		strcpy(LaunchElfDir, argv[0]);  //Default LaunchElfDir to the boot path.
+		strcpy(LaunchElfDir, argv[0]);  // Default LaunchElfDir to the boot path.
 		strcpy(boot_path, argv[0]);
 		if (!strncmp(argv[0], "mass", 4)) {
-			if (!strncmp(argv[0], "mass0:\\", 7)) {  //SwapMagic boot path for usb_mass
-				//Transform the boot path to homebrew standards
+			if (!strncmp(argv[0], "mass0:\\", 7)) {  // SwapMagic boot path for usb_mass
+				// Transform the boot path to homebrew standards
 				LaunchElfDir[4] = ':';
 				strcpy(&LaunchElfDir[5], &LaunchElfDir[7]);
 				for (i = 0; LaunchElfDir[i] != 0; i++) {
 					if (LaunchElfDir[i] == '\\')
 						LaunchElfDir[i] = '/';
 				}
-			}  //else we booted with normal homebrew mass: drivers
+			}  // else we booted with normal homebrew mass: drivers
 
 			boot = BOOT_DEVICE_MASS;
 		} else if (!strncmp(argv[0], "mc", 2))
 			boot = BOOT_DEVICE_MC;
 		else if (!strncmp(argv[0], "cd", 2)) {
 			boot = BOOT_DEVICE_CDVD;
-			strcpy(LaunchElfDir, "mc0:/SYS-CONF/");  //Default to mc0 as a writable location.
+			strcpy(LaunchElfDir, "mc0:/SYS-CONF/");  // Default to mc0 as a writable location.
 		} else if (!strncmp(argv[0], "hdd", 3)) {
-			//Booting from the HDD requires special handling for HDD-based paths.
+			// Booting from the HDD requires special handling for HDD-based paths.
 			char temp[MAX_PATH];
 			char *t, *p;
 			/* Change boot_path to contain a path to the block device.
-                Standard HDD path format: hdd0:partition:pfs:path/to/file
-                However, (older) homebrew may not use this format. */
-			strcpy(temp, boot_path + 5);  //Skip "hdd0:" when copying.
-			t = strchr(temp, ':');        //Check if the separator between the block device & the path exists.
+			    Standard HDD path format: hdd0:partition:pfs:path/to/file
+			    However, (older) homebrew may not use this format. */
+			strcpy(temp, boot_path + 5);  // Skip "hdd0:" when copying.
+			t = strchr(temp, ':');        // Check if the separator between the block device & the path exists.
 			if (t != NULL) {
-				*(t) = 0;                //If it does, get the block device name.
-				p = strchr(t + 1, ':');  //Get the path to the file
+				*(t) = 0;                // If it does, get the block device name.
+				p = strchr(t + 1, ':');  // Get the path to the file
 				if (p != NULL) {
 					if (p[1] == '/')
 						sprintf(LaunchElfDir, "hdd0:/%s", temp);
@@ -2602,17 +2607,17 @@ int main(int argc, char *argv[])
 			boot = BOOT_DEVICE_HDD;
 #ifdef DVRP
 		} else if (!strncmp(argv[0], "dvr_hdd", 7)) {
-			//Booting from the HDD requires special handling for HDD-based paths.
+			// Booting from the HDD requires special handling for HDD-based paths.
 			char temp[MAX_PATH];
 			char *t, *p;
 			/* Change boot_path to contain a path to the block device.
-                Standard HDD path format: dvr_hdd0:partition:pfs:path/to/file
-                However, (older) homebrew may not use this format. */
-			strcpy(temp, boot_path + 9);  //Skip "dvr_hdd0:" when copying.
-			t = strchr(temp, ':');        //Check if the separator between the block device & the path exists.
+			    Standard HDD path format: dvr_hdd0:partition:pfs:path/to/file
+			    However, (older) homebrew may not use this format. */
+			strcpy(temp, boot_path + 9);  // Skip "dvr_hdd0:" when copying.
+			t = strchr(temp, ':');        // Check if the separator between the block device & the path exists.
 			if (t != NULL) {
-				*(t) = 0;                //If it does, get the block device name.
-				p = strchr(t + 1, ':');  //Get the path to the file
+				*(t) = 0;                // If it does, get the block device name.
+				p = strchr(t + 1, ':');  // Get the path to the file
 				if (p != NULL) {
 					if (p[1] == '/')
 						sprintf(LaunchElfDir, "dvr_hdd0:/%s", temp);
@@ -2637,11 +2642,11 @@ int main(int argc, char *argv[])
 		p = strrchr(LaunchElfDir, ':');
 	if (p != NULL)
 		*(p + 1) = 0;
-	//The above cuts away the ELF filename from LaunchElfDir, leaving a pure path
+	// The above cuts away the ELF filename from LaunchElfDir, leaving a pure path
 
 	LastDir[0] = 0;
 
-	TV_mode = uLE_InitializeRegion();  //Let console region decide default TV_mode
+	TV_mode = uLE_InitializeRegion();  // Let console region decide default TV_mode
 	Frame_end_y = Menu_end_y + 4;
 	Menu_tooltip_y = Frame_end_y + LINE_THICKNESS + 2;
 	InitializeBootExecPath();
@@ -2649,20 +2654,20 @@ int main(int argc, char *argv[])
 	CNF_error = loadConfig(mainMsg, strcpy(CNF, "LAUNCHELF.CNF"));
 #ifdef ETH
 	if (boot == BOOT_DEVICE_HOST) {
-		//If booted from the host: device, bring up the host device at this point.
+		// If booted from the host: device, bring up the host device at this point.
 		getIpConfig();
 		initHOST();
 	}
 #endif
-	//Last chance to look at bootup screen, so allow braking here
+	// Last chance to look at bootup screen, so allow braking here
 	/*
 	if(readpad() && (new_pad && PAD_UP))
 	{ scr_printf("________ Boot paused. Press 'Circle' to continue.\n");
-		while(1)
-		{	if(new_pad & PAD_CIRCLE)
-				break;
-			while(!readpad());
-		}
+	    while(1)
+	    {	if(new_pad & PAD_CIRCLE)
+	            break;
+	        while(!readpad());
+	    }
 	}
 */
 	DPRINTF("setupGS()\n");
@@ -2675,7 +2680,7 @@ int main(int argc, char *argv[])
 	maxCNF = setting->numCNF;
 	swapKeys = setting->swapKeys;
 
-	//It's time to load and init drivers
+	// It's time to load and init drivers
 	DPRINTF("Getting IPCONFIG\n");
 	getIpConfig();
 	DPRINTF("Loading USB modules\n");
@@ -2683,7 +2688,7 @@ int main(int argc, char *argv[])
 
 	WaitTime = Timer();
 	DPRINTF("setup pad\n");
-	setupPad();  //Comment out this line when using early setupPad above
+	setupPad();  // Comment out this line when using early setupPad above
 	DPRINTF("Starting keyboard\n");
 	startKbd();
 	WaitTime = Timer();
@@ -2706,29 +2711,29 @@ int main(int argc, char *argv[])
 	else
 		sprintf(mainMsg, "%s", LNG(Loaded_Config));
 
-	//Here nearly everything is ready for the main menu event loop
-	//But before we start that, we need to validate CNF_Path
+	// Here nearly everything is ready for the main menu event loop
+	// But before we start that, we need to validate CNF_Path
 	Validate_CNF_Path();
 
-	RunPath[0] = 0;  //Nothing to run yet
-	cdmode = -1;     //flag unchecked cdmode state
-	event = 1;       //event = initial entry
+	RunPath[0] = 0;  // Nothing to run yet
+	cdmode = -1;     // flag unchecked cdmode state
+	event = 1;       // event = initial entry
 	DPRINTF("starting main menu event loop\n");
 	//----- Start of main menu event loop -----
 	while (1) {
 		int DiscType_ix;
 
-		//Background event section
-		uLE_cdStop();              //Test disc state and if needed stop disc (updates cdmode)
-		if (cdmode == old_cdmode)  //if disc detection did not change state
+		// Background event section
+		uLE_cdStop();              // Test disc state and if needed stop disc (updates cdmode)
+		if (cdmode == old_cdmode)  // if disc detection did not change state
 			goto done_discControl;
 
-		event |= 4;  //event |= disc change detection
+		event |= 4;  // event |= disc change detection
 		if (cdmode <= 0)
 			sprintf(mainMsg, "%s ", LNG(No_Disc));
 		else if (cdmode >= 1 && cdmode <= 4)
 			sprintf(mainMsg, "%s == ", LNG(Detecting_Disc));
-		else  //if(cdmode>=5)
+		else  // if(cdmode>=5)
 			sprintf(mainMsg, "%s == ", LNG(Stop_Disc));
 
 		DiscType_ix = 0;
@@ -2737,11 +2742,11 @@ int main(int argc, char *argv[])
 				DiscType_ix = i;
 
 		sprintf(mainMsg + strlen(mainMsg), DiscTypes[DiscType_ix].name);
-	//Comment out the debug output below when not needed
+	// Comment out the debug output below when not needed
 	/*
 		sprintf(mainMsg+strlen(mainMsg),
-			"  cdmode==%d  uLE_cdmode==%d  type_ix==%d",
-			cdmode, uLE_cdmode, DiscType_ix);
+		    "  cdmode==%d  uLE_cdmode==%d  type_ix==%d",
+		    cdmode, uLE_cdmode, DiscType_ix);
 		//*/
 	done_discControl:
 		if (init_delay) {
@@ -2755,7 +2760,7 @@ int main(int argc, char *argv[])
 				init_delay_start = CurrTime;
 			}
 			if ((init_delay / 1000) != (prev_init_delay / 1000))
-				event |= 8;  //event |= visible delay change
+				event |= 8;  // event |= visible delay change
 		} else if (timeout && !user_acted) {
 			prev_timeout = timeout;
 			CurrTime = Timer();
@@ -2766,27 +2771,27 @@ int main(int argc, char *argv[])
 				timeout_start = CurrTime;
 			}
 			if ((timeout / 1000) != (prev_timeout / 1000))
-				event |= 8;  //event |= visible timeout change
+				event |= 8;  // event |= visible timeout change
 		}
 
-		//Display section
-		if (event || post_event) {  //NB: We need to update two frame buffers per event
+		// Display section
+		if (event || post_event) {  // NB: We need to update two frame buffers per event
 			if (!(setting->GUI_skin[0]))
-				nElfs = drawMainScreen();    //Display pure text GUI on generic background
-			else if (!setting->Show_Menu) {  //Display only GUI jpg
+				nElfs = drawMainScreen();    // Display pure text GUI on generic background
+			else if (!setting->Show_Menu) {  // Display only GUI jpg
 				setLaunchKeys();
 				clrScr(setting->color[COLOR_BACKGR]);
-			} else  //Display launch filenames/titles on GUI jpg
+			} else  // Display launch filenames/titles on GUI jpg
 				nElfs = drawMainScreen2(TV_mode);
 		}
 		drawScr();
 		post_event = event;
 		event = 0;
 
-		//Pad response section
+		// Pad response section
 		if (!init_delay && (waitAnyPadReady(), readpad())) {
 			if (new_pad) {
-				event |= 2;  //event |= pad command
+				event |= 2;  // event |= pad command
 			}
 			RunELF_index = -1;
 			switch (mode) {
@@ -2825,7 +2830,7 @@ int main(int argc, char *argv[])
 					else if (new_pad & PAD_UP || new_pad & PAD_DOWN) {
 						user_acted = 1;
 						if (!setting->Show_Menu && setting->GUI_skin[0]) {
-						}  //GUI Menu: disabled when there's no text on menu screen
+						}  // GUI Menu: disabled when there's no text on menu screen
 						else {
 							selected = 0;
 							mode = DPAD;
@@ -2851,11 +2856,11 @@ int main(int argc, char *argv[])
 							strcpy(RunPath, setting->LK_Path[menu_LK[selected]]);
 					}
 					break;
-			}  //ends switch(mode)
-		}      //ends Pad response section
+			}  // ends switch(mode)
+		}      // ends Pad response section
 
 		if (!user_acted && ((timeout / 1000) == 0) && setting->LK_Path[SETTING_LK_AUTO][0] && mode == BUTTON) {
-			event |= 8;  //event |= visible timeout change
+			event |= 8;  // event |= visible timeout change
 			strcpy(RunPath, setting->LK_Path[SETTING_LK_AUTO]);
 		}
 
@@ -2867,15 +2872,15 @@ int main(int argc, char *argv[])
 			if (setting->GUI_skin[0]) {
 				GUI_active = 1;
 				loadSkin(BACKGROUND_PIC, 0, 0);
-				//Load_External_Language();
-				//loadFont(setting->font_file);
+				// Load_External_Language();
+				// loadFont(setting->font_file);
 			}
 		}
-	}  //ends while(1)
+	}  // ends while(1)
 	   //----- End of main menu event loop -----
 }
 //------------------------------
-//endfunc main
+// endfunc main
 //---------------------------------------------------------------------------
-//End of file: main.c
+// End of file: main.c
 //---------------------------------------------------------------------------

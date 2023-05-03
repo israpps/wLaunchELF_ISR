@@ -553,6 +553,7 @@ int getPs2Time(vmc_datetime *tm)
 //----------------------------------------------------------------------------
 // XOR table use for Error Correcting Code ( ECC ) calculation.
 //----------------------------------------------------------------------------
+// clang-format off
 const unsigned char ECC_XOR_Table[256] = {
     0x00, 0x87, 0x96, 0x11, 0xA5, 0x22, 0x33, 0xB4,
     0xB4, 0x33, 0x22, 0xA5, 0x11, 0x96, 0x87, 0x00,
@@ -587,7 +588,7 @@ const unsigned char ECC_XOR_Table[256] = {
     0x00, 0x87, 0x96, 0x11, 0xA5, 0x22, 0x33, 0xB4,
     0xB4, 0x33, 0x22, 0xA5, 0x11, 0x96, 0x87, 0x00,
 };
-
+// clang-format on
 
 //----------------------------------------------------------------------------
 // Calculate ECC for a 128 bytes chunk of data
