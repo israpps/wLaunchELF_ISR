@@ -1,6 +1,6 @@
-IOP_BIN  = vmc_fs.irx
 IOP_OBJS = vmc_fs.o vmc_io.o vmc_misc.o vmc_fat.o vmc_ps2.o imports.o
 IOP_BIN_DIR = ../../../
+IOP_BIN = $(IOP_BIN_DIR)vmc_fs.irx
 
 IOP_CFLAGS  += -Wall -fno-builtin
 IOP_LDFLAGS += -s

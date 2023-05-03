@@ -95,8 +95,6 @@ $(IOP_LIB_DIR):
 	$(IOP_CC) $(IOP_CFLAGS) -I. -c build-exports.c -o $@
 	-rm -f build-exports.c
 
-IOP_BIN=$(addprefix $(IOP_BIN_DIR), $(IOP_BIN))
-
 $(IOP_BIN) : $(IOP_OBJS)
 	$(IOP_CC) $(IOP_CFLAGS) -o $< $(IOP_OBJS) $(IOP_LDFLAGS) $(IOP_LIBS)
 
