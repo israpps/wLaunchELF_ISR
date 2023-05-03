@@ -97,8 +97,9 @@ $(IOP_LIB_DIR):
 
 $(IOP_BIN): $(IOP_OBJS)
 	$(IOP_CC) $(IOP_CFLAGS) -o $@ $(IOP_OBJS) $(IOP_LDFLAGS) $(IOP_LIBS)
-ifneq ($(IOP_BIN_DIR),)
+ifneq (,$(IOP_BIN_DIR))
 	cp $(IOP_BIN) $(IOP_BIN_DIR)
 endif
+
 $(IOP_LIB): $(IOP_OBJS)
 	$(IOP_AR) cru $< $(IOP_OBJS)
