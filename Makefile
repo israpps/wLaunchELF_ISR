@@ -140,6 +140,7 @@ endif
 
 EE_OBJS_DIR = obj/
 EE_ASM_DIR = asm/
+EE_SRC_DIR = src/
 EE_OBJS := $(EE_OBJS:%=$(EE_OBJS_DIR)%) # remap all EE_OBJ to obj subdir
 
 .PHONY: all run reset clean rebuild
