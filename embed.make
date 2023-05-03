@@ -5,9 +5,9 @@ ifeq ($(MX4SIO),0) # no mx4sio? use ps2dev:1.0 drivers
   SIO2MAN_SOURCE = $(PS2SDK)/iop/irx/sio2man.irx
 else # if we have mx4sio use newer IRX to avoid deadlocks when opening common memory card
   $(info using latest mc drivers)
-  MCMAN_SOURCE = iop/mcman.irx
-  MCSERV_SOURCE = iop/mcserv.irx
-  SIO2MAN_SOURCE = iop/sio2man.irx
+  MCMAN_SOURCE = iop/__precompiled/mcman.irx
+  MCSERV_SOURCE = iop/__precompiled/mcserv.irx
+  SIO2MAN_SOURCE = iop/__precompiled/sio2man.irx
 endif
 
 #---{ MC }---#
@@ -21,7 +21,7 @@ $(EE_ASM_DIR)sio2man.s: $(SIO2MAN_SOURCE) | $(EE_ASM_DIR)
 	$(BIN2S) $< $@ sio2man_irx
 
 	
-$(EE_ASM_DIR)mx4sio_bd.s: iop/mx4sio_bd.irx | $(EE_ASM_DIR)
+$(EE_ASM_DIR)mx4sio_bd.s: iop/__precompiled/mx4sio_bd.irx | $(EE_ASM_DIR)
 	$(BIN2S) $< $@ mx4sio_bd_irx
 #---{ USB }---#
 
@@ -29,13 +29,13 @@ $(EE_ASM_DIR)usbd_irx.s: $(PS2SDK)/iop/irx/usbd.irx | $(EE_ASM_DIR)
 	$(BIN2S) $< $@ usbd_irx
 
 ifeq ($(EXFAT),1)
-$(EE_ASM_DIR)bdm_irx.s: iop/bdm.irx | $(EE_ASM_DIR)
+$(EE_ASM_DIR)bdm_irx.s:iop/__precompiled/bdm.irx | $(EE_ASM_DIR)
 	$(BIN2S) $< $@ bdm_irx
 
-$(EE_ASM_DIR)bdmfs_fatfs_irx.s: iop/bdmfs_fatfs.irx | $(EE_ASM_DIR)
+$(EE_ASM_DIR)bdmfs_fatfs_irx.s:iop/__precompiled/bdmfs_fatfs.irx | $(EE_ASM_DIR)
 	$(BIN2S) $< $@ bdmfs_fatfs_irx
 
-$(EE_ASM_DIR)usbmass_bd_irx.s: iop/usbmass_bd.irx | $(EE_ASM_DIR)
+$(EE_ASM_DIR)usbmass_bd_irx.s:iop/__precompiled/usbmass_bd.irx | $(EE_ASM_DIR)
 	$(BIN2S) $< $@ usbmass_bd_irx
 else
 $(EE_ASM_DIR)usbhdfsd_irx.s: $(PS2SDK)/iop/irx/usbhdfsd.irx | $(EE_ASM_DIR)
@@ -95,10 +95,10 @@ $(EE_ASM_DIR)ps2fs_irx.s: $(PS2SDK)/iop/irx/ps2fs.irx | $(EE_ASM_DIR)
 	$(BIN2S) $< $@ ps2fs_irx
 	
 ifeq ($(DVRP),1)
-$(EE_ASM_DIR)dvrdrv_irx.s: iop/dvrdrv.irx | $(EE_ASM_DIR)
+$(EE_ASM_DIR)dvrdrv_irx.s:iop/__precompiled/dvrdrv.irx | $(EE_ASM_DIR)
 	$(BIN2S) $< $@ dvrdrv_irx
 
-$(EE_ASM_DIR)dvrfile_irx.s: iop/dvrfile.irx | $(EE_ASM_DIR)
+$(EE_ASM_DIR)dvrfile_irx.s:iop/__precompiled/dvrfile.irx | $(EE_ASM_DIR)
 	$(BIN2S) $< $@ dvrfile_irx
 endif
 
@@ -161,7 +161,7 @@ $(EE_ASM_DIR)ps2kbd_irx.s: $(PS2SDK)/iop/irx/ps2kbd.irx | $(EE_ASM_DIR)
 $(EE_ASM_DIR)sior_irx.s: $(PS2SDK)/iop/irx/sior.irx | $(EE_ASM_DIR)
 	$(BIN2S) $< $@ sior_irx
 
-$(EE_ASM_DIR)tty2sior_irx.s: iop/tty2sior.irx | $(EE_ASM_DIR)
+$(EE_ASM_DIR)tty2sior_irx.s:iop/__precompiled/tty2sior.irx | $(EE_ASM_DIR)
 	$(BIN2S) $< $@ tty2sior_irx
 
 iop/AllowDVDV.irx: iop/AllowDVDV

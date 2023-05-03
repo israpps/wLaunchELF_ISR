@@ -12,12 +12,5 @@ asm/*
 obj/*
 
 githash.h
-!iop/bdm.irx
-!iop/bdmfs_fatfs.irx
-!iop/mcman.irx
-!iop/mcserv.irx
-!iop/mx4sio_bd.irx
-!iop/sio2man.irx
-!iop/tty2sior.irx
-!iop/usbmass_bd.irx
+!iop/__precompiled/*
 iop/vmc_fs.irx
