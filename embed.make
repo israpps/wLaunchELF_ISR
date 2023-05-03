@@ -126,10 +126,10 @@ iop/ds34bt.irx: iop/ds34bt/iop
 $(EE_ASM_DIR)ds34usb.s: iop/ds34usb.irx | $(EE_ASM_DIR)
 	$(BIN2S) $< $@ ds34usb_irx
 
-$(EE_OBJS_DIR)libds34usb.a: ds34usb/ee/libds34usb.a
+$(EE_OBJS_DIR)libds34usb.a: iop/ds34usb/ee/libds34usb.a
 	cp $< $@	
 
-$(EE_OBJS_DIR)libds34bt.a: ds34bt/ee/libds34bt.a
+$(EE_OBJS_DIR)libds34bt.a: iop/ds34bt/ee/libds34bt.a
 	cp $< $@
 
 $(EE_ASM_DIR)ds34bt.s: iop/ds34bt.irx | $(EE_ASM_DIR)
