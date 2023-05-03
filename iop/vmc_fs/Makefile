@@ -15,4 +15,4 @@ clean:
 	rm -f $(IOP_OBJS) $(IOP_BIN)
 
 include $(PS2SDK)/Defs.make
-include ../Rules.make
+include $(IOP_BIN_DIR)Rules.make
