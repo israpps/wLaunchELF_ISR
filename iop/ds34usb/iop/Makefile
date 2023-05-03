@@ -1,5 +1,5 @@
-IOP_BIN = ds34usb.irx
 IOP_BIN_DIR = ../../
+IOP_BIN = $(IOP_BIN_DIR)ds34usb.irx
 IOP_OBJS = ds34usb.o smsutils.o imports.o
 
 all: $(IOP_BIN)
