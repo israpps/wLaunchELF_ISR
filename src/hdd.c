@@ -41,7 +41,7 @@ enum {  //For menu commands
 static PARTYINFO PartyInfo[MAX_PARTITIONS];
 static int numParty;
 static u32 hddSize, hddFree, hddFreeSpace, hddUsed;
-static int hddConnected, hddFormated;
+static int hddConnected, hddFormated, hddRealStatus;
 
 static char DbgMsg[MAX_TEXT_LINE * 30];
 
@@ -106,7 +106,8 @@ void GetHddInfo(void)
 	tooManyPartitions = 0;
 
 	drawMsg(LNG(Reading_HDD_Information));
-
+	hddRealStatus = fileXioDevctl("hdd0:", HDIOC_STATUS, NULL, 0, NULL, 0);
+	DPRINTF("HDIOC_STATUS: %d\n", hddRealStatus);
 	if (hddCheckPresent() < 0) {
 		hddConnected = 0;
 		goto end;
@@ -873,8 +874,9 @@ void hddManager(void)
 
 			y = Menu_start_y;
 
-			x = ((((SCREEN_WIDTH / 2 - 25) - Menu_start_x) / 2) + Menu_start_x) - (strlen(LNG(HDD_STATUS)) * FONT_WIDTH) / 2;
-			printXY(LNG(HDD_STATUS), x, y, setting->color[COLOR_TEXT], TRUE, 0);
+			sprintf(c, "%s: %d", LNG(HDD_STATUS), hddRealStatus);
+			x = ((((SCREEN_WIDTH / 2 - 25) - Menu_start_x) / 2) + Menu_start_x) - (strlen(c) * FONT_WIDTH) / 2;
+			printXY(c, x, y, setting->color[COLOR_TEXT], TRUE, 0);
 
 			if (TV_mode != TV_mode_PAL)
 				y += FONT_HEIGHT + 10;
