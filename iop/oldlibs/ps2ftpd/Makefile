@@ -7,7 +7,7 @@
 # Review ps2sdk README & LICENSE files for further details.
 
 IOP_OBJS_DIR = obj/
-IOP_BIN_DIR = ../../../
+IOP_BIN_DIR = ../../
 IOP_SRC_DIR = src/
 IOP_INC_DIR = include/
 
