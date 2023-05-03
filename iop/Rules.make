@@ -97,7 +97,7 @@ $(IOP_LIB_DIR):
 
 $(IOP_BIN): $(IOP_OBJS)
 	$(IOP_CC) $(IOP_CFLAGS) -o $@ $(IOP_OBJS) $(IOP_LDFLAGS) $(IOP_LIBS)
-ifneq (,$(IOP_BIN_DIR))
+ifneq (__,_$(IOP_BIN_DIR)_)
 	cp $(IOP_BIN) $(IOP_BIN_DIR)
 endif
 
