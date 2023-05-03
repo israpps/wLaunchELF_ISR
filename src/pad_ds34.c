@@ -21,7 +21,7 @@ u32 new_pad, new_pad_t[4];
 u32 joy_value = 0;
 static int test_joy = 0;
 
-int semPoll,semRunning,semFinish;
+int semPoll, semRunning, semFinish;
 int isRunning;
 
 // Alarm handler
@@ -39,22 +39,22 @@ void padPollingThread(void *args)
 {
 	int state;
 	ee_sema_t semData;
-	int semAlrm,iIsRunning;
+	int semAlrm, iIsRunning;
 
 	semData.option = semData.attr = 0;
 	semData.init_count = 0;
 	semData.max_count = 1;
 
 	while (1) {
-	
+
 		WaitSema(semRunning);
-		iIsRunning=isRunning;
+		iIsRunning = isRunning;
 		SignalSema(semRunning);
-		
-		if(iIsRunning==0)
-		    break;
-		    
-		
+
+		if (iIsRunning == 0)
+			break;
+
+
 
 		state = padGetState(0, 0);
 		if (state == PAD_STATE_STABLE || (state == PAD_STATE_FINDCTP1)) {
@@ -97,7 +97,7 @@ void padPollingThread(void *args)
 		WaitSema(semAlrm);
 		DeleteSema(semAlrm);
 	}
-	
+
 	SignalSema(semFinish);
 	ExitDeleteThread();
 }
@@ -107,7 +107,7 @@ void padPollingInit(void)
 {
 
 	ee_thread_t th_attr;
-	int pad_thr_id;	
+	int pad_thr_id;
 	ee_sema_t semData;
 	static unsigned char stack[4096] __attribute__((aligned(16)));
 
@@ -126,8 +126,8 @@ void padPollingInit(void)
 	th_attr.gp_reg = &_gp;
 	th_attr.initial_priority = 2;
 	th_attr.attr = th_attr.option = 0;
-	
-	isRunning=1;
+
+	isRunning = 1;
 	pad_thr_id = CreateThread(&th_attr);
 	StartThread(pad_thr_id, NULL);
 }

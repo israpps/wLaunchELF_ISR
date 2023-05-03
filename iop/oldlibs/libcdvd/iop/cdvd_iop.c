@@ -28,7 +28,7 @@ enum PathMatch {
 #define MAX_DIR_CACHE_SECTORS 32
 
 
-//static u8 cdVolDescriptor[2048];
+// static u8 cdVolDescriptor[2048];
 static sceCdRMode cdReadMode;
 
 int lastsector;
@@ -222,8 +222,8 @@ void CDVD_Thread(void *param);
 
 
 /********************
-* Optimised CD Read *
-********************/
+ * Optimised CD Read *
+ ********************/
 
 int ReadSect(u32 lsn, u32 sectors, void *buf, sceCdRMode *mode)
 {
@@ -274,8 +274,8 @@ int ReadSect(u32 lsn, u32 sectors, void *buf, sceCdRMode *mode)
 }
 
 /***********************************************
-* Determines if there is a valid disc inserted *
-***********************************************/
+ * Determines if there is a valid disc inserted *
+ ***********************************************/
 int isValidDisc(void)
 {
 	int result;
@@ -296,10 +296,10 @@ int isValidDisc(void)
 }
 
 /*************************************************************
-* The functions below are the normal file-system operations, *
-* used to provide a standard filesystem interface. There is  *
-* no need to export these functions for calling via RPC      *
-*************************************************************/
+ * The functions below are the normal file-system operations, *
+ * used to provide a standard filesystem interface. There is  *
+ * no need to export these functions for calling via RPC      *
+ *************************************************************/
 int dummy()
 {
 #ifdef DEBUG
@@ -639,10 +639,10 @@ int _start(int argc, char **argv)
 }
 
 /**************************************************************
-* The functions below are not exported for normal file-system *
-* operations, but are used by the file-system operations, and *
-* may also be exported  for use via RPC                       *
-**************************************************************/
+ * The functions below are not exported for normal file-system *
+ * operations, but are used by the file-system operations, and *
+ * may also be exported  for use via RPC                       *
+ **************************************************************/
 
 
 int CDVD_GetVolumeDescriptor(void)
@@ -820,7 +820,7 @@ int CDVD_findfile(const char *fname, struct TocEntry *tocEntry)
 		CDVD_Cache_Dir(pathname, CACHE_NEXT);
 	}
 
-// we've run out of dir blocks to cache, and still not found it, so fail
+	// we've run out of dir blocks to cache, and still not found it, so fail
 
 #ifdef DEBUG
 	printf("CDVD_findfile: could not find file\n");
@@ -873,8 +873,8 @@ int CDVD_Cache_Dir(const char *pathname, enum Cache_getMode getMode)
 					CachedDirInfo.valid = TRUE;
 					return TRUE;
 				} else {
-// Requested cache of start of the directory, but thats not what's cached
-// so re-cache the start of the directory
+					// Requested cache of start of the directory, but thats not what's cached
+					// so re-cache the start of the directory
 
 #ifdef DEBUG
 					printf("          but dir isn't cached from start, so re-cache existing dir from start\n");
@@ -1629,7 +1629,7 @@ void *CDVDRpc_Getdir(unsigned int *sbuff)
 	    sbuff[1152 / 4],                     // CDVD_getMode
 	    (struct TocEntry *)sbuff[1156 / 4],  // pointer to array of TocEntry structures in EE mem
 	    sbuff[1160 / 4]                      // requested number of entries
-	    );
+	);
 
 	sbuff[0] = ret;
 	strcpy((char *)&sbuff[1], CachedDirInfo.pathname);
@@ -1643,9 +1643,9 @@ void *CDVDRpc_GetSize(unsigned int *sbuff)
 }
 
 /*************************************************
-* The functions below are for internal use only, *
-* and are not to be exported                     *
-*************************************************/
+ * The functions below are for internal use only, *
+ * and are not to be exported                     *
+ *************************************************/
 
 void CDVD_Thread(void *param)
 {
@@ -1777,7 +1777,7 @@ int TocEntryCompare(char *filename, const char *extensions)
 }
 
 // Used in findfile
-//int tolower(int c);
+// int tolower(int c);
 int strcasecmp(const char *s1, const char *s2)
 {
 	while (*s1 != '\0' && tolower(*s1) == tolower(*s2)) {

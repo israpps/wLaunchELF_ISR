@@ -8,28 +8,28 @@ enum {
 	DEF_TIMEOUT = 10,
 	DEF_HIDE_PATHS = TRUE,
 #ifdef CUSTOM_COLORS
-	DEF_COLOR1 = GS_SETREG_RGBA(0, 0, 0, 0),  //Backgr
-	DEF_COLOR2 = GS_SETREG_RGBA(160, 160, 160, 0),     //Frame
+	DEF_COLOR1 = GS_SETREG_RGBA(0, 0, 0, 0),        // Backgr
+	DEF_COLOR2 = GS_SETREG_RGBA(160, 160, 160, 0),  // Frame
 #ifdef DVRP
 	DEF_COLOR3 = GS_SETREG_RGBA(0x7a, 0, 0xbe, 0),
 #else
-	DEF_COLOR3 = GS_SETREG_RGBA(0, 204, 255, 0),       //Select
+	DEF_COLOR3 = GS_SETREG_RGBA(0, 204, 255, 0),  // Select
 #endif
-	DEF_COLOR4 = GS_SETREG_RGBA(255, 255, 255, 0),        //Text
-	DEF_COLOR5 = GS_SETREG_RGBA(255, 255, 0, 0),      //Graph1
-	DEF_COLOR6 = GS_SETREG_RGBA(0, 255, 0, 0),       //Graph2
-	DEF_COLOR7 = GS_SETREG_RGBA(64, 64, 64, 0),  //Graph3
-	DEF_COLOR8 = GS_SETREG_RGBA(128, 128, 128, 0),        //Graph4
+	DEF_COLOR4 = GS_SETREG_RGBA(255, 255, 255, 0),  // Text
+	DEF_COLOR5 = GS_SETREG_RGBA(255, 255, 0, 0),    // Graph1
+	DEF_COLOR6 = GS_SETREG_RGBA(0, 255, 0, 0),      // Graph2
+	DEF_COLOR7 = GS_SETREG_RGBA(64, 64, 64, 0),     // Graph3
+	DEF_COLOR8 = GS_SETREG_RGBA(128, 128, 128, 0),  // Graph4
 #else
-	DEF_COLOR1 = GS_SETREG_RGBA(128, 128, 128, 0),  //Backgr
-	DEF_COLOR2 = GS_SETREG_RGBA(64, 64, 64, 0),     //Frame
-	DEF_COLOR3 = GS_SETREG_RGBA(96, 0, 0, 0),       //Select
-	DEF_COLOR4 = GS_SETREG_RGBA(0, 0, 0, 0),        //Text
-	DEF_COLOR5 = GS_SETREG_RGBA(96, 96, 0, 0),      //Graph1
-	DEF_COLOR6 = GS_SETREG_RGBA(0, 96, 0, 0),       //Graph2
-	DEF_COLOR7 = GS_SETREG_RGBA(224, 224, 224, 0),  //Graph3
-	DEF_COLOR8 = GS_SETREG_RGBA(0, 0, 0, 0),        //Graph4
-#endif //CUSTOM_COLORS
+	DEF_COLOR1 = GS_SETREG_RGBA(128, 128, 128, 0),  // Backgr
+	DEF_COLOR2 = GS_SETREG_RGBA(64, 64, 64, 0),     // Frame
+	DEF_COLOR3 = GS_SETREG_RGBA(96, 0, 0, 0),       // Select
+	DEF_COLOR4 = GS_SETREG_RGBA(0, 0, 0, 0),        // Text
+	DEF_COLOR5 = GS_SETREG_RGBA(96, 96, 0, 0),      // Graph1
+	DEF_COLOR6 = GS_SETREG_RGBA(0, 96, 0, 0),       // Graph2
+	DEF_COLOR7 = GS_SETREG_RGBA(224, 224, 224, 0),  // Graph3
+	DEF_COLOR8 = GS_SETREG_RGBA(0, 0, 0, 0),        // Graph4
+#endif  // CUSTOM_COLORS
 	DEF_MENU_FRAME = TRUE,
 	DEF_MENU = TRUE,
 	DEF_NUMCNF = 1,
@@ -63,9 +63,9 @@ static const char LK_ID[SETTING_LK_COUNT][10] = {
     "L3",
     "R3",
     "Start",
-    "Select",  //Predefined for "CONFIG"
-    "Left",    //Predefined for "LOAD CONFIG--"
-    "Right",   //Predefined for "LOAD CONFIG++"
+    "Select",  // Predefined for "CONFIG"
+    "Left",    // Predefined for "LOAD CONFIG--"
+    "Right",   // Predefined for "LOAD CONFIG++"
     "ESR",
     "OSDSYS"};
 
@@ -88,47 +88,47 @@ int get_CNF_string(char **CNF_p_p,
 
 start_line:
 	while ((*tp <= ' ') && (*tp > '\0'))
-		tp += 1;  //Skip leading whitespace, if any
+		tp += 1;  // Skip leading whitespace, if any
 	if (*tp == '\0')
-		return false;  //but exit at EOF
-	np = tp;           //Current pos is potential name
-	if (*tp < 'A')     //but may be a comment line
-	{                  //We must skip a comment line
+		return false;  // but exit at EOF
+	np = tp;           // Current pos is potential name
+	if (*tp < 'A')     // but may be a comment line
+	{                  // We must skip a comment line
 		while ((*tp != '\r') && (*tp != '\n') && (*tp > '\0'))
-			tp += 1;      //Seek line end
-		goto start_line;  //Go back to try next line
+			tp += 1;      // Seek line end
+		goto start_line;  // Go back to try next line
 	}
 
 	while ((*tp >= 'A') || ((*tp >= '0') && (*tp <= '9')))
-		tp += 1;  //Seek name end
+		tp += 1;  // Seek name end
 	if (*tp == '\0')
-		return false;  //but exit at EOF
+		return false;  // but exit at EOF
 
 	while ((*tp <= ' ') && (*tp > '\0'))
-		*tp++ = '\0';  //zero&skip post-name whitespace
+		*tp++ = '\0';  // zero&skip post-name whitespace
 	if (*tp != '=')
-		return false;  //exit (syntax error) if '=' missing
-	*tp++ = '\0';      //zero '=' (possibly terminating name)
+		return false;  // exit (syntax error) if '=' missing
+	*tp++ = '\0';      // zero '=' (possibly terminating name)
 
-	while ((*tp <= ' ') && (*tp > '\0')  //Skip pre-value whitespace, if any
+	while ((*tp <= ' ') && (*tp > '\0')  // Skip pre-value whitespace, if any
 	       && (*tp != '\r') && (*tp != '\n'))
-		tp += 1;  //but do not pass the end of the line
+		tp += 1;  // but do not pass the end of the line
 	if (*tp == '\0')
-		return false;  //but exit at EOF
-	vp = tp;           //Current pos is potential value
+		return false;  // but exit at EOF
+	vp = tp;           // Current pos is potential value
 
 	while ((*tp != '\r') && (*tp != '\n') && (*tp != '\0'))
-		tp += 1;  //Seek line end
+		tp += 1;  // Seek line end
 	if (*tp != '\0')
-		*tp++ = '\0';  //terminate value (passing if not EOF)
+		*tp++ = '\0';  // terminate value (passing if not EOF)
 	while ((*tp <= ' ') && (*tp > '\0'))
-		tp += 1;  //Skip following whitespace, if any
+		tp += 1;  // Skip following whitespace, if any
 
-	*CNF_p_p = tp;    //return new CNF file position
-	*name_p_p = np;   //return found variable name
-	*value_p_p = vp;  //return found variable value
-	return true;      //return control to caller
-}  //Ends get_CNF_string
+	*CNF_p_p = tp;    // return new CNF file position
+	*name_p_p = np;   // return found variable name
+	*value_p_p = vp;  // return found variable value
+	return true;      // return control to caller
+}  // Ends get_CNF_string
 
 //---------------------------------------------------------------------------
 int CheckMC(void)
@@ -161,7 +161,7 @@ unsigned long hextoul(char *string)
 	return value;
 }
 //---------------------------------------------------------------------------
-//storeSkinCNF will save most cosmetic settings to a RAM area
+// storeSkinCNF will save most cosmetic settings to a RAM area
 //------------------------------
 static size_t storeSkinCNF(char *cnf_buf)
 {
@@ -186,31 +186,31 @@ static size_t storeSkinCNF(char *cnf_buf)
 	        "Menu_Frame = %d\r\n"
 	        "Show_Menu = %d\r\n"
 	        "%n",                               // %n causes NO output, but only a measurement
-	        (u32)setting->color[COLOR_BACKGR],  //Col_1
-	        (u32)setting->color[COLOR_FRAME],   //Col_2
-	        (u32)setting->color[COLOR_SELECT],  //Col_3
-	        (u32)setting->color[COLOR_TEXT],    //Col_4
-	        (u32)setting->color[COLOR_GRAPH1],  //Col_5
-	        (u32)setting->color[COLOR_GRAPH2],  //Col_6
-	        (u32)setting->color[COLOR_GRAPH3],  //Col_7
-	        (u32)setting->color[COLOR_GRAPH4],  //Col_8
-	        setting->skin,                      //SKIN_FILE
-	        setting->GUI_skin,                  //GUI_SKIN_FILE
-	        setting->Brightness,                //SKIN_Brightness
-	        setting->TV_mode,                   //TV_mode
-	        setting->screen_x,                  //Screen_X
-	        setting->screen_y,                  //Screen_Y
-	        setting->Popup_Opaque,              //Popup_Opaque
-	        setting->Menu_Frame,                //Menu_Frame
-	        setting->Show_Menu,                 //Show_Menu
+	        (u32)setting->color[COLOR_BACKGR],  // Col_1
+	        (u32)setting->color[COLOR_FRAME],   // Col_2
+	        (u32)setting->color[COLOR_SELECT],  // Col_3
+	        (u32)setting->color[COLOR_TEXT],    // Col_4
+	        (u32)setting->color[COLOR_GRAPH1],  // Col_5
+	        (u32)setting->color[COLOR_GRAPH2],  // Col_6
+	        (u32)setting->color[COLOR_GRAPH3],  // Col_7
+	        (u32)setting->color[COLOR_GRAPH4],  // Col_8
+	        setting->skin,                      // SKIN_FILE
+	        setting->GUI_skin,                  // GUI_SKIN_FILE
+	        setting->Brightness,                // SKIN_Brightness
+	        setting->TV_mode,                   // TV_mode
+	        setting->screen_x,                  // Screen_X
+	        setting->screen_y,                  // Screen_Y
+	        setting->Popup_Opaque,              // Popup_Opaque
+	        setting->Menu_Frame,                // Menu_Frame
+	        setting->Show_Menu,                 // Show_Menu
 	        &CNF_size                           // This variable measures the size of sprintf data
-	        );
+	);
 	return CNF_size;
 }
 //------------------------------
-//endfunc storeSkinCNF
+// endfunc storeSkinCNF
 //---------------------------------------------------------------------------
-//saveSkinCNF will save most cosmetic settings to a skin CNF file
+// saveSkinCNF will save most cosmetic settings to a skin CNF file
 //------------------------------
 static int saveSkinCNF(char *CNF)
 {
@@ -223,19 +223,19 @@ static int saveSkinCNF(char *CNF)
 
 	ret = genFixPath(CNF, cnf_path);
 	if ((ret < 0) || ((fd = genOpen(cnf_path, O_CREAT | O_WRONLY | O_TRUNC)) < 0)) {
-		return -1;  //Failed open
+		return -1;  // Failed open
 	}
 	ret = genWrite(fd, &tmp, CNF_size);
 	if (ret != CNF_size)
-		ret = -2;  //Failed writing
+		ret = -2;  // Failed writing
 	genClose(fd);
 
 	return ret;
 }
 //-----------------------------
-//endfunc saveSkinCNF
+// endfunc saveSkinCNF
 //---------------------------------------------------------------------------
-//saveSkinBrowser will save most cosmetic settings to browsed skin CNF file
+// saveSkinBrowser will save most cosmetic settings to browsed skin CNF file
 //------------------------------
 static void saveSkinBrowser(void)
 {
@@ -253,12 +253,12 @@ static void saveSkinBrowser(void)
 	drawMsg(LNG(Enter_File_Name));
 
 	tmp[0] = 0;
-	if (tst > 0) {               //if an existing file was selected, use its name
-		p = strrchr(path, '/');  //find separator between path and name
+	if (tst > 0) {               // if an existing file was selected, use its name
+		p = strrchr(path, '/');  // find separator between path and name
 		if (p != NULL) {
 			strcpy(tmp, p + 1);
 			p[1] = '\0';
-		} else  //if we got a pathname without separator, something is wrong
+		} else  // if we got a pathname without separator, something is wrong
 			goto abort;
 	}
 	if ((tst >= 0) && (keyboard(tmp, 36) > 0))
@@ -288,9 +288,9 @@ test:
 	drawMsg(tmp);
 }
 //-----------------------------
-//endfunc saveSkinBrowser
+// endfunc saveSkinBrowser
 //---------------------------------------------------------------------------
-//preloadCNF loads an entire CNF file into RAM it allocates
+// preloadCNF loads an entire CNF file into RAM it allocates
 //------------------------------
 char *preloadCNF(char *path)
 {
@@ -314,15 +314,15 @@ char *preloadCNF(char *path)
 		genClose(fd);
 		goto failed_load;
 	}
-	genRead(fd, RAM_p, CNF_size);  //Read CNF as one long string
+	genRead(fd, RAM_p, CNF_size);  // Read CNF as one long string
 	genClose(fd);
-	RAM_p[CNF_size] = '\0';  //Terminate the CNF string
+	RAM_p[CNF_size] = '\0';  // Terminate the CNF string
 	return RAM_p;
 }
 //------------------------------
-//endfunc preloadCNF
+// endfunc preloadCNF
 //---------------------------------------------------------------------------
-//scanSkinCNF will check for most cosmetic variables of a CNF
+// scanSkinCNF will check for most cosmetic variables of a CNF
 //------------------------------
 int scanSkinCNF(char *name, char *value)
 {
@@ -364,13 +364,13 @@ int scanSkinCNF(char *name, char *value)
 	else if (!strcmp(name, "Show_Menu"))
 		setting->Show_Menu = atoi(value);
 	else
-		return 0;  //when no skin variable
-	return 1;      //when skin variable found
+		return 0;  // when no skin variable
+	return 1;      // when skin variable found
 }
 //------------------------------
-//endfunc scanSkinCNF
+// endfunc scanSkinCNF
 //---------------------------------------------------------------------------
-//loadSkinCNF will load most cosmetic settings from CNF file
+// loadSkinCNF will load most cosmetic settings from CNF file
 //------------------------------
 int loadSkinCNF(char *path)
 {
@@ -389,9 +389,9 @@ int loadSkinCNF(char *path)
 	return 0;
 }
 //------------------------------
-//endfunc loadSkinCNF
+// endfunc loadSkinCNF
 //---------------------------------------------------------------------------
-//loadSkinBrowser will load most cosmetic settings from browsed skin CNF file
+// loadSkinBrowser will load most cosmetic settings from browsed skin CNF file
 //------------------------------
 void loadSkinBrowser(void)
 {
@@ -409,7 +409,7 @@ void loadSkinBrowser(void)
 	drawMsg(mess);
 }
 //------------------------------
-//endfunc loadSkinBrowser
+// endfunc loadSkinBrowser
 //---------------------------------------------------------------------------
 // Save LAUNCHELF.CNF (or LAUNCHELFx.CNF with multiple pages)
 // sincro: ADD save USBD_FILE string
@@ -423,9 +423,9 @@ void saveConfig(char *mainMsg, char *CNF)
 	char cnf_path[MAX_PATH];
 	size_t CNF_size, CNF_step;
 
-	sprintf(tmp, "CNF_version = 3\r\n%n", &CNF_size);  //Start CNF with version header
+	sprintf(tmp, "CNF_version = 3\r\n%n", &CNF_size);  // Start CNF with version header
 
-	for (i = 0; i < SETTING_LK_COUNT; i++) {  //Loop to save the ELF paths for launch keys
+	for (i = 0; i < SETTING_LK_COUNT; i++) {  // Loop to save the ELF paths for launch keys
 		if ((i <= SETTING_LK_SELECT) || (setting->LK_Flag[i] != 0)) {
 			sprintf(tmp + CNF_size,
 			        "LK_%s_E1 = %s\r\n"
@@ -433,10 +433,10 @@ void saveConfig(char *mainMsg, char *CNF)
 			        LK_ID[i],
 			        setting->LK_Path[i],
 			        &CNF_step  // This variable measures the size of sprintf data
-			        );
+			);
 			CNF_size += CNF_step;
 		}
-	}  //ends for
+	}  // ends for
 
 	i = strlen(setting->Misc);
 	sprintf(tmp + CNF_size,
@@ -480,7 +480,7 @@ void saveConfig(char *mainMsg, char *CNF)
 	        setting->Misc_Show_Build_Info + i,
 	        setting->Misc_OSDSYS + i,
 	        &CNF_step  // This variable measures the size of sprintf data
-	        );
+	);
 	CNF_size += CNF_step;
 
 	CNF_size += storeSkinCNF(tmp + CNF_size);
@@ -511,75 +511,75 @@ void saveConfig(char *mainMsg, char *CNF)
 	        "PSU_NoOverwrite = %d\r\n"
 	        "FB_NoIcons = %d\r\n"
 	        "%n",                      // %n causes NO output, but only a measurement
-	        setting->timeout,          //auto_Timer
-	        setting->Hide_Paths,       //Menu_Hide_Paths
-	        setting->numCNF,           //Menu_Pages
-	        setting->swapKeys,         //GUI_Swap_Keys
-	        setting->usbd_file,        //USBD_FILE
-	        setting->HOSTwrite,        //NET_HOST_write
-	        setting->Menu_Title,       //Menu_Title
-	        setting->Init_Delay,       //Init_Delay
-	        setting->usbkbd_used,      //USBKBD_USED
-	        setting->usbkbd_file,      //USBKBD_FILE
-	        setting->kbdmap_file,      //KBDMAP_FILE
-	        setting->Show_Titles,      //Menu_Show_Titles
-	        setting->PathPad_Lock,     //PathPad_Lock
-	        setting->CNF_Path,         //CNF_Path
-	        setting->usbmass_file,     //USBMASS_FILE
-	        setting->lang_file,        //LANG_FILE
-	        setting->font_file,        //FONT_FILE
-	        setting->JpgView_Timer,    //JpgView_Timer
-	        setting->JpgView_Trans,    //JpgView_Trans
-	        setting->JpgView_Full,     //JpgView_Full
-	        setting->PSU_HugeNames,    //PSU_HugeNames
-	        setting->PSU_DateNames,    //PSU_DateNames
-	        setting->PSU_NoOverwrite,  //PSU_NoOverwrite
-	        setting->FB_NoIcons,       //FB_NoIcons
+	        setting->timeout,          // auto_Timer
+	        setting->Hide_Paths,       // Menu_Hide_Paths
+	        setting->numCNF,           // Menu_Pages
+	        setting->swapKeys,         // GUI_Swap_Keys
+	        setting->usbd_file,        // USBD_FILE
+	        setting->HOSTwrite,        // NET_HOST_write
+	        setting->Menu_Title,       // Menu_Title
+	        setting->Init_Delay,       // Init_Delay
+	        setting->usbkbd_used,      // USBKBD_USED
+	        setting->usbkbd_file,      // USBKBD_FILE
+	        setting->kbdmap_file,      // KBDMAP_FILE
+	        setting->Show_Titles,      // Menu_Show_Titles
+	        setting->PathPad_Lock,     // PathPad_Lock
+	        setting->CNF_Path,         // CNF_Path
+	        setting->usbmass_file,     // USBMASS_FILE
+	        setting->lang_file,        // LANG_FILE
+	        setting->font_file,        // FONT_FILE
+	        setting->JpgView_Timer,    // JpgView_Timer
+	        setting->JpgView_Trans,    // JpgView_Trans
+	        setting->JpgView_Full,     // JpgView_Full
+	        setting->PSU_HugeNames,    // PSU_HugeNames
+	        setting->PSU_DateNames,    // PSU_DateNames
+	        setting->PSU_NoOverwrite,  // PSU_NoOverwrite
+	        setting->FB_NoIcons,       // FB_NoIcons
 	        &CNF_step                  // This variable measures the size of sprintf data
-	        );
+	);
 	CNF_size += CNF_step;
 
-	for (i = 0; i < SETTING_LK_BTN_COUNT; i++) {  //Loop to save user defined launch key titles
-		if (setting->LK_Title[i][0]) {            //Only save non-empty strings
+	for (i = 0; i < SETTING_LK_BTN_COUNT; i++) {  // Loop to save user defined launch key titles
+		if (setting->LK_Title[i][0]) {            // Only save non-empty strings
 			sprintf(tmp + CNF_size,
 			        "LK_%s_Title = %s\r\n"
 			        "%n",  // %n causes NO output, but only a measurement
 			        LK_ID[i],
 			        setting->LK_Title[i],
 			        &CNF_step  // This variable measures the size of sprintf data
-			        );
+			);
 			CNF_size += CNF_step;
-		}  //ends if
-	}      //ends for
+		}  // ends if
+	}      // ends for
 
 	sprintf(tmp + CNF_size,
 	        "PathPad_Lock = %d\r\n"
 	        "%n",                   // %n causes NO output, but only a measurement
-	        setting->PathPad_Lock,  //PathPad_Lock
+	        setting->PathPad_Lock,  // PathPad_Lock
 	        &CNF_step               // This variable measures the size of sprintf data
-	        );
+	);
 	CNF_size += CNF_step;
 
-	for (i = 0; i < MAX_PATH_PAD; i++) {  //Loop to save non-empty PathPad entries
-		if (PathPad[i][0]) {              //Only save non-empty strings
+	for (i = 0; i < MAX_PATH_PAD; i++) {  // Loop to save non-empty PathPad entries
+		if (PathPad[i][0]) {              // Only save non-empty strings
 			sprintf(tmp + CNF_size,
 			        "PathPad[%02d] = %s\r\n"
 			        "%n",  // %n causes NO output, but only a measurement
 			        i,
 			        PathPad[i],
 			        &CNF_step  // This variable measures the size of sprintf data
-			        );
+			);
 			CNF_size += CNF_step;
-		}  //ends if
-	}      //ends for
+		}  // ends if
+	}      // ends for
 
 	strcpy(c, LaunchElfDir);
 	strcat(c, CNF);
 	ret = genFixPath(c, cnf_path);
 	if ((ret >= 0) && ((fd = genOpen(cnf_path, O_RDONLY)) >= 0))
 		genClose(fd);
-	else {                                //Start of clause for failure to use LaunchElfDir
-		if (setting->CNF_Path[0] == 0) {  //if NO CNF Path override defined
+	else {                                // Start of clause for failure to use LaunchElfDir
+		if (setting->CNF_Path[0] == 0) {  // if NO CNF Path override defined
 			if (!strncmp(LaunchElfDir, "mc", 2))
 				sprintf(c, "mc%d:/SYS-CONF", LaunchElfDir[2] - '0');
 			else
@@ -594,7 +594,7 @@ void saveConfig(char *mainMsg, char *CNF)
 				strcat(c, CNF);
 			}
 		}
-	}  //End of clause for failure to use LaunchElfDir
+	}  // End of clause for failure to use LaunchElfDir
 
 	ret = genFixPath(c, cnf_path);
 	if ((ret < 0) || ((fd = genOpen(cnf_path, O_CREAT | O_WRONLY | O_TRUNC)) < 0)) {
@@ -695,8 +695,8 @@ void initConfig(void)
 	setting->usbkbd_used = DEF_USBKBD_USED;
 	setting->Show_Titles = DEF_SHOW_TITLES;
 	setting->PathPad_Lock = DEF_PATHPAD_LOCK;
-	setting->JpgView_Timer = -1;  //only used to detect missing variable
-	setting->JpgView_Trans = -1;  //only used to detect missing variable
+	setting->JpgView_Timer = -1;  // only used to detect missing variable
+	setting->JpgView_Trans = -1;  // only used to detect missing variable
 	setting->JpgView_Full = DEF_JPGVIEW_FULL;
 	setting->PSU_HugeNames = DEF_PSU_HUGENAMES;
 	setting->PSU_DateNames = DEF_PSU_DATENAMES;
@@ -704,7 +704,7 @@ void initConfig(void)
 	setting->FB_NoIcons = DEF_FB_NOICONS;
 }
 //------------------------------
-//endfunc initConfig
+// endfunc initConfig
 //---------------------------------------------------------------------------
 // Load LAUNCHELF.CNF (or LAUNCHELFx.CNF with multiple pages)
 // sincro: ADD load USBD_FILE string
@@ -734,13 +734,13 @@ int loadConfig(char *mainMsg, char *CNF)
 		char strtmp[MAX_PATH], *p;
 		int pos;
 
-		p = strrchr(path, '.');  //make p point to extension
-		if (*(p - 1) != 'F')     //is this an indexed CNF
-			p--;                 //then make p point to index
+		p = strrchr(path, '.');  // make p point to extension
+		if (*(p - 1) != 'F')     // is this an indexed CNF
+			p--;                 // then make p point to index
 		pos = (p - path);
 		strcpy(strtmp, path);
-		strcpy(strtmp + pos - 9, "LNCHELF");   //Replace LAUNCHELF with LNCHELF (for CD)
-		strcpy(strtmp + pos - 2, path + pos);  //Add index+extension too
+		strcpy(strtmp + pos - 9, "LNCHELF");   // Replace LAUNCHELF with LNCHELF (for CD)
+		strcpy(strtmp + pos - 2, path + pos);  // Add index+extension too
 		if ((tst = genFixPath(strtmp, cnf_path)) >= 0)
 			fd = genOpen(cnf_path, O_RDONLY);
 		if (fd < 0) {
@@ -770,9 +770,9 @@ int loadConfig(char *mainMsg, char *CNF)
 		goto failed_load;
 	CNF_p = RAM_p;
 
-	//RA NB: in the code below, the 'LK_' variables have been implemented such that
-	//       any _Ex suffix will be accepted, with identical results. This will need
-	//       to be modified when more execution methods are implemented.
+	// RA NB: in the code below, the 'LK_' variables have been implemented such that
+	//        any _Ex suffix will be accepted, with identical results. This will need
+	//        to be modified when more execution methods are implemented.
 
 	CNF_version = 0;                                                       // The CNF version is still unidentified
 	for (var_cnt = 0; get_CNF_string(&CNF_p, &name, &value); var_cnt++) {  // A variable was found, now we dispose of its value.
@@ -796,7 +796,7 @@ int loadConfig(char *mainMsg, char *CNF)
 		if (i < SETTING_LK_COUNT)
 			continue;
 		//----------
-		//In the next group, the Misc device must be defined before its subprograms
+		// In the next group, the Misc device must be defined before its subprograms
 		//----------
 		else if (!strcmp(name, "Misc"))
 			sprintf(setting->Misc, "%s/", value);
@@ -908,7 +908,7 @@ int loadConfig(char *mainMsg, char *CNF)
 				}
 			}
 		}
-	}  //ends for
+	}  // ends for
 	for (i = 0; i < SETTING_LK_BTN_COUNT; i++)
 		setting->LK_Title[i][MAX_ELF_TITLE - 1] = 0;
 	free(RAM_p);
@@ -920,7 +920,7 @@ int loadConfig(char *mainMsg, char *CNF)
 	return 0;
 }
 //------------------------------
-//endfunc loadConfig
+// endfunc loadConfig
 //---------------------------------------------------------------------------
 // Polo: ADD Skin Menu with Skin preview
 // suloku: ADD Main skin selection
@@ -957,78 +957,78 @@ static void Config_Skin(void)
 	current_preview = PREVIEW_PIC;
 
 	s = CONFIG_SKIN_FIRST;
-	event = 1;  //event = initial entry
+	event = 1;  // event = initial entry
 	while (1) {
-		//Pad response section
+		// Pad response section
 		waitPadReady(0, 0);
 		if (readpad()) {
 			if (new_pad & PAD_UP) {
-				event |= 2;  //event |= valid pad command
+				event |= 2;  // event |= valid pad command
 				if (s != CONFIG_SKIN_FIRST)
 					s--;
 				else
 					s = max_s;
 			} else if (new_pad & PAD_DOWN) {
-				event |= 2;  //event |= valid pad command
+				event |= 2;  // event |= valid pad command
 				if (s != max_s)
 					s++;
 				else
 					s = CONFIG_SKIN_FIRST;
 			} else if (new_pad & PAD_LEFT) {
-				event |= 2;  //event |= valid pad command
+				event |= 2;  // event |= valid pad command
 				if (s != CONFIG_SKIN_FIRST)
 					s = CONFIG_SKIN_FIRST;
 				else
 					s = max_s;
 			} else if (new_pad & PAD_RIGHT) {
-				event |= 2;  //event |= valid pad command
+				event |= 2;  // event |= valid pad command
 				if (s != max_s)
 					s = max_s;
 				else
 					s = CONFIG_SKIN_FIRST;
 			} else if ((!swapKeys && new_pad & PAD_CROSS) || (swapKeys && new_pad & PAD_CIRCLE)) {
-				event |= 2;                   //event |= valid pad command
-				if (s == CONFIG_SKIN_PATH) {  //Command == Cancel Skin Path
+				event |= 2;                   // event |= valid pad command
+				if (s == CONFIG_SKIN_PATH) {  // Command == Cancel Skin Path
 					setting->skin[0] = '\0';
 					loadSkin(PREVIEW_PIC, 0, 0);
 					current_preview = PREVIEW_PIC;
-				} else if (s == CONFIG_SKIN_BRIGHTNESS) {  //Command == Decrease Brightness
+				} else if (s == CONFIG_SKIN_BRIGHTNESS) {  // Command == Decrease Brightness
 					if ((Brightness > 0) && (testsetskin == 1)) {
 						Brightness--;
 					}
-				} else if (s == CONFIG_SKIN_GUI_PATH) {  //Command == Cancel GUI Skin Path
+				} else if (s == CONFIG_SKIN_GUI_PATH) {  // Command == Cancel GUI Skin Path
 					setting->GUI_skin[0] = '\0';
 					loadSkin(PREVIEW_GUI, 0, 0);
 					current_preview = PREVIEW_GUI;
 				}
 			} else if ((swapKeys && new_pad & PAD_CROSS) || (!swapKeys && new_pad & PAD_CIRCLE)) {
-				event |= 2;                   //event |= valid pad command
-				if (s == CONFIG_SKIN_PATH) {  //Command == Set Skin Path
+				event |= 2;                   // event |= valid pad command
+				if (s == CONFIG_SKIN_PATH) {  // Command == Set Skin Path
 					getFilePath(setting->skin, SKIN_CNF);
 					loadSkin(PREVIEW_PIC, 0, 0);
 					current_preview = PREVIEW_PIC;
-				} else if (s == CONFIG_SKIN_APPLY) {  //Command == Apply New Skin
+				} else if (s == CONFIG_SKIN_APPLY) {  // Command == Apply New Skin
 					GUI_active = 0;
 					loadSkin(BACKGROUND_PIC, 0, 0);
 					setting->Brightness = Brightness;
 					strcpy(skinSave, setting->skin);
 					loadSkin(PREVIEW_PIC, 0, 0);
 					current_preview = PREVIEW_PIC;
-				} else if (s == CONFIG_SKIN_BRIGHTNESS) {  //Command == Increase Brightness
+				} else if (s == CONFIG_SKIN_BRIGHTNESS) {  // Command == Increase Brightness
 					if ((Brightness < 100) && (testsetskin == 1)) {
 						Brightness++;
 					}
-				} else if (s == CONFIG_SKIN_GUI_PATH) {  //Command == Set GUI Skin Path
+				} else if (s == CONFIG_SKIN_GUI_PATH) {  // Command == Set GUI Skin Path
 					getFilePath(setting->GUI_skin, GUI_SKIN_CNF);
 					loadSkin(PREVIEW_GUI, 0, 0);
 					current_preview = PREVIEW_GUI;
-				} else if (s == CONFIG_SKIN_GUI_APPLY) {  //Command == Apply GUI Skin
+				} else if (s == CONFIG_SKIN_GUI_APPLY) {  // Command == Apply GUI Skin
 					strcpy(GUI_Save, setting->GUI_skin);
 					loadSkin(PREVIEW_GUI, 0, 0);
 					current_preview = PREVIEW_GUI;
-				} else if (s == CONFIG_SKIN_GUI_SHOW_MENU) {  //Command == Show GUI Menu
+				} else if (s == CONFIG_SKIN_GUI_SHOW_MENU) {  // Command == Show GUI Menu
 					setting->Show_Menu = !setting->Show_Menu;
-				} else if (s == CONFIG_SKIN_RETURN) {  //Command == RETURN
+				} else if (s == CONFIG_SKIN_RETURN) {  // Command == RETURN
 					setting->skin[0] = '\0';
 					strcpy(setting->skin, skinSave);
 					setting->GUI_skin[0] = '\0';
@@ -1042,11 +1042,11 @@ static void Config_Skin(void)
 				strcpy(setting->GUI_skin, GUI_Save);
 				return;
 			}
-		}  //end if(readpad())
+		}  // end if(readpad())
 
-		if (event || post_event) {  //NB: We need to update two frame buffers per event
+		if (event || post_event) {  // NB: We need to update two frame buffers per event
 
-			//Display section
+			// Display section
 			clrScr(setting->color[COLOR_BACKGR]);
 
 			if (testsetskin == 1) {
@@ -1115,11 +1115,11 @@ static void Config_Skin(void)
 			strcat(c, LNG(Skin_Preview));
 			printXY(c, SCREEN_WIDTH / 4, (SCREEN_HEIGHT / 4) + 78 - FONT_HEIGHT, setting->color[COLOR_TEXT], TRUE, 0);
 
-			//Cursor positioning section
+			// Cursor positioning section
 			y = Menu_start_y + s * (FONT_HEIGHT);
 			drawChar(LEFT_CUR, x, y, setting->color[COLOR_TEXT]);
 
-			//Tooltip section
+			// Tooltip section
 			if ((s == 1) || (s == 4)) {
 				if (swapKeys)
 					len = sprintf(c, "\xFF"
@@ -1131,7 +1131,7 @@ static void Config_Skin(void)
 					                 "0:%s \xFF"
 					                 "1:%s",
 					              LNG(Edit), LNG(Clear));
-			} else if (s == 3) {  //if cursor at a colour component or a screen offset
+			} else if (s == 3) {  // if cursor at a colour component or a screen offset
 				if (swapKeys)
 					len = sprintf(c, "\xFF"
 					                 "1:%s \xFF"
@@ -1165,13 +1165,13 @@ static void Config_Skin(void)
 			                 "3:%s",
 			        LNG(Return));
 			setScrTmp("", c);
-		}  //ends if(event||post_event)
+		}  // ends if(event||post_event)
 		drawScr();
 		post_event = event;
 		event = 0;
 
-	}  //ends while
-}  //ends Config_Skin
+	}  // ends while
+}  // ends Config_Skin
 //---------------------------------------------------------------------------
 
 enum CONFIG_SCREEN {
@@ -1203,7 +1203,7 @@ enum CONFIG_SCREEN {
 	CONFIG_SCREEN_COL_GRAPH4_G,
 	CONFIG_SCREEN_COL_GRAPH4_B,
 
-	//First option after colour selectors
+	// First option after colour selectors
 	CONFIG_SCREEN_AFT_COLORS,
 	CONFIG_SCREEN_TV_MODE = CONFIG_SCREEN_AFT_COLORS,
 	CONFIG_SCREEN_TV_STARTX,
@@ -1226,7 +1226,7 @@ enum CONFIG_SCREEN {
 static void Config_Screen(void)
 {
 	int i;
-	int s, max_s = CONFIG_SCREEN_COUNT - 1;  //define cursor index and its max value
+	int s, max_s = CONFIG_SCREEN_COUNT - 1;  // define cursor index and its max value
 	int x, y;
 	int len;
 	int event, post_event = 0;
@@ -1234,7 +1234,7 @@ static void Config_Screen(void)
 	char c[MAX_PATH];
 	int space = ((SCREEN_WIDTH - SCREEN_MARGIN - 4 * FONT_WIDTH) - (Menu_start_x + 2 * FONT_WIDTH)) / 8;
 
-	event = 1;  //event = initial entry
+	event = 1;  // event = initial entry
 
 	for (i = 0; i < COLOR_COUNT; i++) {
 		rgb[i][0] = setting->color[i] & 0xFF;
@@ -1244,11 +1244,11 @@ static void Config_Screen(void)
 
 	s = CONFIG_SCREEN_FIRST;
 	while (1) {
-		//Pad response section
+		// Pad response section
 		waitPadReady(0, 0);
 		if (readpad()) {
 			if (new_pad & PAD_UP) {
-				event |= 2;  //event |= valid pad command
+				event |= 2;  // event |= valid pad command
 				if (s == CONFIG_SCREEN_FIRST)
 					s = max_s;
 				else if (s == CONFIG_SCREEN_AFT_COLORS)
@@ -1256,7 +1256,7 @@ static void Config_Screen(void)
 				else
 					s--;
 			} else if (new_pad & PAD_DOWN) {
-				event |= 2;  //event |= valid pad command
+				event |= 2;  // event |= valid pad command
 				if ((s < CONFIG_SCREEN_AFT_COLORS) && (s % 3 == 2))
 					s = CONFIG_SCREEN_AFT_COLORS;
 				else if (s == max_s)
@@ -1264,7 +1264,7 @@ static void Config_Screen(void)
 				else
 					s++;
 			} else if (new_pad & PAD_LEFT) {
-				event |= 2;  //event |= valid pad command
+				event |= 2;  // event |= valid pad command
 
 				if (s >= CONFIG_SCREEN_RETURN)
 					s = CONFIG_SCREEN_MENU_FRAME;
@@ -1275,13 +1275,13 @@ static void Config_Screen(void)
 				else if (s >= CONFIG_SCREEN_SKIN)
 					s = CONFIG_SCREEN_TV_MODE;
 				else if (s >= CONFIG_SCREEN_TV_STARTX)
-					s = CONFIG_SCREEN_TV_MODE;  //at or
+					s = CONFIG_SCREEN_TV_MODE;  // at or
 				else if (s >= CONFIG_SCREEN_AFT_COLORS)
-					s = CONFIG_SCREEN_COL_LAST;  //if s beyond color settings
+					s = CONFIG_SCREEN_COL_LAST;  // if s beyond color settings
 				else if (s >= CONFIG_SCREEN_COL_FIRST + 3)
-					s -= 3;  //if s in a color beyond the first colour, step to preceding color
+					s -= 3;  // if s in a color beyond the first colour, step to preceding color
 			} else if (new_pad & PAD_RIGHT) {
-				event |= 2;  //event |= valid pad command
+				event |= 2;  // event |= valid pad command
 				if (s >= CONFIG_SCREEN_MENU_FRAME)
 					s = CONFIG_SCREEN_RETURN;
 				else if (s >= CONFIG_SCREEN_MENU_TITLE)
@@ -1293,11 +1293,11 @@ static void Config_Screen(void)
 				else if (s >= CONFIG_SCREEN_TV_MODE)
 					s = CONFIG_SCREEN_TV_STARTX;
 				else if (s >= CONFIG_SCREEN_COL_LAST)
-					s = CONFIG_SCREEN_AFT_COLORS;  //if s in the last colour, move it to the first control after colour selection.
+					s = CONFIG_SCREEN_AFT_COLORS;  // if s in the last colour, move it to the first control after colour selection.
 				else
 					s += 3;
-			} else if ((!swapKeys && new_pad & PAD_CROSS) || (swapKeys && new_pad & PAD_CIRCLE)) {  //User pressed CANCEL=>Subtract/Clear
-				event |= 2;                                                                         //event |= valid pad command
+			} else if ((!swapKeys && new_pad & PAD_CROSS) || (swapKeys && new_pad & PAD_CIRCLE)) {  // User pressed CANCEL=>Subtract/Clear
+				event |= 2;                                                                         // event |= valid pad command
 				if (s < CONFIG_SCREEN_AFT_COLORS) {
 					if (rgb[s / 3][s % 3] > 0) {
 						rgb[s / 3][s % 3]--;
@@ -1314,11 +1314,11 @@ static void Config_Screen(void)
 						setting->screen_y--;
 						updateScreenMode();
 					}
-				} else if (s == CONFIG_SCREEN_MENU_TITLE) {  //cursor is at Menu_Title
+				} else if (s == CONFIG_SCREEN_MENU_TITLE) {  // cursor is at Menu_Title
 					setting->Menu_Title[0] = '\0';
 				}
-			} else if ((swapKeys && new_pad & PAD_CROSS) || (!swapKeys && new_pad & PAD_CIRCLE)) {  //User pressed OK=>Add/Ok/Edit
-				event |= 2;                                                                         //event |= valid pad command
+			} else if ((swapKeys && new_pad & PAD_CROSS) || (!swapKeys && new_pad & PAD_CIRCLE)) {  // User pressed OK=>Add/Ok/Edit
+				event |= 2;                                                                         // event |= valid pad command
 				if (s < CONFIG_SCREEN_AFT_COLORS) {
 					if (rgb[s / 3][s % 3] < 255) {
 						rgb[s / 3][s % 3]++;
@@ -1326,7 +1326,7 @@ static void Config_Screen(void)
 						    GS_SETREG_RGBA(rgb[s / 3][0], rgb[s / 3][1], rgb[s / 3][2], 0);
 					}
 				} else if (s == CONFIG_SCREEN_TV_MODE) {
-					setting->TV_mode = (setting->TV_mode + 1) % TV_mode_COUNT;  //Change between the various modes
+					setting->TV_mode = (setting->TV_mode + 1) % TV_mode_COUNT;  // Change between the various modes
 					updateScreenMode();
 				} else if (s == CONFIG_SCREEN_TV_STARTX) {
 					if (setting->screen_x < gsGlobal->StartX) {
@@ -1344,7 +1344,7 @@ static void Config_Screen(void)
 					loadSkinBrowser();
 				} else if (s == CONFIG_SCREEN_SAVE_SKIN_BROWSER) {
 					saveSkinBrowser();
-				} else if (s == CONFIG_SCREEN_MENU_TITLE) {  //cursor is at Menu_Title
+				} else if (s == CONFIG_SCREEN_MENU_TITLE) {  // cursor is at Menu_Title
 					char tmp[MAX_MENU_TITLE + 1];
 					strcpy(tmp, setting->Menu_Title);
 					if (keyboard(tmp, MAX_MENU_TITLE) >= 0)
@@ -1353,9 +1353,9 @@ static void Config_Screen(void)
 					setting->Menu_Frame = !setting->Menu_Frame;
 				} else if (s == CONFIG_SCREEN_POPUP_OPAQUE) {
 					setting->Popup_Opaque = !setting->Popup_Opaque;
-				} else if (s == CONFIG_SCREEN_RETURN) {  //Always put 'RETURN' next to last
+				} else if (s == CONFIG_SCREEN_RETURN) {  // Always put 'RETURN' next to last
 					return;
-				} else if (s == CONFIG_SCREEN_DEFAULT) {  //Always put 'DEFAULT SCREEN SETTINGS' last
+				} else if (s == CONFIG_SCREEN_DEFAULT) {  // Always put 'DEFAULT SCREEN SETTINGS' last
 					setting->skin[0] = '\0';
 					setting->GUI_skin[0] = '\0';
 					loadSkin(BACKGROUND_PIC, 0, 0);
@@ -1386,9 +1386,9 @@ static void Config_Screen(void)
 				return;
 		}
 
-		if (event || post_event) {  //NB: We need to update two frame buffers per event
+		if (event || post_event) {  // NB: We need to update two frame buffers per event
 
-			//Display section
+			// Display section
 			clrScr(setting->color[COLOR_BACKGR]);
 
 			x = Menu_start_x;
@@ -1426,7 +1426,7 @@ static void Config_Screen(void)
 				sprintf(c, "\xFF"
 				           "4");
 				printXY(c, x + (space * (i + 1)) - FONT_WIDTH, y, setting->color[i], TRUE, 0);
-			}  //ends loop for colour RGB values
+			}  // ends loop for colour RGB values
 			y += FONT_HEIGHT * 2;
 			sprintf(c, "  %s: ", LNG(TV_mode));
 			if (setting->TV_mode == TV_mode_NTSC)
@@ -1492,35 +1492,35 @@ static void Config_Screen(void)
 			printXY(c, x, y, setting->color[COLOR_TEXT], TRUE, 0);
 			y += FONT_HEIGHT;
 
-			//Cursor positioning section
+			// Cursor positioning section
 			x = Menu_start_x;
 			y = Menu_start_y;
 
-			if (s < CONFIG_SCREEN_AFT_COLORS) {  //if cursor indicates a colour component
+			if (s < CONFIG_SCREEN_AFT_COLORS) {  // if cursor indicates a colour component
 				int colnum = s / 3;
 				int comnum = s - colnum * 3;
 				x += (space * (colnum + 1)) - (FONT_WIDTH * 4);
 				y += (2 + comnum) * FONT_HEIGHT;
-			} else {                                                                      //if cursor indicates anything after colour components
-				y += (s - CONFIG_SCREEN_AFT_COLORS + 6) * FONT_HEIGHT + FONT_HEIGHT / 2;  //adjust y for cursor beyond colours
-				//Here y is almost correct, except for additional group spacing
-				if (s >= CONFIG_SCREEN_AFT_COLORS)  //if cursor at or beyond TV mode choice
-					y += FONT_HEIGHT / 2;           //adjust for half-row space below colours
-				if (s >= CONFIG_SCREEN_TV_STARTX)   //if cursor at or beyond screen offsets
-					y += FONT_HEIGHT / 2;           //adjust for half-row space below TV mode choice
-				if (s >= CONFIG_SCREEN_SKIN)        //if cursor at or beyond 'SKIN SETTINGS'
-					y += FONT_HEIGHT / 2;           //adjust for half-row space below screen offsets
-				if (s >= CONFIG_SCREEN_MENU_TITLE)  //if cursor at or beyond 'Menu Title'
-					y += FONT_HEIGHT / 2;           //adjust for half-row space below 'SKIN SETTINGS'
-				if (s >= CONFIG_SCREEN_MENU_FRAME)  //if cursor at or beyond 'Menu Frame'
-					y += FONT_HEIGHT / 2;           //adjust for half-row space below 'Menu Title'
-				if (s >= CONFIG_SCREEN_RETURN)      //if cursor at or beyond 'RETURN'
-					y += FONT_HEIGHT / 2;           //adjust for half-row space below 'Popups Opaque'
+			} else {                                                                      // if cursor indicates anything after colour components
+				y += (s - CONFIG_SCREEN_AFT_COLORS + 6) * FONT_HEIGHT + FONT_HEIGHT / 2;  // adjust y for cursor beyond colours
+				// Here y is almost correct, except for additional group spacing
+				if (s >= CONFIG_SCREEN_AFT_COLORS)  // if cursor at or beyond TV mode choice
+					y += FONT_HEIGHT / 2;           // adjust for half-row space below colours
+				if (s >= CONFIG_SCREEN_TV_STARTX)   // if cursor at or beyond screen offsets
+					y += FONT_HEIGHT / 2;           // adjust for half-row space below TV mode choice
+				if (s >= CONFIG_SCREEN_SKIN)        // if cursor at or beyond 'SKIN SETTINGS'
+					y += FONT_HEIGHT / 2;           // adjust for half-row space below screen offsets
+				if (s >= CONFIG_SCREEN_MENU_TITLE)  // if cursor at or beyond 'Menu Title'
+					y += FONT_HEIGHT / 2;           // adjust for half-row space below 'SKIN SETTINGS'
+				if (s >= CONFIG_SCREEN_MENU_FRAME)  // if cursor at or beyond 'Menu Frame'
+					y += FONT_HEIGHT / 2;           // adjust for half-row space below 'Menu Title'
+				if (s >= CONFIG_SCREEN_RETURN)      // if cursor at or beyond 'RETURN'
+					y += FONT_HEIGHT / 2;           // adjust for half-row space below 'Popups Opaque'
 			}
-			drawChar(LEFT_CUR, x, y, setting->color[COLOR_TEXT]);  //draw cursor
+			drawChar(LEFT_CUR, x, y, setting->color[COLOR_TEXT]);  // draw cursor
 
-			//Tooltip section
-			if (s < CONFIG_SCREEN_AFT_COLORS || s == CONFIG_SCREEN_TV_STARTX || s == CONFIG_SCREEN_TV_STARTY) {  //if cursor at a colour component or a screen offset
+			// Tooltip section
+			if (s < CONFIG_SCREEN_AFT_COLORS || s == CONFIG_SCREEN_TV_STARTX || s == CONFIG_SCREEN_TV_STARTY) {  // if cursor at a colour component or a screen offset
 				if (swapKeys)
 					len = sprintf(c, "\xFF"
 					                 "1:%s \xFF"
@@ -1532,7 +1532,7 @@ static void Config_Screen(void)
 					                 "1:%s",
 					              LNG(Add), LNG(Subtract));
 			} else if (s == CONFIG_SCREEN_TV_MODE || s == CONFIG_SCREEN_MENU_FRAME || s == CONFIG_SCREEN_POPUP_OPAQUE) {
-				//if cursor at 'TV mode', 'Menu Frame' or 'Popups Opaque'
+				// if cursor at 'TV mode', 'Menu Frame' or 'Popups Opaque'
 				if (swapKeys)
 					len = sprintf(c, "\xFF"
 					                 "1:%s",
@@ -1541,7 +1541,7 @@ static void Config_Screen(void)
 					len = sprintf(c, "\xFF"
 					                 "0:%s",
 					              LNG(Change));
-			} else if (s == CONFIG_SCREEN_SKIN || s == CONFIG_SCREEN_LOAD_SKIN_BROWSER || s == CONFIG_SCREEN_SAVE_SKIN_BROWSER) {  //if cursor at 'SKIN SETTINGS'
+			} else if (s == CONFIG_SCREEN_SKIN || s == CONFIG_SCREEN_LOAD_SKIN_BROWSER || s == CONFIG_SCREEN_SAVE_SKIN_BROWSER) {  // if cursor at 'SKIN SETTINGS'
 				if (swapKeys)
 					len = sprintf(c, "\xFF"
 					                 "1:%s",
@@ -1550,7 +1550,7 @@ static void Config_Screen(void)
 					len = sprintf(c, "\xFF"
 					                 "0:%s",
 					              LNG(OK));
-			} else if (s == CONFIG_SCREEN_MENU_TITLE) {  //if cursor at Menu_Title
+			} else if (s == CONFIG_SCREEN_MENU_TITLE) {  // if cursor at Menu_Title
 				if (swapKeys)
 					len = sprintf(c, "\xFF"
 					                 "1:%s \xFF"
@@ -1561,7 +1561,7 @@ static void Config_Screen(void)
 					                 "0:%s \xFF"
 					                 "1:%s",
 					              LNG(Edit), LNG(Clear));
-			} else {  //if cursor at 'RETURN' or 'DEFAULT' options
+			} else {  // if cursor at 'RETURN' or 'DEFAULT' options
 				if (swapKeys)
 					len = sprintf(c, "\xFF"
 					                 "1:%s",
@@ -1575,13 +1575,13 @@ static void Config_Screen(void)
 			                 "3:%s",
 			        LNG(Return));
 			setScrTmp("", c);
-		}  //ends if(event||post_event)
+		}  // ends if(event||post_event)
 		drawScr();
 		post_event = event;
 		event = 0;
 
-	}  //ends while
-}  //ends Config_Screen
+	}  // ends while
+}  // ends Config_Screen
 //---------------------------------------------------------------------------
 // Other settings by EP
 // sincro: ADD USBD SELECTOR MENU
@@ -1611,44 +1611,44 @@ enum CONFIG_STARTUP {
 
 static void Config_Startup(void)
 {
-	int s, max_s = CONFIG_STARTUP_COUNT - 1;  //define cursor index and its max value
+	int s, max_s = CONFIG_STARTUP_COUNT - 1;  // define cursor index and its max value
 	int x, y;
 	int len;
 	int event, post_event = 0;
 	char c[MAX_PATH];
 
-	event = 1;  //event = initial entry
+	event = 1;  // event = initial entry
 	s = CONFIG_STARTUP_FIRST;
 	while (1) {
-		//Pad response section
+		// Pad response section
 		waitPadReady(0, 0);
 		if (readpad()) {
 			if (new_pad & PAD_UP) {
-				event |= 2;  //event |= valid pad command
+				event |= 2;  // event |= valid pad command
 				if (s != CONFIG_STARTUP_FIRST)
 					s--;
 				else
 					s = max_s;
 			} else if (new_pad & PAD_DOWN) {
-				event |= 2;  //event |= valid pad command
+				event |= 2;  // event |= valid pad command
 				if (s != max_s)
 					s++;
 				else
 					s = CONFIG_STARTUP_FIRST;
 			} else if (new_pad & PAD_LEFT) {
-				event |= 2;  //event |= valid pad command
+				event |= 2;  // event |= valid pad command
 				if (s != max_s)
 					s = max_s;
 				else
 					s = CONFIG_STARTUP_FIRST;
 			} else if (new_pad & PAD_RIGHT) {
-				event |= 2;  //event |= valid pad command
+				event |= 2;  // event |= valid pad command
 				if (s != max_s)
 					s = max_s;
 				else
 					s = CONFIG_STARTUP_FIRST;
 			} else if ((!swapKeys && new_pad & PAD_CROSS) || (swapKeys && new_pad & PAD_CIRCLE)) {
-				event |= 2;  //event |= valid pad command
+				event |= 2;  // event |= valid pad command
 				if (s == CONFIG_STARTUP_CNF_COUNT && setting->numCNF > 1)
 					setting->numCNF--;
 				else if (s == CONFIG_STARTUP_USBD)
@@ -1671,15 +1671,15 @@ static void Config_Startup(void)
 				} else if (s == CONFIG_STARTUP_FONT) {
 					setting->font_file[0] = '\0';
 					loadFont("");
-				} else if (s == CONFIG_STARTUP_ESR) {  //clear ESR file choice
+				} else if (s == CONFIG_STARTUP_ESR) {  // clear ESR file choice
 					setting->LK_Path[SETTING_LK_ESR][0] = 0;
 					setting->LK_Flag[SETTING_LK_ESR] = 0;
-				} else if (s == CONFIG_STARTUP_OSDSYS) {  //clear OSDSYS file choice
+				} else if (s == CONFIG_STARTUP_OSDSYS) {  // clear OSDSYS file choice
 					setting->LK_Path[SETTING_LK_OSDSYS][0] = 0;
 					setting->LK_Flag[SETTING_LK_OSDSYS] = 0;
 				}
 			} else if ((swapKeys && new_pad & PAD_CROSS) || (!swapKeys && new_pad & PAD_CIRCLE)) {
-				event |= 2;  //event |= valid pad command
+				event |= 2;  // event |= valid pad command
 				if (s == CONFIG_STARTUP_CNF_COUNT)
 					setting->numCNF++;
 				else if (s == CONFIG_STARTUP_SELECT_BTN)
@@ -1711,7 +1711,7 @@ static void Config_Startup(void)
 					getFilePath(setting->font_file, FONT_CNF);
 					if (loadFont(setting->font_file) == 0)
 						setting->font_file[0] = '\0';
-				} else if (s == CONFIG_STARTUP_CNF) {  //Make ESR file choice
+				} else if (s == CONFIG_STARTUP_CNF) {  // Make ESR file choice
 					getFilePath(setting->LK_Path[SETTING_LK_ESR], LK_ELF_CNF);
 					if (!strncmp(setting->LK_Path[SETTING_LK_ESR], "mc0", 3) ||
 					    !strncmp(setting->LK_Path[SETTING_LK_ESR], "mc1", 3)) {
@@ -1720,7 +1720,7 @@ static void Config_Startup(void)
 					}
 					if (setting->LK_Path[SETTING_LK_ESR][0])
 						setting->LK_Flag[SETTING_LK_ESR] = 1;
-				} else if (s == CONFIG_STARTUP_OSDSYS) {  //Make OSDSYS file choice
+				} else if (s == CONFIG_STARTUP_OSDSYS) {  // Make OSDSYS file choice
 					getFilePath(setting->LK_Path[SETTING_LK_OSDSYS], TEXT_CNF);
 					if (!strncmp(setting->LK_Path[SETTING_LK_OSDSYS], "mc0", 3) ||
 					    !strncmp(setting->LK_Path[SETTING_LK_OSDSYS], "mc1", 3)) {
@@ -1735,9 +1735,9 @@ static void Config_Startup(void)
 				return;
 		}
 
-		if (event || post_event) {  //NB: We need to update two frame buffers per event
+		if (event || post_event) {  // NB: We need to update two frame buffers per event
 
-			//Display section
+			// Display section
 			clrScr(setting->color[COLOR_BACKGR]);
 
 			x = Menu_start_x;
@@ -1847,15 +1847,15 @@ static void Config_Startup(void)
 			printXY(c, x, y, setting->color[COLOR_TEXT], TRUE, 0);
 			y += FONT_HEIGHT;
 
-			//Cursor positioning section
+			// Cursor positioning section
 			y = Menu_start_y + s * FONT_HEIGHT + FONT_HEIGHT / 2;
 
 			if (s >= max_s)
 				y += FONT_HEIGHT / 2;
 			drawChar(LEFT_CUR, x, y, setting->color[COLOR_TEXT]);
 
-			//Tooltip section
-			if ((s == CONFIG_STARTUP_SELECT_BTN) || (s == CONFIG_STARTUP_KEYBOARD)) {  //usbkbd_used
+			// Tooltip section
+			if ((s == CONFIG_STARTUP_SELECT_BTN) || (s == CONFIG_STARTUP_KEYBOARD)) {  // usbkbd_used
 				if (swapKeys)
 					len = sprintf(c, "\xFF"
 					                 "1:%s",
@@ -1864,7 +1864,7 @@ static void Config_Startup(void)
 					len = sprintf(c, "\xFF"
 					                 "0:%s",
 					              LNG(Change));
-			} else if ((s == CONFIG_STARTUP_CNF_COUNT) || (s == CONFIG_STARTUP_INIT_DELAY) || (s == CONFIG_STARTUP_TIMEOUT)) {  //numCNF || Init_Delay || timeout
+			} else if ((s == CONFIG_STARTUP_CNF_COUNT) || (s == CONFIG_STARTUP_INIT_DELAY) || (s == CONFIG_STARTUP_TIMEOUT)) {  // numCNF || Init_Delay || timeout
 				if (swapKeys)
 					len = sprintf(c, "\xFF"
 					                 "1:%s \xFF"
@@ -1876,8 +1876,8 @@ static void Config_Startup(void)
 					                 "1:%s",
 					              LNG(Add), LNG(Subtract));
 			} else if ((s == CONFIG_STARTUP_USBD) || (s == CONFIG_STARTUP_USBKBD) || (s == CONFIG_STARTUP_KBDMAP) || (s == CONFIG_STARTUP_CNF) || (s == CONFIG_STARTUP_USBHDFSD)
-			           //usbd_file||usbkbd_file||kbdmap_file||CNF_Path||usbmass_file
-			           //Language||Fontfile||ESR_elf||OSDSYS_kelf
+			           // usbd_file||usbkbd_file||kbdmap_file||CNF_Path||usbmass_file
+			           // Language||Fontfile||ESR_elf||OSDSYS_kelf
 			           || (s == CONFIG_STARTUP_LANG) || (s == CONFIG_STARTUP_FONT) || (s == CONFIG_STARTUP_ESR) || (s == CONFIG_STARTUP_OSDSYS)) {
 				if (swapKeys)
 					len = sprintf(c, "\xFF"
@@ -1903,13 +1903,13 @@ static void Config_Startup(void)
 			                 "3:%s",
 			        LNG(Return));
 			setScrTmp("", c);
-		}  //ends if(event||post_event)
+		}  // ends if(event||post_event)
 		drawScr();
 		post_event = event;
 		event = 0;
 
-	}  //ends while
-}  //ends Config_Startup
+	}  // ends while
+}  // ends Config_Startup
 //---------------------------------------------------------------------------
 // Network settings GUI by Slam-Tilt
 //---------------------------------------------------------------------------
@@ -1959,7 +1959,7 @@ static void saveNetworkSettings(char *Message)
 
 		/*for (i = 0; (ipconfigfile[i] != 0 && i <= size); i++)
 		{
-			// DPRINTF("%i-%c\n\r",i,ipconfigfile[i]);
+		    // DPRINTF("%i-%c\n\r",i,ipconfigfile[i]);
 		}*/
 
 		sizeleft = size - i;
@@ -1968,7 +1968,7 @@ static void saveNetworkSettings(char *Message)
 	} else {
 		port = CheckMC();
 		if (port < 0)
-			port = 0;  //Default to mc0, if it fails.
+			port = 0;  // Default to mc0, if it fails.
 		sprintf(path, "mc%d:/SYS-CONF/IPCONFIG.DAT", port);
 	}
 
@@ -2038,7 +2038,7 @@ enum CONFIG_NET {
 	CONFIG_NET_NM,
 	CONFIG_NET_GW,
 
-	//Settings after IP addresses
+	// Settings after IP addresses
 	CONFIG_NET_AFT_IP,
 	CONFIG_NET_SAVE = CONFIG_NET_AFT_IP,
 	CONFIG_NET_RETURN,
@@ -2062,17 +2062,17 @@ static void Config_Network(void)
 	char NetMsg[MAX_PATH] = "";
 	char path[MAX_PATH];
 
-	event = 1;  //event = initial entry
+	event = 1;  // event = initial entry
 	s = CONFIG_NET_FIRST;
 	l = 1;
 	ipdata = BuildOctets(ip, netmask, gw);
 
 	while (1) {
-		//Pad response section
+		// Pad response section
 		waitPadReady(0, 0);
 		if (readpad()) {
 			if (new_pad & PAD_UP) {
-				event |= 2;  //event |= valid pad command
+				event |= 2;  // event |= valid pad command
 				if (s != CONFIG_NET_FIRST)
 					s--;
 				else {
@@ -2080,7 +2080,7 @@ static void Config_Network(void)
 					l = 1;
 				}
 			} else if (new_pad & PAD_DOWN) {
-				event |= 2;  //event |= valid pad command
+				event |= 2;  // event |= valid pad command
 				if (s != CONFIG_NET_COUNT - 1)
 					s++;
 				else
@@ -2088,17 +2088,17 @@ static void Config_Network(void)
 				if (s >= CONFIG_NET_AFT_IP)
 					l = 1;
 			} else if (new_pad & PAD_LEFT) {
-				event |= 2;  //event |= valid pad command
+				event |= 2;  // event |= valid pad command
 				if (s < CONFIG_NET_AFT_IP)
 					if (l > 1)
 						l--;
 			} else if (new_pad & PAD_RIGHT) {
-				event |= 2;  //event |= valid pad command
+				event |= 2;  // event |= valid pad command
 				if (s < CONFIG_NET_AFT_IP)
 					if (l < 5)
 						l++;
 			} else if ((!swapKeys && new_pad & PAD_CROSS) || (swapKeys && new_pad & PAD_CIRCLE)) {
-				event |= 2;  //event |= valid pad command
+				event |= 2;  // event |= valid pad command
 				if ((s < CONFIG_NET_AFT_IP) && (l > 1)) {
 					if (s == CONFIG_NET_IP) {
 						if (ipdata.ip[l - 2] > 0) {
@@ -2115,7 +2115,7 @@ static void Config_Network(void)
 					}
 				}
 			} else if ((swapKeys && new_pad & PAD_CROSS) || (!swapKeys && new_pad & PAD_CIRCLE)) {
-				event |= 2;  //event |= valid pad command
+				event |= 2;  // event |= valid pad command
 				if ((s < CONFIG_NET_AFT_IP) && (l > 1)) {
 					if (s == CONFIG_NET_IP) {
 						if (ipdata.ip[l - 2] < 255) {
@@ -2139,15 +2139,15 @@ static void Config_Network(void)
 					sprintf(gw, "%i.%i.%i.%i", ipdata.gw[0], ipdata.gw[1], ipdata.gw[2], ipdata.gw[3]);
 
 					saveNetworkSettings(NetMsg);
-				} else  //s == CONFIG_NET_RETURN
+				} else  // s == CONFIG_NET_RETURN
 					return;
 			} else if (new_pad & PAD_TRIANGLE)
 				return;
 		}
 
-		if (event || post_event) {  //NB: We need to update two frame buffers per event
+		if (event || post_event) {  // NB: We need to update two frame buffers per event
 
-			//Display section
+			// Display section
 			clrScr(setting->color[COLOR_BACKGR]);
 
 			x = Menu_start_x;
@@ -2182,7 +2182,7 @@ static void Config_Network(void)
 
 			y += FONT_HEIGHT / 2;
 
-			uLE_related(path, "uLE:/IPCONFIG.DAT");  //Get save target.
+			uLE_related(path, "uLE:/IPCONFIG.DAT");  // Get save target.
 			sprintf(c, "  %s \"%s\"", LNG(Save_to), path);
 			printXY(c, x, y, setting->color[COLOR_TEXT], TRUE, 0);
 			y += FONT_HEIGHT;
@@ -2192,7 +2192,7 @@ static void Config_Network(void)
 			printXY(c, x, y, setting->color[COLOR_TEXT], TRUE, 0);
 			y += FONT_HEIGHT;
 
-			//Cursor positioning section
+			// Cursor positioning section
 			y = Menu_start_y + s * FONT_HEIGHT + FONT_HEIGHT / 2;
 
 			if (s >= CONFIG_NET_AFT_IP)
@@ -2203,7 +2203,7 @@ static void Config_Network(void)
 				x += (len - 1) * FONT_WIDTH - 1 + (l - 2) * 6 * FONT_WIDTH;
 			drawChar(LEFT_CUR, x, y, setting->color[COLOR_TEXT]);
 
-			//Tooltip section
+			// Tooltip section
 			if ((s < CONFIG_NET_AFT_IP) && (l == 1)) {
 				len = sprintf(c, "%s", LNG(Right_DPad_to_Edit));
 			} else if (s < CONFIG_NET_AFT_IP) {
@@ -2240,13 +2240,13 @@ static void Config_Network(void)
 			                 "3:%s",
 			        LNG(Return));
 			setScrTmp(NetMsg, c);
-		}  //ends if(event||post_event)
+		}  // ends if(event||post_event)
 		drawScr();
 		post_event = event;
 		event = 0;
 
-	}  //ends while
-}  //ends Config_Network
+	}  // ends while
+}  // ends Config_Network
 //---------------------------------------------------------------------------
 // Configuration menu
 //---------------------------------------------------------------------------
@@ -2266,7 +2266,7 @@ enum CONFIG_MAIN {
 	CONFIG_MAIN_BTN_R3,
 	CONFIG_MAIN_BTN_START,
 
-	//After button settings
+	// After button settings
 	CONFIG_MAIN_AFT_BTNS,
 	CONFIG_MAIN_SHOW_TITLES = CONFIG_MAIN_AFT_BTNS,
 	CONFIG_MAIN_FILENAME,
@@ -2296,49 +2296,49 @@ void config(char *mainMsg, char *CNF)
 	setting = (SETTING *)malloc(sizeof(SETTING));
 	*setting = *tmpsetting;
 
-	event = 1;  //event = initial entry
+	event = 1;  // event = initial entry
 	s = CONFIG_MAIN_FIRST;
 	while (1) {
-		//Pad response section
+		// Pad response section
 		waitPadReady(0, 0);
 		if (readpad()) {
 			if (new_pad & PAD_UP) {
-				event |= 2;  //event |= valid pad command
+				event |= 2;  // event |= valid pad command
 				if (s != CONFIG_MAIN_FIRST)
 					s--;
 				else
 					s = CONFIG_MAIN_COUNT - 1;
 			} else if (new_pad & PAD_DOWN) {
-				event |= 2;  //event |= valid pad command
+				event |= 2;  // event |= valid pad command
 				if (s != CONFIG_MAIN_COUNT - 1)
 					s++;
 				else
 					s = 0;
 			} else if (new_pad & PAD_LEFT) {
-				event |= 2;  //event |= valid pad command
+				event |= 2;  // event |= valid pad command
 				if (s > CONFIG_MAIN_LAST)
 					s = CONFIG_MAIN_AFT_BTNS;
 				else
 					s = CONFIG_MAIN_FIRST;
 			} else if (new_pad & PAD_RIGHT) {
-				event |= 2;  //event |= valid pad command
+				event |= 2;  // event |= valid pad command
 				if (s < CONFIG_MAIN_AFT_BTNS)
 					s = CONFIG_MAIN_AFT_BTNS;
 				else if (s <= CONFIG_MAIN_LAST)
 					s = CONFIG_MAIN_OK;
 			} else if ((new_pad & PAD_SQUARE) && (s < CONFIG_MAIN_AFT_BTNS)) {
-				event |= 2;  //event |= valid pad command
+				event |= 2;  // event |= valid pad command
 				strcpy(title_tmp, setting->LK_Title[s]);
 				if (keyboard(title_tmp, MAX_ELF_TITLE) >= 0)
 					strcpy(setting->LK_Title[s], title_tmp);
 			} else if ((!swapKeys && new_pad & PAD_CROSS) || (swapKeys && new_pad & PAD_CIRCLE)) {
-				event |= 2;  //event |= valid pad command
+				event |= 2;  // event |= valid pad command
 				if (s < CONFIG_MAIN_AFT_BTNS) {
 					setting->LK_Path[s][0] = 0;
 					setting->LK_Title[s][0] = 0;
 				}
 			} else if ((swapKeys && new_pad & PAD_CROSS) || (!swapKeys && new_pad & PAD_CIRCLE)) {
-				event |= 2;  //event |= valid pad command
+				event |= 2;  // event |= valid pad command
 				if (s < CONFIG_MAIN_AFT_BTNS) {
 					getFilePath(setting->LK_Path[s], TRUE);
 					if (!strncmp(setting->LK_Path[s], "mc0", 3) ||
@@ -2379,11 +2379,11 @@ void config(char *mainMsg, char *CNF)
 				mainMsg[0] = 0;
 				break;
 			}
-		}  //end if(readpad())
+		}  // end if(readpad())
 
-		if (event || post_event) {  //NB: We need to update two frame buffers per event
+		if (event || post_event) {  // NB: We need to update two frame buffers per event
 
-			//Display section
+			// Display section
 			clrScr(setting->color[COLOR_BACKGR]);
 
 			if (s < CONFIG_MAIN_AFT_BTNS)
@@ -2475,13 +2475,13 @@ void config(char *mainMsg, char *CNF)
 			sprintf(c, "  %s", LNG(Cancel));
 			printXY(c, x, y, setting->color[COLOR_TEXT], TRUE, 0);
 
-			//Cursor positioning section
+			// Cursor positioning section
 			y = Menu_start_y + (s + 1) * FONT_HEIGHT;
 			if (s >= CONFIG_MAIN_AFT_BTNS)
 				y += FONT_HEIGHT / 2;
 			drawChar(LEFT_CUR, x, y, setting->color[COLOR_TEXT]);
 
-			//Tooltip section
+			// Tooltip section
 			if (s < CONFIG_MAIN_AFT_BTNS) {
 				if (swapKeys)
 					len = sprintf(c, "\xFF"
@@ -2518,13 +2518,13 @@ void config(char *mainMsg, char *CNF)
 			                 "3:%s",
 			        LNG(Return));
 			setScrTmp(localMsg, c);
-		}  //ends if(event||post_event)
+		}  // ends if(event||post_event)
 		drawScr();
 		post_event = event;
 		event = 0;
 
-	}  //ends while
-}  //ends config
+	}  // ends while
+}  // ends config
 //---------------------------------------------------------------------------
 // End of file: config.c
 //---------------------------------------------------------------------------

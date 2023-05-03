@@ -1,5 +1,5 @@
 //--------------------------------------------------------------
-//File name:   filer.c
+// File name:   filer.c
 //--------------------------------------------------------------
 #include "launchelf.h"
 
@@ -14,15 +14,15 @@ typedef struct
 	unsigned short year;  // date/time (year)
 } PS2TIME __attribute__((aligned(2)));
 
-#define MC_SFI 0xFEED  //flag value used for mcSetFileInfo at MC file restoration
+#define MC_SFI 0xFEED  // flag value used for mcSetFileInfo at MC file restoration
 
-#define MC_ATTR_norm_folder 0x8427  //Normal folder on PS2 MC
-#define MC_ATTR_prot_folder 0x842F  //Protected folder on PS2 MC
-#define MC_ATTR_PS1_folder 0x9027   //PS1 save folder on PS2 MC
-#define MC_ATTR_norm_file 0x8497    //file (PS2/PS1) on PS2 MC
-#define MC_ATTR_PS1_file 0x9417     //PS1 save file on PS1 MC
+#define MC_ATTR_norm_folder 0x8427  // Normal folder on PS2 MC
+#define MC_ATTR_prot_folder 0x842F  // Protected folder on PS2 MC
+#define MC_ATTR_PS1_folder 0x9027   // PS1 save folder on PS2 MC
+#define MC_ATTR_norm_file 0x8497    // file (PS2/PS1) on PS2 MC
+#define MC_ATTR_PS1_file 0x9417     // PS1 save file on PS1 MC
 
-#define IOCTL_RENAME 0xFEEDC0DE  //Ioctl request code for Rename function
+#define IOCTL_RENAME 0xFEEDC0DE  // Ioctl request code for Rename function
 
 enum {
 	COPY,
@@ -42,30 +42,30 @@ enum {
 	NUM_MENU
 } R1_menu_enum;
 
-#define PM_NORMAL 0       //PasteMode value for normal copies
-#define PM_MC_BACKUP 1    //PasteMode value for gamesave backup from MC
-#define PM_MC_RESTORE 2   //PasteMode value for gamesave restore to MC
-#define PM_PSU_BACKUP 3   //PasteMode value for gamesave backup from MC to PSU
-#define PM_PSU_RESTORE 4  //PasteMode value for gamesave restore to MC from PSU
-#define PM_RENAME 5       //PasteMode value for normal copies with new names
-#define MAX_RECURSE 16    //Maximum folder recursion for MC Backup/Restore
+#define PM_NORMAL 0       // PasteMode value for normal copies
+#define PM_MC_BACKUP 1    // PasteMode value for gamesave backup from MC
+#define PM_MC_RESTORE 2   // PasteMode value for gamesave restore to MC
+#define PM_PSU_BACKUP 3   // PasteMode value for gamesave backup from MC to PSU
+#define PM_PSU_RESTORE 4  // PasteMode value for gamesave restore to MC from PSU
+#define PM_RENAME 5       // PasteMode value for normal copies with new names
+#define MAX_RECURSE 16    // Maximum folder recursion for MC Backup/Restore
 
-int PasteProgress_f = 0;   //Flags progress report having been made in Pasting
-int PasteMode;             //Top-level PasteMode flag
-int PM_flag[MAX_RECURSE];  //PasteMode flag for each 'copy' recursion level
-int PM_file[MAX_RECURSE];  //PasteMode attribute file descriptors
+int PasteProgress_f = 0;   // Flags progress report having been made in Pasting
+int PasteMode;             // Top-level PasteMode flag
+int PM_flag[MAX_RECURSE];  // PasteMode flag for each 'copy' recursion level
+int PM_file[MAX_RECURSE];  // PasteMode attribute file descriptors
 
 char mountedParty[MOUNT_LIMIT][MAX_NAME];
 int latestMount = -1;
-int vmcMounted[2] = {0, 0};                          //flags true for mounted VMC false for unmounted
-int vmc_PartyIndex[2] = {-1, -1};                    //PFS index for each VMC, unless -1
-int Party_vmcIndex[MOUNT_LIMIT] = {-1, -1, -1, -1};  //VMC for each PFS, unless -1
+int vmcMounted[2] = {0, 0};                          // flags true for mounted VMC false for unmounted
+int vmc_PartyIndex[2] = {-1, -1};                    // PFS index for each VMC, unless -1
+int Party_vmcIndex[MOUNT_LIMIT] = {-1, -1, -1, -1};  // VMC for each PFS, unless -1
 unsigned char *elisaFnt = NULL;
-int elisa_failed = FALSE;  //Set at failure to load font, cleared at browser entry
+int elisa_failed = FALSE;  // Set at failure to load font, cleared at browser entry
 u64 freeSpace;
 int mcfreeSpace;
-int mctype_PSx;  //dlanor: Needed for proper scaling of mcfreespace
-int vfreeSpace;  //flags validity of freespace value
+int mctype_PSx;  // dlanor: Needed for proper scaling of mcfreespace
+int vfreeSpace;  // flags validity of freespace value
 int browser_cut;
 int nclipFiles, nmarks, nparties;
 #ifdef DVRP
@@ -75,14 +75,14 @@ int latestDVRPMount = -1;
 #endif
 
 #ifdef MX4SIO
-int mx4sio_idx = -1; // To keep track of wich mass#:/ device represents MX4SIO
+int mx4sio_idx = -1;  // To keep track of wich mass#:/ device represents MX4SIO
 #endif
 
-int file_show = 1;  //dlanor: 0==name_only, 1==name+size+time, 2==title+size+time
-int file_sort = 1;  //dlanor: 0==none, 1==name, 2==title, 3==mtime
+int file_show = 1;  // dlanor: 0==name_only, 1==name+size+time, 2==title+size+time
+int file_sort = 1;  // dlanor: 0==none, 1==name, 2==title, 3==mtime
 int size_valid = 0;
 int time_valid = 0;
-char parties[MAX_PARTITIONS][MAX_PART_NAME+1];
+char parties[MAX_PARTITIONS][MAX_PART_NAME + 1];
 char clipPath[MAX_PATH], LastDir[MAX_NAME], marks[MAX_ENTRY];
 FILEINFO clipFiles[MAX_ENTRY];
 int fileMode = FIO_S_IRUSR | FIO_S_IWUSR | FIO_S_IXUSR | FIO_S_IRGRP | FIO_S_IWGRP | FIO_S_IXGRP | FIO_S_IROTH | FIO_S_IWOTH | FIO_S_IXOTH;
@@ -126,10 +126,10 @@ char cnfmode_extL[CNFMODE_CNT][4] = {
 int host_ready = 0;
 int host_error = 0;
 int host_elflist = 0;
-int host_use_Bsl = 1;  //By default assume that host paths use backslash
+int host_use_Bsl = 1;  // By default assume that host paths use backslash
 #endif
-unsigned long written_size;  //Used for pasting progress report
-u64 PasteTime;               //Used for pasting progress report
+unsigned long written_size;  // Used for pasting progress report
+u64 PasteTime;               // Used for pasting progress report
 
 typedef struct
 {
@@ -143,43 +143,43 @@ typedef struct
 } ps2time;
 
 typedef struct
-{                       //Offs:  Example content
-	ps2time cTime;      //0x00:  8 bytes creation timestamp (struct above)
-	ps2time mTime;      //0x08:  8 bytes modification timestamp (struct above)
-	u32 size;           //0x10:  file size
-	u16 attr;           //0x14:  0x8427  (=normal folder, 8497 for normal file)
-	u16 unknown_1_u16;  //0x16:  2 zero bytes
-	u64 unknown_2_u64;  //0x18:  8 zero bytes
-	u8 name[32];        //0x20:  32 name bytes, padded with zeroes
+{                       // Offs:  Example content
+	ps2time cTime;      // 0x00:  8 bytes creation timestamp (struct above)
+	ps2time mTime;      // 0x08:  8 bytes modification timestamp (struct above)
+	u32 size;           // 0x10:  file size
+	u16 attr;           // 0x14:  0x8427  (=normal folder, 8497 for normal file)
+	u16 unknown_1_u16;  // 0x16:  2 zero bytes
+	u64 unknown_2_u64;  // 0x18:  8 zero bytes
+	u8 name[32];        // 0x20:  32 name bytes, padded with zeroes
 } mcT_header __attribute__((aligned(64)));
 
 typedef struct
-{                                   //Offs:  Example content
-	u16 attr;                       //0x00:  0x8427  (=normal folder, 8497 for normal file)
-	u16 unknown_1_u16;              //0x02:  2 zero bytes
-	u32 size;                       //0x04:  header_count-1, file size, 0 for pseudo
-	ps2time cTime;                  //0x08:  8 bytes creation timestamp (struct above)
-	u64 EMS_used_u64;               //0x10:  8 zero bytes (but used by EMS)
-	ps2time mTime;                  //0x18:  8 bytes modification timestamp (struct above)
-	u64 unknown_2_u64;              //0x20:  8 bytes from mcTable
-	u8 unknown_3_24_bytes[24];      //0x28:  24 zero bytes
-	u8 name[32];                    //0x40:  32 name bytes, padded with zeroes
-	u8 unknown_4_416_bytes[0x1A0];  //0x60:  zero byte padding to reach 0x200 size
-} psu_header;                       //0x200: End of psu_header struct
+{                                   // Offs:  Example content
+	u16 attr;                       // 0x00:  0x8427  (=normal folder, 8497 for normal file)
+	u16 unknown_1_u16;              // 0x02:  2 zero bytes
+	u32 size;                       // 0x04:  header_count-1, file size, 0 for pseudo
+	ps2time cTime;                  // 0x08:  8 bytes creation timestamp (struct above)
+	u64 EMS_used_u64;               // 0x10:  8 zero bytes (but used by EMS)
+	ps2time mTime;                  // 0x18:  8 bytes modification timestamp (struct above)
+	u64 unknown_2_u64;              // 0x20:  8 bytes from mcTable
+	u8 unknown_3_24_bytes[24];      // 0x28:  24 zero bytes
+	u8 name[32];                    // 0x40:  32 name bytes, padded with zeroes
+	u8 unknown_4_416_bytes[0x1A0];  // 0x60:  zero byte padding to reach 0x200 size
+} psu_header;                       // 0x200: End of psu_header struct
 
-int PSU_content;  //Used to count PSU content headers for the main header
+int PSU_content;  // Used to count PSU content headers for the main header
 
-//USB_mass definitions for multiple drive usage
+// USB_mass definitions for multiple drive usage
 char USB_mass_ix[10] = {'0', 0, 0, 0, 0, 0, 0, 0, 0, 0};
 int USB_mass_max_drives = USB_MASS_MAX_DRIVES;
 u64 USB_mass_scan_time = 0;
-int USB_mass_scanned = 0;  //0==Not_found_OR_No_Multi 1==found_Multi_mass_once
-int USB_mass_loaded = 0;   //0==none, 1==internal, 2==external
+int USB_mass_scanned = 0;  // 0==Not_found_OR_No_Multi 1==found_Multi_mass_once
+int USB_mass_loaded = 0;   // 0==none, 1==internal, 2==external
 
 
-//char debugs[4096]; //For debug display strings. Comment it out when unused
+// char debugs[4096]; //For debug display strings. Comment it out when unused
 //--------------------------------------------------------------
-//executable code
+// executable code
 //--------------------------------------------------------------
 void clear_mcTable(sceMcTblGetDir *mcT)
 {
@@ -211,7 +211,7 @@ void pad_psu_header(psu_header *psu)
 // pfs index), and this is then followed by the path within that partition.
 // Note that despite the name 'dir', this is also used for files.
 //-----
-//NB: From the first slash character those two strings are identical when
+// NB: From the first slash character those two strings are identical when
 // both are used, but either pointer may be set to NULL in the function call,
 // as an indication that the caller isn't interested in that part.
 //--------------------------------------------------------------
@@ -244,19 +244,19 @@ int mountParty(const char *party)
 	int i, j;
 	char pfs_str[6];
 
-	for (i = 0; i < MOUNT_LIMIT; i++) {  //Here we check already mounted PFS indexes
+	for (i = 0; i < MOUNT_LIMIT; i++) {  // Here we check already mounted PFS indexes
 		if (!strcmp(party, mountedParty[i]))
 			goto return_i;
 	}
 
-	for (i = 0, j = -1; i < MOUNT_LIMIT; i++) {  //Here we search for a free PFS index
+	for (i = 0, j = -1; i < MOUNT_LIMIT; i++) {  // Here we search for a free PFS index
 		if (mountedParty[i][0] == 0) {
 			j = i;
 			break;
 		}
 	}
 
-	if (j == -1) {  //Here we search for a suitable PFS index to unmount
+	if (j == -1) {  // Here we search for a suitable PFS index to unmount
 		for (i = 0; i < MOUNT_LIMIT; i++) {
 			if ((i != latestMount) && (Party_vmcIndex[i] < 0)) {
 				j = i;
@@ -265,30 +265,30 @@ int mountParty(const char *party)
 		}
 		unmountParty(j);
 	}
-	//Here j is the index of a free PFS mountpoint
-	//But 'free' only means that the main uLE program isn't using it
-	//If the ftp server is running, that may have used the mountpoints
+	// Here j is the index of a free PFS mountpoint
+	// But 'free' only means that the main uLE program isn't using it
+	// If the ftp server is running, that may have used the mountpoints
 
-	//RA NB: The old code to reclaim FTP partitions was seriously bugged...
+	// RA NB: The old code to reclaim FTP partitions was seriously bugged...
 
 	i = j;
 	strcpy(pfs_str, "pfs0:");
 
 	pfs_str[3] = '0' + i;
-	if (fileXioMount(pfs_str, party, FIO_MT_RDWR) < 0) {          //if FTP stole it
-		for (i = 0; i <= 4; i++) {                                //for loop to kill FTP partition mountpoints
-			if ((i != latestMount) && (Party_vmcIndex[i] < 0)) {  //if unneeded by uLE
-				unmountParty(i);                                  //unmount partition mountpoint
-				pfs_str[3] = '0' + i;                             //prepare to reuse that mountpoint
+	if (fileXioMount(pfs_str, party, FIO_MT_RDWR) < 0) {          // if FTP stole it
+		for (i = 0; i <= 4; i++) {                                // for loop to kill FTP partition mountpoints
+			if ((i != latestMount) && (Party_vmcIndex[i] < 0)) {  // if unneeded by uLE
+				unmountParty(i);                                  // unmount partition mountpoint
+				pfs_str[3] = '0' + i;                             // prepare to reuse that mountpoint
 				if (fileXioMount(pfs_str, party, FIO_MT_RDWR) >= 0)
-					break;  //break from the loop on successful mount
-			}               //ends if unneeded by uLE
-		}                   //ends for loop to kill FTP partition mountpoints
-		//Here i indicates what happened above with the following meanings:
-		//0..4==Success after trying i mountpoints,  5==Failure
+					break;  // break from the loop on successful mount
+			}               // ends if unneeded by uLE
+		}                   // ends for loop to kill FTP partition mountpoints
+		// Here i indicates what happened above with the following meanings:
+		// 0..4==Success after trying i mountpoints,  5==Failure
 		if (i > 4)
 			return -1;
-	}  //ends if clause for mountpoints stolen by FTP
+	}  // ends if clause for mountpoints stolen by FTP
 	strcpy(mountedParty[i], party);
 return_i:
 	latestMount = i;
@@ -302,7 +302,7 @@ void unmountParty(int party_ix)
 	strcpy(pfs_str, "pfs0:");
 	pfs_str[3] += party_ix;
 	if (fileXioUmount(pfs_str) < 0)
-		return;  //leave variables unchanged if unmount failed (remember true state)
+		return;  // leave variables unchanged if unmount failed (remember true state)
 	if (party_ix < MOUNT_LIMIT) {
 		mountedParty[party_ix][0] = 0;
 	}
@@ -341,12 +341,12 @@ int mountDVRPParty(const char *party)
 {
 	int i, j;
 
-	for (i = 0; i < MOUNT_LIMIT; i++) {  //Here we check already mounted PFS indexes
+	for (i = 0; i < MOUNT_LIMIT; i++) {  // Here we check already mounted PFS indexes
 		if (!strcmp(party, mountedDVRPParty[i]))
 			goto return_i;
 	}
 
-	for (i = 0, j = -1; i < MOUNT_LIMIT; i++) {  //Here we search for a free PFS index
+	for (i = 0, j = -1; i < MOUNT_LIMIT; i++) {  // Here we search for a free PFS index
 		if (mountedDVRPParty[i][0] == 0) {
 			j = i;
 			break;
@@ -422,7 +422,7 @@ void unmountAll(void)
 	}
 	latestDVRPMount = -1;
 #endif
-}  //ends unmountAll
+}  // ends unmountAll
 //--------------------------------------------------------------
 int ynDialog(const char *message)
 {
@@ -434,17 +434,17 @@ int ynDialog(const char *message)
 
 	strcpy(msg, message);
 
-	for (i = 0, n = 1; msg[i] != 0; i++) {  //start with one string at pos zero
-		if (msg[i] == '\n') {               //line separator at current pos ?
-			msg[i] = 0;                     //split old line to separate string
-			n++;                            //increment string count
+	for (i = 0, n = 1; msg[i] != 0; i++) {  // start with one string at pos zero
+		if (msg[i] == '\n') {               // line separator at current pos ?
+			msg[i] = 0;                     // split old line to separate string
+			n++;                            // increment string count
 		}
-	}                                                 //loop back for next character pos
-	for (i = len = tw = 0; i < n; i++) {              //start with string 0, assume 0 length & width
-		ret = printXY(&msg[len], 0, 0, 0, FALSE, 0);  //get width of current string
+	}                                                 // loop back for next character pos
+	for (i = len = tw = 0; i < n; i++) {              // start with string 0, assume 0 length & width
+		ret = printXY(&msg[len], 0, 0, 0, FALSE, 0);  // get width of current string
 		if (ret > tw)
-			tw = ret;                  //tw = largest text width of strings so far
-		len += strlen(&msg[len]) + 1;  //len = pos of next string start
+			tw = ret;                  // tw = largest text width of strings so far
+		len += strlen(&msg[len]) + 1;  // len = pos of next string start
 	}
 	if (tw < 96)
 		tw = 96;
@@ -455,16 +455,16 @@ int ynDialog(const char *message)
 	dy = (SCREEN_HEIGHT - dh) / 2;
 	//	printf("tw=%d\ndh=%d\ndw=%d\ndx=%d\ndy=%d\n", tw,dh,dw,dx,dy);
 
-	event = 1;  //event = initial entry
+	event = 1;  // event = initial entry
 	while (1) {
-		//Pad response section
+		// Pad response section
 		waitPadReady(0, 0);
 		if (readpad()) {
 			if (new_pad & PAD_LEFT) {
-				event |= 2;  //event |= valid pad command
+				event |= 2;  // event |= valid pad command
 				sel = 0;
 			} else if (new_pad & PAD_RIGHT) {
-				event |= 2;  //event |= valid pad command
+				event |= 2;  // event |= valid pad command
 				sel = 1;
 			} else if ((!swapKeys && new_pad & PAD_CROSS) || (swapKeys && new_pad & PAD_CIRCLE)) {
 				ret = -1;
@@ -478,9 +478,9 @@ int ynDialog(const char *message)
 			}
 		}
 
-		if (event || post_event) {  //NB: We need to update two frame buffers per event
+		if (event || post_event) {  // NB: We need to update two frame buffers per event
 
-			//Display section
+			// Display section
 			drawPopSprite(setting->color[COLOR_BACKGR],
 			              dx, dy,
 			              dx + dw, (dy + dh));
@@ -490,7 +490,7 @@ int ynDialog(const char *message)
 				len += strlen(&msg[len]) + 1;
 			}
 
-			//Cursor positioning section
+			// Cursor positioning section
 			x = (tw - 96) / 4;
 			printXY(LNG(OK), dx + a + x + FONT_WIDTH,
 			        (dy + a + b + 2 + n * FONT_HEIGHT), setting->color[COLOR_TEXT], TRUE, 0);
@@ -501,11 +501,11 @@ int ynDialog(const char *message)
 			else
 				drawChar(LEFT_CUR, dx + dw - x - (strlen(LNG(CANCEL)) + 2) * FONT_WIDTH - 1,
 				         (dy + a + b + 2 + n * FONT_HEIGHT), setting->color[COLOR_TEXT]);
-		}  //ends if(event||post_event)
+		}  // ends if(event||post_event)
 		drawLastMsg();
 		post_event = event;
 		event = 0;
-	}  //ends while
+	}  // ends while
 	drawSprite(setting->color[COLOR_BACKGR], dx, dy, dx + dw + 1, (dy + dh) + 1);
 	drawScr();
 	drawSprite(setting->color[COLOR_BACKGR], dx, dy, dx + dw + 1, (dy + dh) + 1);
@@ -513,16 +513,16 @@ int ynDialog(const char *message)
 	return ret;
 }
 //------------------------------
-//endfunc ynDialog
+// endfunc ynDialog
 //--------------------------------------------------------------
 void nonDialog(char *message)
 {
-	char msg[80 * 30];          //More than this can't be shown on screen, even in PAL
-	static int dh, dw, dx, dy;  //These are static, to allow cleanup
+	char msg[80 * 30];          // More than this can't be shown on screen, even in PAL
+	static int dh, dw, dx, dy;  // These are static, to allow cleanup
 	int a = 6, b = 4, c = 2, n, tw;
 	int i, len, ret;
 
-	if (message == NULL) {  //NULL message means cleanup for last nonDialog
+	if (message == NULL) {  // NULL message means cleanup for last nonDialog
 		drawSprite(setting->color[COLOR_BACKGR],
 		           dx, dy,
 		           dx + dw, (dy + dh));
@@ -531,17 +531,17 @@ void nonDialog(char *message)
 
 	strcpy(msg, message);
 
-	for (i = 0, n = 1; msg[i] != 0; i++) {  //start with one string at pos zero
-		if (msg[i] == '\n') {               //line separator at current pos ?
-			msg[i] = 0;                     //split old line to separate string
-			n++;                            //increment string count
+	for (i = 0, n = 1; msg[i] != 0; i++) {  // start with one string at pos zero
+		if (msg[i] == '\n') {               // line separator at current pos ?
+			msg[i] = 0;                     // split old line to separate string
+			n++;                            // increment string count
 		}
-	}                                                 //loop back for next character pos
-	for (i = len = tw = 0; i < n; i++) {              //start with string 0, assume 0 length & width
-		ret = printXY(&msg[len], 0, 0, 0, FALSE, 0);  //get width of current string
+	}                                                 // loop back for next character pos
+	for (i = len = tw = 0; i < n; i++) {              // start with string 0, assume 0 length & width
+		ret = printXY(&msg[len], 0, 0, 0, FALSE, 0);  // get width of current string
 		if (ret > tw)
-			tw = ret;                  //tw = largest text width of strings so far
-		len += strlen(&msg[len]) + 1;  //len = pos of next string start
+			tw = ret;                  // tw = largest text width of strings so far
+		len += strlen(&msg[len]) + 1;  // len = pos of next string start
 	}
 	if (tw < 96)
 		tw = 96;
@@ -550,7 +550,7 @@ void nonDialog(char *message)
 	dw = 2 * 2 + a * 2 + tw;
 	dx = (SCREEN_WIDTH - dw) / 2;
 	dy = (SCREEN_HEIGHT - dh) / 2;
-	//printf("tw=%d\ndh=%d\ndw=%d\ndx=%d\ndy=%d\n", tw,dh,dw,dx,dy);
+	// printf("tw=%d\ndh=%d\ndw=%d\ndx=%d\ndy=%d\n", tw,dh,dw,dx,dy);
 
 	drawPopSprite(setting->color[COLOR_BACKGR],
 	              dx, dy,
@@ -562,7 +562,7 @@ void nonDialog(char *message)
 	}
 }
 //------------------------------
-//endfunc nonDialog
+// endfunc nonDialog
 //--------------------------------------------------------------
 // cmpFile below returns negative if the 'a' entry is 'lower'
 // than the 'b' entry, normally meaning that 'a' should be in
@@ -570,13 +570,13 @@ void nonDialog(char *message)
 // return value causes the calling sort routine to adjust the
 // entry order, which does not occur for other return values.
 //--------------------------------------------------------------
-int cmpFile(FILEINFO *a, FILEINFO *b)  //Used for directory sort
+int cmpFile(FILEINFO *a, FILEINFO *b)  // Used for directory sort
 {
 	char ca, cb;
 	int i, n, ret, aElf = FALSE, bElf = FALSE, t = (file_sort == 2);
 
 	if (file_sort == 0)
-		return 0;  //return 0 for unsorted mode
+		return 0;  // return 0 for unsorted mode
 
 	if ((a->stats.AttrFile & MC_ATTR_OBJECT) == (b->stats.AttrFile & MC_ATTR_OBJECT)) {
 		if (a->stats.AttrFile & sceMcFileAttrFile) {
@@ -589,13 +589,13 @@ int cmpFile(FILEINFO *a, FILEINFO *b)  //Used for directory sort
 			else if (!aElf && bElf)
 				return 1;
 		}
-		if (file_sort == 3) {      //Sort by timestamp
-			t = (file_show == 2);  //Set secondary sort criterion
+		if (file_sort == 3) {      // Sort by timestamp
+			t = (file_show == 2);  // Set secondary sort criterion
 			if (time_valid) {
 				u64 time_a = *(u64 *)&a->stats._Modify;
 				u64 time_b = *(u64 *)&b->stats._Modify;
 				if (time_a > time_b)
-					return -1;  //NB: reversed comparison for falling order
+					return -1;  // NB: reversed comparison for falling order
 				if (time_a < time_b)
 					return 1;
 			}
@@ -670,7 +670,7 @@ int readMC(const char *path, FILEINFO *info, int max)
 
 	mcGetInfo(path[2] - '0', 0, &mctype_PSx, NULL, NULL);
 	mcSync(0, NULL, &ret);
-	if (mctype_PSx == 2)  //PS2 MC ?
+	if (mctype_PSx == 2)  // PS2 MC ?
 		time_valid = 1;
 	size_valid = 1;
 
@@ -682,7 +682,7 @@ int readMC(const char *path, FILEINFO *info, int max)
 	for (i = j = 0; i < ret; i++) {
 		if (mcDir[i].AttrFile & sceMcFileAttrSubdir &&
 		    (!strcmp((char *)mcDir[i].EntryName, ".") || !strcmp((char *)mcDir[i].EntryName, "..")))
-			continue;  //Skip pseudopaths "." and ".."
+			continue;  // Skip pseudopaths "." and ".."
 		strcpy(info[j].name, (char *)mcDir[i].EntryName);
 		info[j].stats = mcDir[i];
 		j++;
@@ -691,7 +691,7 @@ int readMC(const char *path, FILEINFO *info, int max)
 	return j;
 }
 //------------------------------
-//endfunc readMC
+// endfunc readMC
 //--------------------------------------------------------------
 int readCD(const char *path, FILEINFO *info, int max)
 {
@@ -722,7 +722,7 @@ int readCD(const char *path, FILEINFO *info, int max)
 		if (TocEntryList[i].fileProperties & 0x02 &&
 		    (!strcmp(TocEntryList[i].filename, ".") ||
 		     !strcmp(TocEntryList[i].filename, "..")))
-			continue;  //Skip pseudopaths "." and ".."
+			continue;  // Skip pseudopaths "." and ".."
 		strcpy(info[j].name, TocEntryList[i].filename);
 		clear_mcTable(&info[j].stats);
 		if (TocEntryList[i].fileProperties & 0x02) {
@@ -730,7 +730,7 @@ int readCD(const char *path, FILEINFO *info, int max)
 		} else {
 			info[j].stats.AttrFile = MC_ATTR_norm_file;
 			info[j].stats.FileSizeByte = TocEntryList[i].fileSize;
-			info[j].stats.Reserve2 = 0;  //Assuming a CD can't have a single 4GB file
+			info[j].stats.Reserve2 = 0;  // Assuming a CD can't have a single 4GB file
 		}
 		j++;
 	}
@@ -740,7 +740,7 @@ int readCD(const char *path, FILEINFO *info, int max)
 	return j;
 }
 //------------------------------
-//endfunc readCD
+// endfunc readCD
 //--------------------------------------------------------------
 void setPartyList(void)
 {
@@ -757,22 +757,22 @@ void setPartyList(void)
 		if ((dirEnt.stat.attr != ATTR_MAIN_PARTITION) || (dirEnt.stat.mode != FS_TYPE_PFS))
 			continue;
 
-		//Patch this to see if new CB versions use valid PFS format
-		//NB: All CodeBreaker versions up to v9.3 use invalid formats
+		// Patch this to see if new CB versions use valid PFS format
+		// NB: All CodeBreaker versions up to v9.3 use invalid formats
 		/*	if(!strncmp(dirEnt.name, "PP.",3)){
-			int len = strlen(dirEnt.name);
-			if(!strcmp(dirEnt.name+len-4, ".PCB"))
-				continue;
+		    int len = strlen(dirEnt.name);
+		    if(!strcmp(dirEnt.name+len-4, ".PCB"))
+		        continue;
 		}
 
 		if(!strncmp(dirEnt.name, "__", 2) &&
-			strcmp(dirEnt.name, "__boot") &&
-			strcmp(dirEnt.name, "__net") &&
-			strcmp(dirEnt.name, "__system") &&
-			strcmp(dirEnt.name, "__sysconf") &&
-			strcmp(dirEnt.name, "__contents") &&   // this is where PSBBN used to store it's downloaded contents. Adding it is useful.
-			strcmp(dirEnt.name, "__common"))
-			continue;
+		    strcmp(dirEnt.name, "__boot") &&
+		    strcmp(dirEnt.name, "__net") &&
+		    strcmp(dirEnt.name, "__system") &&
+		    strcmp(dirEnt.name, "__sysconf") &&
+		    strcmp(dirEnt.name, "__contents") &&   // this is where PSBBN used to store it's downloaded contents. Adding it is useful.
+		    strcmp(dirEnt.name, "__common"))
+		    continue;
 	*/
 		strncpy(parties[nparties], dirEnt.name, MAX_PART_NAME);
 		parties[nparties++][MAX_PART_NAME] = '\0';
@@ -795,21 +795,21 @@ void setDVRPPartyList(void)
 		if ((dirEnt.stat.attr != ATTR_MAIN_PARTITION) || (dirEnt.stat.mode != FS_TYPE_PFS))
 			continue;
 
-		//Patch this to see if new CB versions use valid PFS format
-		//NB: All CodeBreaker versions up to v9.3 use invalid formats
+		// Patch this to see if new CB versions use valid PFS format
+		// NB: All CodeBreaker versions up to v9.3 use invalid formats
 		/*	if(!strncmp(dirEnt.name, "PP.",3)){
-			int len = strlen(dirEnt.name);
-			if(!strcmp(dirEnt.name+len-4, ".PCB"))
-				continue;
+		    int len = strlen(dirEnt.name);
+		    if(!strcmp(dirEnt.name+len-4, ".PCB"))
+		        continue;
 		}
 		if(!strncmp(dirEnt.name, "__", 2) &&
-			strcmp(dirEnt.name, "__boot") &&
-			strcmp(dirEnt.name, "__net") &&
-			strcmp(dirEnt.name, "__system") &&
-			strcmp(dirEnt.name, "__sysconf") &&
-			strcmp(dirEnt.name, "__contents") &&   // this is where PSBBN used to store it's downloaded contents. Adding it is useful.
-			strcmp(dirEnt.name, "__common"))
-			continue;
+		    strcmp(dirEnt.name, "__boot") &&
+		    strcmp(dirEnt.name, "__net") &&
+		    strcmp(dirEnt.name, "__system") &&
+		    strcmp(dirEnt.name, "__sysconf") &&
+		    strcmp(dirEnt.name, "__contents") &&   // this is where PSBBN used to store it's downloaded contents. Adding it is useful.
+		    strcmp(dirEnt.name, "__common"))
+		    continue;
 	*/
 		strncpy(parties[ndvrpparties], dirEnt.name, MAX_PART_NAME);
 		parties[ndvrpparties++][MAX_PART_NAME] = '\0';
@@ -835,41 +835,41 @@ void setDVRPPartyList(void)
 void genLimObjName(char *uLE_path, int reserve)
 {
 	char *p, *q, *r;
-	int limit = 256;                                            //enforce a generic limit of 256 characters
-	int folder_flag = (uLE_path[strlen(uLE_path) - 1] == '/');  //flag folder object
+	int limit = 256;                                            // enforce a generic limit of 256 characters
+	int folder_flag = (uLE_path[strlen(uLE_path) - 1] == '/');  // flag folder object
 	int overflow;
 
 	if (!strncmp(uLE_path, "mc", 2) || !strncmp(uLE_path, "vmc", 3))
-		limit = 32;  //enforce MC limit of 32 characters
+		limit = 32;  // enforce MC limit of 32 characters
 
-	if (folder_flag)                         //if path ends with path separator
+	if (folder_flag)                         // if path ends with path separator
 		uLE_path[strlen(uLE_path) - 1] = 0;  //  remove final path separator (temporarily)
 
-	p = uLE_path;                         //initially assume a pure object name (quite insanely :))
-	if ((q = strchr(p, ':')) != NULL)     //if a drive separator is present
+	p = uLE_path;                         // initially assume a pure object name (quite insanely :))
+	if ((q = strchr(p, ':')) != NULL)     // if a drive separator is present
 		p = q + 1;                        //  object name may start after drive separator
-	if ((q = strrchr(p, '/')) != NULL)    //If there's any path separator in the string
+	if ((q = strrchr(p, '/')) != NULL)    // If there's any path separator in the string
 		p = q + 1;                        //  object name starts after last path separator
-	limit -= reserve;                     //lower limit by reserved character space
-	overflow = strlen(p) - limit;         //Calculate length of string to remove (if positive)
-	if ((limit <= 0) || (overflow <= 0))  //if limit invalid, or not exceeded
+	limit -= reserve;                     // lower limit by reserved character space
+	overflow = strlen(p) - limit;         // Calculate length of string to remove (if positive)
+	if ((limit <= 0) || (overflow <= 0))  // if limit invalid, or not exceeded
 		goto limited;                     //  no further limitation is needed
-	if ((q = strrchr(p, '.')) == NULL)    //if there's no extension separator
-		goto limit_end;                   //limitation must be done at end of full name
-	r = q - overflow;                     //r is the place to recopy file extension
-	if (r > p) {                          //if this place is above string start
-		strcpy(r, q);                     //remove overflow from end of prefix part
-		goto limited;                     //which concludes the limitation
-	}                                     //if we fall through here, the prefix part was too short for the limitation needed
+	if ((q = strrchr(p, '.')) == NULL)    // if there's no extension separator
+		goto limit_end;                   // limitation must be done at end of full name
+	r = q - overflow;                     // r is the place to recopy file extension
+	if (r > p) {                          // if this place is above string start
+		strcpy(r, q);                     // remove overflow from end of prefix part
+		goto limited;                     // which concludes the limitation
+	}                                     // if we fall through here, the prefix part was too short for the limitation needed
 limit_end:
 	p[limit] = 0;  //  remove overflow from end of full name
 limited:
 
-	if (folder_flag)            //if original path ended with path separator
+	if (folder_flag)            // if original path ended with path separator
 		strcat(uLE_path, "/");  //  reappend final path separator after name
 }
 //------------------------------
-//endfunc genLimObjName
+// endfunc genLimObjName
 //--------------------------------------------------------------
 int genFixPath(const char *inp_path, char *gen_path)
 {
@@ -877,76 +877,76 @@ int genFixPath(const char *inp_path, char *gen_path)
 	char *pathSep;
 	int part_ix;
 
-	part_ix = 99;  //Assume valid non-HDD path
+	part_ix = 99;  // Assume valid non-HDD path
 	if (!uLE_related(uLE_path, inp_path))
-		part_ix = -99;           //Assume invalid uLE_related path
-	strcpy(gen_path, uLE_path);  //Assume no path patching needed
+		part_ix = -99;           // Assume invalid uLE_related path
+	strcpy(gen_path, uLE_path);  // Assume no path patching needed
 	pathSep = strchr(uLE_path, '/');
 
-	if (!strncmp(uLE_path, "cdfs", 4)) {  //if using CD or DVD disc path
+	if (!strncmp(uLE_path, "cdfs", 4)) {  // if using CD or DVD disc path
 		CDVD_FlushCache();
 		CDVD_DiskReady(0);
-		//end of clause for using a CD or DVD path
+		// end of clause for using a CD or DVD path
 
-	} else if (!strncmp(uLE_path, "mass", 4)) {  //if using USB mass: path
+	} else if (!strncmp(uLE_path, "mass", 4)) {  // if using USB mass: path
 		if (pathSep && (pathSep - uLE_path < 7) && pathSep[-1] == ':')
 			strcpy(gen_path + (pathSep - uLE_path), pathSep + 1);
-		//end of clause for using a USB mass: path
+		// end of clause for using a USB mass: path
 
-	} else if (!strncmp(uLE_path, "hdd0:/", 6)) {  //If using HDD path
-		//Get path on HDD unit, LaunchELF's format (e.g. hdd0:/partition/path/to/file)
+	} else if (!strncmp(uLE_path, "hdd0:/", 6)) {  // If using HDD path
+		// Get path on HDD unit, LaunchELF's format (e.g. hdd0:/partition/path/to/file)
 		strcpy(loc_path, uLE_path + 6);
 		if ((p = strchr(loc_path, '/')) != NULL) {
-			//Extract path to file within partition. Make a new path, relative to the filesystem root.
-			//hdd0:/partition/path/to/file becomes pfs0:/path/to/file.
+			// Extract path to file within partition. Make a new path, relative to the filesystem root.
+			// hdd0:/partition/path/to/file becomes pfs0:/path/to/file.
 			sprintf(gen_path, "pfs0:%s", p);
-			*p = 0;  //null-terminate the block device path (hdd0:/partition).
+			*p = 0;  // null-terminate the block device path (hdd0:/partition).
 		} else {
-			//Otherwise, default to /
+			// Otherwise, default to /
 			strcpy(gen_path, "pfs0:/");
 		}
-		//Generate standard path to the block device (i.e. hdd0:/partition results in hdd0:partition)
+		// Generate standard path to the block device (i.e. hdd0:/partition results in hdd0:partition)
 		sprintf(party, "hdd0:%s", loc_path);
 		if (nparties == 0) {
-			//No partitions recognized? Load modules & populate partition list.
+			// No partitions recognized? Load modules & populate partition list.
 			loadHddModules();
 			setPartyList();
 		}
-		//Mount the partition.
+		// Mount the partition.
 		if ((part_ix = mountParty(party)) >= 0)
 			gen_path[3] = part_ix + '0';
 #ifdef DVRP
-	} else if (!strncmp(uLE_path, "dvr_hdd0:/", 10)) {  //If using DVRP HDD path
-		//Get path on DVR HDD unit, LaunchELF's format (e.g. dvr_hdd0:/partition/path/to/file)
+	} else if (!strncmp(uLE_path, "dvr_hdd0:/", 10)) {  // If using DVRP HDD path
+		// Get path on DVR HDD unit, LaunchELF's format (e.g. dvr_hdd0:/partition/path/to/file)
 		strcpy(loc_path, uLE_path + 10);
 		if ((p = strchr(loc_path, '/')) != NULL) {
-			//Extract path to file within partition. Make a new path, relative to the filesystem root.
-			//dvr_hdd0:/partition/path/to/file becomes dvr_pfs0:/path/to/file.
+			// Extract path to file within partition. Make a new path, relative to the filesystem root.
+			// dvr_hdd0:/partition/path/to/file becomes dvr_pfs0:/path/to/file.
 			sprintf(gen_path, "dvr_pfs0:%s", p);
-			*p = 0;  //null-terminate the block device path (dvr_hdd0:/partition).
+			*p = 0;  // null-terminate the block device path (dvr_hdd0:/partition).
 		} else {
-			//Otherwise, default to /
+			// Otherwise, default to /
 			strcpy(gen_path, "dvr_pfs0:/");
 		}
-		//Generate standard path to the block device (i.e. dvr_hdd0:/partition results in hdd0:partition)
+		// Generate standard path to the block device (i.e. dvr_hdd0:/partition results in hdd0:partition)
 		sprintf(party, "dvr_hdd0:%s", loc_path);
 		if (ndvrpparties == 0) {
-			//No partitions recognized? Load modules & populate partition list.
+			// No partitions recognized? Load modules & populate partition list.
 			loadDVRPHddModules();
 			setDVRPPartyList();
 		}
-		//Mount the partition.
+		// Mount the partition.
 		if ((part_ix = mountDVRPParty(party)) >= 0)
 			gen_path[7] = part_ix + '0';
-		//end of clause for using an HDD path
+			// end of clause for using an HDD path
 #endif
 	}
 	genLimObjName(gen_path, 0);
 	return part_ix;
-	//non-HDD Path => 99, Good HDD Path => 0-3, Bad Path => negative
+	// non-HDD Path => 99, Good HDD Path => 0-3, Bad Path => negative
 }
 //------------------------------
-//endfunc genFixPath
+// endfunc genFixPath
 //--------------------------------------------------------------
 int genRmdir(char *path)
 {
@@ -959,7 +959,7 @@ int genRmdir(char *path)
 	return ret;
 }
 //------------------------------
-//endfunc genRmdir
+// endfunc genRmdir
 //--------------------------------------------------------------
 int genRemove(char *path)
 {
@@ -972,7 +972,7 @@ int genRemove(char *path)
 	return ret;
 }
 //------------------------------
-//endfunc genRemove
+// endfunc genRemove
 //--------------------------------------------------------------
 int genOpen(char *path, int mode)
 {
@@ -980,7 +980,7 @@ int genOpen(char *path, int mode)
 	return fileXioOpen(path, mode, fileMode);
 }
 //------------------------------
-//endfunc genOpen
+// endfunc genOpen
 //--------------------------------------------------------------
 int genDopen(char *path)
 {
@@ -1000,42 +1000,42 @@ int genDopen(char *path)
 	return fd;
 }
 //------------------------------
-//endfunc genDopen
+// endfunc genDopen
 //--------------------------------------------------------------
 int genLseek(int fd, int where, int how)
 {
 	return fileXioLseek(fd, where, how);
 }
 //------------------------------
-//endfunc genLseek
+// endfunc genLseek
 //--------------------------------------------------------------
 int genRead(int fd, void *buf, int size)
 {
 	return fileXioRead(fd, buf, size);
 }
 //------------------------------
-//endfunc genRead
+// endfunc genRead
 //--------------------------------------------------------------
 int genWrite(int fd, void *buf, int size)
 {
 	return fileXioWrite(fd, buf, size);
 }
 //------------------------------
-//endfunc genWrite
+// endfunc genWrite
 //--------------------------------------------------------------
 int genClose(int fd)
 {
 	return fileXioClose(fd);
 }
 //------------------------------
-//endfunc genClose
+// endfunc genClose
 //--------------------------------------------------------------
 int genDclose(int fd)
 {
 	return fileXioDclose(fd);
 }
 //------------------------------
-//endfunc genDclose
+// endfunc genDclose
 //--------------------------------------------------------------
 int genCmpFileExt(const char *filename, const char *extension)
 {
@@ -1045,7 +1045,7 @@ int genCmpFileExt(const char *filename, const char *extension)
 	return (p != NULL && !stricmp(p + 1, extension));
 }
 //------------------------------
-//endfunc genDclose
+// endfunc genDclose
 //--------------------------------------------------------------
 int readVMC(const char *path, FILEINFO *info, int max)
 {
@@ -1059,16 +1059,16 @@ int readVMC(const char *path, FILEINFO *info, int max)
 
 	while (fileXioDread(fd, &dirbuf) > 0) {
 		//		if(dirbuf.stat.mode & FIO_S_IFDIR &&  //NB: normal usage (non-vmcfs)
-		if (dirbuf.stat.mode & sceMcFileAttrSubdir &&  //NB: nonstandard usage of vmcfs
+		if (dirbuf.stat.mode & sceMcFileAttrSubdir &&  // NB: nonstandard usage of vmcfs
 		    (!strcmp(dirbuf.name, ".") || !strcmp(dirbuf.name, "..")))
-			continue;  //Skip pseudopaths "." and ".."
+			continue;  // Skip pseudopaths "." and ".."
 
 		strcpy(info[i].name, dirbuf.name);
 		clear_mcTable(&info[i].stats);
 		//		if(dirbuf.stat.mode & FIO_S_IFDIR){  //NB: normal usage (non-vmcfs)
 		//			info[i].stats.attrFile = MC_ATTR_norm_folder;
 		//		}
-		if (dirbuf.stat.mode & sceMcFileAttrSubdir) {  //NB: vmcfs usage
+		if (dirbuf.stat.mode & sceMcFileAttrSubdir) {  // NB: vmcfs usage
 			info[i].stats.AttrFile = dirbuf.stat.mode;
 		}
 		//		else if(dirbuf.stat.mode & FIO_S_IFREG){  //NB: normal usage (non-vmcfs)
@@ -1076,12 +1076,12 @@ int readVMC(const char *path, FILEINFO *info, int max)
 		//			info[i].stats.fileSizeByte = dirbuf.stat.size;
 		//			info[i].stats.unknown4[0] = dirbuf.stat.hisize;
 		//		}
-		else if (dirbuf.stat.mode & sceMcFileAttrFile) {  //NB: vmcfs usage
+		else if (dirbuf.stat.mode & sceMcFileAttrFile) {  // NB: vmcfs usage
 			info[i].stats.AttrFile = dirbuf.stat.mode;
 			info[i].stats.FileSizeByte = dirbuf.stat.size;
 			info[i].stats.Reserve2 = dirbuf.stat.hisize;
 		} else
-			continue;  //Skip entry which is neither a file nor a folder
+			continue;  // Skip entry which is neither a file nor a folder
 		strncpy((char *)info[i].stats.EntryName, info[i].name, 32);
 		memcpy((void *)&info[i].stats._Create, dirbuf.stat.ctime, 8);
 		memcpy((void *)&info[i].stats._Modify, dirbuf.stat.mtime, 8);
@@ -1098,7 +1098,7 @@ int readVMC(const char *path, FILEINFO *info, int max)
 	return i;
 }
 //------------------------------
-//endfunc readVMC
+// endfunc readVMC
 //--------------------------------------------------------------
 int readHDD(const char *path, FILEINFO *info, int max)
 {
@@ -1131,7 +1131,7 @@ int readHDD(const char *path, FILEINFO *info, int max)
 	while (fileXioDread(fd, &dirbuf) > 0) {
 		if (dirbuf.stat.mode & FIO_S_IFDIR &&
 		    (!strcmp(dirbuf.name, ".") || !strcmp(dirbuf.name, "..")))
-			continue;  //Skip pseudopaths "." and ".."
+			continue;  // Skip pseudopaths "." and ".."
 
 		strcpy(info[i].name, dirbuf.name);
 		clear_mcTable(&info[i].stats);
@@ -1142,7 +1142,7 @@ int readHDD(const char *path, FILEINFO *info, int max)
 			info[i].stats.FileSizeByte = dirbuf.stat.size;
 			info[i].stats.Reserve2 = dirbuf.stat.hisize;
 		} else
-			continue;  //Skip entry which is neither a file nor a folder
+			continue;  // Skip entry which is neither a file nor a folder
 		strncpy((char *)info[i].stats.EntryName, info[i].name, 32);
 		memcpy((void *)&info[i].stats._Create, dirbuf.stat.ctime, 8);
 		memcpy((void *)&info[i].stats._Modify, dirbuf.stat.mtime, 8);
@@ -1159,7 +1159,7 @@ int readHDD(const char *path, FILEINFO *info, int max)
 	return i;
 }
 //------------------------------
-//endfunc readHDD
+// endfunc readHDD
 //--------------------------------------------------------------
 #ifdef DVRP
 int readHDDDVRP(const char *path, FILEINFO *info, int max)
@@ -1193,7 +1193,7 @@ int readHDDDVRP(const char *path, FILEINFO *info, int max)
 	while (fileXioDread(fd, &dirbuf) > 0) {
 		if (dirbuf.stat.mode & FIO_S_IFDIR &&
 		    (!strcmp(dirbuf.name, ".") || !strcmp(dirbuf.name, "..")))
-			continue;  //Skip pseudopaths "." and ".."
+			continue;  // Skip pseudopaths "." and ".."
 
 		strcpy(info[i].name, dirbuf.name);
 		clear_mcTable(&info[i].stats);
@@ -1204,7 +1204,7 @@ int readHDDDVRP(const char *path, FILEINFO *info, int max)
 			info[i].stats.FileSizeByte = dirbuf.stat.size;
 			info[i].stats.Reserve2 = dirbuf.stat.hisize;
 		} else
-			continue;  //Skip entry which is neither a file nor a folder
+			continue;  // Skip entry which is neither a file nor a folder
 		strncpy((char *)info[i].stats.EntryName, info[i].name, 32);
 		memcpy((void *)&info[i].stats._Create, dirbuf.stat.ctime, 8);
 		memcpy((void *)&info[i].stats._Modify, dirbuf.stat.mtime, 8);
@@ -1221,7 +1221,7 @@ int readHDDDVRP(const char *path, FILEINFO *info, int max)
 	return i;
 }
 //------------------------------
-//endfunc readHDDDVRP
+// endfunc readHDDDVRP
 //--------------------------------------------------------------
 #endif
 #ifdef XFROM
@@ -1230,13 +1230,12 @@ int readXFROM(const char *path, FILEINFO *info, int max)
 	iox_dirent_t dirbuf;
 	char dir[MAX_PATH];
 	int i = 0, fd;
-	//volatile int j;
+	// volatile int j;
 
 	loadFlashModules();
 
 	strcpy(dir, path);
-	if ((fd = fileXioDopen(path)) < 0)
-	{
+	if ((fd = fileXioDopen(path)) < 0) {
 		DPRINTF("ERROR: Cannot open path '%s'\n", path);
 		return 0;
 	}
@@ -1244,7 +1243,7 @@ int readXFROM(const char *path, FILEINFO *info, int max)
 	while (fileXioDread(fd, &dirbuf) > 0) {
 		if (dirbuf.stat.mode & FIO_S_IFDIR &&
 		    (!strcmp(dirbuf.name, ".") || !strcmp(dirbuf.name, "..")))
-			continue;  //Skip pseudopaths "." and ".."
+			continue;  // Skip pseudopaths "." and ".."
 
 		strcpy(info[i].name, dirbuf.name);
 		clear_mcTable(&info[i].stats);
@@ -1254,11 +1253,10 @@ int readXFROM(const char *path, FILEINFO *info, int max)
 			info[i].stats.AttrFile = MC_ATTR_norm_file;
 			info[i].stats.FileSizeByte = dirbuf.stat.size;
 			info[i].stats.Reserve2 = dirbuf.stat.hisize;
-		} else
-			{
-				DPRINTF("ERROR: Skipping entry wich is neither file or folder '%s'\n", path);
-				continue;  //Skip entry which is neither a file nor a folder
-			}
+		} else {
+			DPRINTF("ERROR: Skipping entry wich is neither file or folder '%s'\n", path);
+			continue;  // Skip entry which is neither a file nor a folder
+		}
 		strncpy((char *)info[i].stats.EntryName, info[i].name, 32);
 		memcpy((void *)&info[i].stats._Create, dirbuf.stat.ctime, 8);
 		memcpy((void *)&info[i].stats._Modify, dirbuf.stat.mtime, 8);
@@ -1276,7 +1274,7 @@ int readXFROM(const char *path, FILEINFO *info, int max)
 }
 #endif
 //------------------------------
-//endfunc readXFROM
+// endfunc readXFROM
 //--------------------------------------------------------------
 #ifndef USBMASS_IOCTL_GET_DRIVERNAME
 #define USBMASS_IOCTL_GET_DRIVERNAME 0x0003
@@ -1289,12 +1287,12 @@ void scan_USB_mass(void)
 	int i, dd;
 	iox_stat_t chk_stat;
 	char mass_path[8] = "mass0:/";
-	if ((USB_mass_max_drives < 2)  //No need for dynamic lists with only one drive
+	if ((USB_mass_max_drives < 2)  // No need for dynamic lists with only one drive
 	    || (USB_mass_scanned && ((Timer() - USB_mass_scan_time) < 5000)))
 		return;
 
 #ifdef MX4SIO
-	mx4sio_idx = -1; //assume none is mx4sio // this MUST ALWAYS be after the USB_mass_scan_time check
+	mx4sio_idx = -1;  // assume none is mx4sio // this MUST ALWAYS be after the USB_mass_scan_time check
 #endif
 
 	for (i = 0; i < USB_mass_max_drives; i++) {
@@ -1304,24 +1302,23 @@ void scan_USB_mass(void)
 			continue;
 		}
 #ifdef MX4SIO
-    	if ((dd = fileXioDopen(mass_path)) >= 0) {
-    	    int *intptr_ctl = (int *)DEVID;
-    	    *intptr_ctl = fileXioIoctl(dd, USBMASS_IOCTL_GET_DRIVERNAME, "");
-    	    fileXioDclose(dd);
-		if (!strncmp(DEVID, "sdc", 3))
-		{
-			mx4sio_idx = i;
-			DPRINTF("%s: Found MX4SIO device at mass%d:/\n", __func__, i);
+		if ((dd = fileXioDopen(mass_path)) >= 0) {
+			int *intptr_ctl = (int *)DEVID;
+			*intptr_ctl = fileXioIoctl(dd, USBMASS_IOCTL_GET_DRIVERNAME, "");
+			fileXioDclose(dd);
+			if (!strncmp(DEVID, "sdc", 3)) {
+				mx4sio_idx = i;
+				DPRINTF("%s: Found MX4SIO device at mass%d:/\n", __func__, i);
+			}
 		}
-    	}
 #endif
 		USB_mass_ix[i] = '0' + i;
 		USB_mass_scanned = 1;
 		USB_mass_scan_time = Timer();
-	}  //ends for loop
+	}  // ends for loop
 }
 //------------------------------
-//endfunc scan_USB_mass
+// endfunc scan_USB_mass
 //--------------------------------------------------------------
 int readMASS(const char *path, FILEINFO *info, int max)
 {
@@ -1332,10 +1329,10 @@ int readMASS(const char *path, FILEINFO *info, int max)
 		scan_USB_mass();
 
 	if ((dd = fileXioDopen(path)) < 0)
-		goto exit;  //exit if error opening directory
+		goto exit;  // exit if error opening directory
 	while (fileXioDread(dd, &record) > 0) {
 		if ((FIO_S_ISDIR(record.stat.mode)) && (!strcmp(record.name, ".") || !strcmp(record.name, "..")))
-			continue;  //Skip entry if pseudo-folder "." or ".."
+			continue;  // Skip entry if pseudo-folder "." or ".."
 
 		strcpy(info[n].name, record.name);
 		clear_mcTable(&info[n].stats);
@@ -1346,24 +1343,24 @@ int readMASS(const char *path, FILEINFO *info, int max)
 			info[n].stats.FileSizeByte = record.stat.size;
 			info[n].stats.Reserve2 = record.stat.hisize;
 		} else
-			continue;  //Skip entry which is neither a file nor a folder
+			continue;  // Skip entry which is neither a file nor a folder
 		strncpy((char *)info[n].stats.EntryName, info[n].name, 32);
 		memcpy((void *)&info[n].stats._Create, record.stat.ctime, 8);
 		memcpy((void *)&info[n].stats._Modify, record.stat.mtime, 8);
 		n++;
 		if (n == max)
 			break;
-	}  //ends while
+	}  // ends while
 	size_valid = 1;
 	time_valid = 1;
 
 exit:
 	if (dd >= 0)
-		fileXioDclose(dd);  //Close directory if opened above
+		fileXioDclose(dd);  // Close directory if opened above
 	return n;
 }
 //------------------------------
-//endfunc readMASS
+// endfunc readMASS
 //--------------------------------------------------------------
 #ifdef ETH
 char *makeHostPath(char *dp, char *sp)
@@ -1474,7 +1471,7 @@ int readHOST(const char *path, FILEINFO *info, int max)
 		free(elflisttxt);
 		return hostcount - 1;
 	}
-	//This point is only reached if elflist.txt is NOT to be used
+	// This point is only reached if elflist.txt is NOT to be used
 
 	if ((hfd = fileXioDopen(makeHostPath(Win_path, host_path))) < 0)
 		return 0;
@@ -1487,13 +1484,13 @@ int readHOST(const char *path, FILEINFO *info, int max)
 			strcpy(info[hostcount].name, hostcontent.name);
 			clear_mcTable(&info[hostcount].stats);
 
-			if (!(hostcontent.stat.mode & FIO_S_IFDIR))  //if not a directory
+			if (!(hostcontent.stat.mode & FIO_S_IFDIR))  // if not a directory
 				info[hostcount].stats.AttrFile = MC_ATTR_norm_file;
 			else
 				info[hostcount].stats.AttrFile = MC_ATTR_norm_folder;
 
 			info[hostcount].stats.FileSizeByte = hostcontent.stat.size;
-			info[hostcount].stats.Reserve2 = hostcontent.stat.hisize;  //taking an unused(?) unknown for the high bits
+			info[hostcount].stats.Reserve2 = hostcontent.stat.hisize;  // taking an unused(?) unknown for the high bits
 			memcpy((void *)&info[hostcount].stats._Create, hostcontent.stat.ctime, 8);
 			info[hostcount].stats._Create.Year += 1900;
 			memcpy((void *)&info[hostcount].stats._Modify, hostcontent.stat.mtime, 8);
@@ -1509,7 +1506,7 @@ int readHOST(const char *path, FILEINFO *info, int max)
 }
 #endif
 //------------------------------
-//endfunc readHOST
+// endfunc readHOST
 //--------------------------------------------------------------
 int getDir(const char *path, FILEINFO *info)
 {
@@ -1559,9 +1556,9 @@ static int getGameTitle(const char *path, const FILEINFO *file, unsigned char *o
 	psu_header PSU_head;
 	int i, tst, PSU_content, psu_pad_pos;
 
-	out[0] = '\0';  //Start by making an empty result string, for failures
+	out[0] = '\0';  // Start by making an empty result string, for failures
 
-	//Avoid title usage in browser root or partition list
+	// Avoid title usage in browser root or partition list
 	if (path[0] == 0 || !strcmp(path, "hdd0:/") || !strcmp(path, "dvr_hdd0:/"))
 		return -1;
 
@@ -1584,24 +1581,24 @@ static int getGameTitle(const char *path, const FILEINFO *file, unsigned char *o
 			strcat(dir, "/");
 	}
 
-	ret = -1;  //Assume that result will be failure, to simplify aborts
+	ret = -1;  // Assume that result will be failure, to simplify aborts
 
 	if ((file->stats.AttrFile & sceMcFileAttrSubdir) == 0) {
-		//Here we know that the object needing a title is a file
-		strcpy(tmpdir, dir);                //Copy the pathname for file access
-		if (!genCmpFileExt(tmpdir, "psu"))  //Find the extension, if any. If it's anything other than a PSU file
-			goto get_PS1_GameTitle;         //then it may be a PS1 save
-		//Here we know that the object needing a title is a PSU file
+		// Here we know that the object needing a title is a file
+		strcpy(tmpdir, dir);                // Copy the pathname for file access
+		if (!genCmpFileExt(tmpdir, "psu"))  // Find the extension, if any. If it's anything other than a PSU file
+			goto get_PS1_GameTitle;         // then it may be a PS1 save
+		// Here we know that the object needing a title is a PSU file
 		if ((fd = genOpen(tmpdir, O_RDONLY)) < 0)
-			goto finish;  //Abort if open fails
+			goto finish;  // Abort if open fails
 		tst = genRead(fd, (void *)&PSU_head, sizeof(PSU_head));
 		if (tst != sizeof(PSU_head))
-			goto finish;  //Abort if read fails
+			goto finish;  // Abort if read fails
 		PSU_content = PSU_head.size;
 		for (i = 0; i < PSU_content; i++) {
 			tst = genRead(fd, (void *)&PSU_head, sizeof(PSU_head));
 			if (tst != sizeof(PSU_head))
-				goto finish;  //Abort if read fails
+				goto finish;  // Abort if read fails
 			PSU_head.name[sizeof(PSU_head.name) - 1] = '\0';
 			if (!strcmp((char *)PSU_head.name, "icon.sys")) {
 				genLseek(fd, 0xC0, SEEK_CUR);
@@ -1611,14 +1608,14 @@ static int getGameTitle(const char *path, const FILEINFO *file, unsigned char *o
 				psu_pad_pos = (PSU_head.size + 0x3FF) & -0x400;
 				genLseek(fd, psu_pad_pos, SEEK_CUR);
 			}
-			//Here the PSU file pointer is positioned for reading next header
-		}  //ends for
-		//Coming here means that the search for icon.sys failed
-		goto finish;  //So go finish off this function
-	}                 //ends if clause for files needing a title
+			// Here the PSU file pointer is positioned for reading next header
+		}  // ends for
+		// Coming here means that the search for icon.sys failed
+		goto finish;  // So go finish off this function
+	}                 // ends if clause for files needing a title
 
-	//Here we know that the object needing a title is a folder
-	//First try to find a valid PS2 icon.sys file inside the folder
+	// Here we know that the object needing a title is a folder
+	// First try to find a valid PS2 icon.sys file inside the folder
 	strcpy(tmpdir, dir);
 	strcat(tmpdir, "icon.sys");
 	if ((fd = genOpen(tmpdir, O_RDONLY)) >= 0) {
@@ -1627,21 +1624,21 @@ static int getGameTitle(const char *path, const FILEINFO *file, unsigned char *o
 		genLseek(fd, 0xC0, SEEK_SET);
 		goto read_title;
 	}
-	//Next try to find a valid PS1 savefile inside the folder instead
+	// Next try to find a valid PS1 savefile inside the folder instead
 	strcpy(tmpdir, dir);
-	strcat(tmpdir, file->name);  //PS1 save file should have same name as folder
+	strcat(tmpdir, file->name);  // PS1 save file should have same name as folder
 
 get_PS1_GameTitle:
 	if ((fd = genOpen(tmpdir, O_RDONLY)) < 0)
-		goto finish;  //PS1 gamesave file needed
+		goto finish;  // PS1 gamesave file needed
 	if ((size = genLseek(fd, 0, SEEK_END)) < 0x2000)
-		goto finish;  //Min size is 8K
+		goto finish;  // Min size is 8K
 	if (size & 0x1FFF)
-		goto finish;  //Size must be a multiple of 8K
+		goto finish;  // Size must be a multiple of 8K
 	genLseek(fd, 0, SEEK_SET);
 	genRead(fd, out, 2);
 	if (strncmp((const char *)out, "SC", 2))
-		goto finish;  //PS1 gamesaves always start with "SC"
+		goto finish;  // PS1 gamesaves always start with "SC"
 	genLseek(fd, 4, SEEK_SET);
 
 read_title:
@@ -1676,32 +1673,32 @@ int menu(const char *path, FILEINFO *file)
 	menu_len = strlen(LNG(Get_Size)) > menu_len ? strlen(LNG(Get_Size)) : menu_len;
 	menu_len = strlen(LNG(mcPaste)) > menu_len ? strlen(LNG(mcPaste)) : menu_len;
 	menu_len = strlen(LNG(psuPaste)) > menu_len ? strlen(LNG(psuPaste)) : menu_len;
-    menu_len = strlen(LNG(time_manip)) > menu_len ? strlen(LNG(time_manip)) : menu_len;
-    menu_len = strlen(LNG(title_cfg)) > menu_len ? strlen(LNG(title_cfg)) : menu_len;
+	menu_len = strlen(LNG(time_manip)) > menu_len ? strlen(LNG(time_manip)) : menu_len;
+	menu_len = strlen(LNG(title_cfg)) > menu_len ? strlen(LNG(title_cfg)) : menu_len;
 	menu_len = (strlen(LNG(Mount)) + 6) > menu_len ? (strlen(LNG(Mount)) + 6) : menu_len;
-	
 
-	int menu_ch_w = menu_len + 1;                                 //Total characters in longest menu string
-	int menu_ch_h = NUM_MENU;                                     //Total number of menu lines
-	int mSprite_Y1 = 64;                                          //Top edge of sprite
-	int mSprite_X2 = SCREEN_WIDTH - 35;                           //Right edge of sprite
-	int mSprite_X1 = mSprite_X2 - (menu_ch_w + 3) * FONT_WIDTH;   //Left edge of sprite
-	int mSprite_Y2 = mSprite_Y1 + (menu_ch_h + 1) * FONT_HEIGHT;  //Bottom edge of sprite
 
-	memset(enable, TRUE, NUM_MENU);  //Assume that all menu items are legal by default
+	int menu_ch_w = menu_len + 1;                                 // Total characters in longest menu string
+	int menu_ch_h = NUM_MENU;                                     // Total number of menu lines
+	int mSprite_Y1 = 64;                                          // Top edge of sprite
+	int mSprite_X2 = SCREEN_WIDTH - 35;                           // Right edge of sprite
+	int mSprite_X1 = mSprite_X2 - (menu_ch_w + 3) * FONT_WIDTH;   // Left edge of sprite
+	int mSprite_Y2 = mSprite_Y1 + (menu_ch_h + 1) * FONT_HEIGHT;  // Bottom edge of sprite
 
-	//identify cases where write access is illegal, and disable menu items accordingly
-	if ((!strncmp(path, "cdfs", 4))                           //Writing is always illegal for CDVD drive
+	memset(enable, TRUE, NUM_MENU);  // Assume that all menu items are legal by default
+
+	// identify cases where write access is illegal, and disable menu items accordingly
+	if ((!strncmp(path, "cdfs", 4))  // Writing is always illegal for CDVD drive
 #ifdef ETH
-	    || ((!strncmp(path, "host", 4))                       //host: has special cases
-	        && ((!setting->HOSTwrite)                         //host: Writing is illegal if not enabled in CNF
-	            || (host_elflist && !strcmp(path, "host:/"))  //it's also illegal in elflist.txt
+	    || ((!strncmp(path, "host", 4))                       // host: has special cases
+	        && ((!setting->HOSTwrite)                         // host: Writing is illegal if not enabled in CNF
+	            || (host_elflist && !strcmp(path, "host:/"))  // it's also illegal in elflist.txt
 	            ))
 #endif
-				)
+	)
 		write_disabled = 1;
 
-	if ((!strcmp(path, "hdd0:/") || !strcmp(path, "dvr_hdd0:/")) || path[0] == 0)  //No menu cmds in partition/device lists
+	if ((!strcmp(path, "hdd0:/") || !strcmp(path, "dvr_hdd0:/")) || path[0] == 0)  // No menu cmds in partition/device lists
 		menu_disabled = 1;
 
 	if (menu_disabled) {
@@ -1710,21 +1707,22 @@ int menu(const char *path, FILEINFO *file)
 		enable[MOUNTVMC1] = FALSE;
 		enable[GETSIZE] = FALSE;
 	}
-//#ifdef TMANIP
-	if (                                                        //if
-	    (file->stats.AttrFile & sceMcFileAttrSubdir) &&         //pointing to a folder
-	    (strcmp(file->name, "..")) &&                           //it isnt the ".." option
-	    ((!strcmp(path, "mc0:/")) || (!strcmp(path, "mc1:/")))  //we're on Memory card roots
+	//#ifdef TMANIP
+	if (                                                        // if
+	    (file->stats.AttrFile & sceMcFileAttrSubdir) &&         // pointing to a folder
+	    (strcmp(file->name, "..")) &&                           // it isnt the ".." option
+	    ((!strcmp(path, "mc0:/")) || (!strcmp(path, "mc1:/")))  // we're on Memory card roots
 	) {
 		enable[TIMEMANIP] = TRUE;
 	} else {
 		enable[TIMEMANIP] = FALSE;
-	} 
-//#endif //TMANIP
-	if ( (genCmpFileExt(file->name, "ELF")) && ( (!strncmp(path, "mass", 4)) || (!strncmp(path, "hdd0:/", 6) && !menu_disabled) ) )
-	{
+	}
+	//#endif //TMANIP
+	if ((genCmpFileExt(file->name, "ELF")) && ((!strncmp(path, "mass", 4)) || (!strncmp(path, "hdd0:/", 6) && !menu_disabled))) {
 		enable[TITLE_CFG] = TRUE;
-	} else {enable[TITLE_CFG] = FALSE;}
+	} else {
+		enable[TITLE_CFG] = FALSE;
+	}
 
 
 	if (write_disabled || menu_disabled) {
@@ -1752,46 +1750,46 @@ int menu(const char *path, FILEINFO *file)
 	}
 
 	if ((file->stats.AttrFile & sceMcFileAttrSubdir) || !strncmp(path, "vmc", 3) || !strncmp(path, "mc", 2)) {
-		enable[MOUNTVMC0] = FALSE;  //forbid insane VMC mounting
-		enable[MOUNTVMC1] = FALSE;  //forbid insane VMC mounting
+		enable[MOUNTVMC0] = FALSE;  // forbid insane VMC mounting
+		enable[MOUNTVMC1] = FALSE;  // forbid insane VMC mounting
 	}
 
 	if (nclipFiles == 0) {
-		//Nothing in clipboard
+		// Nothing in clipboard
 		enable[PASTE] = FALSE;
 		enable[MCPASTE] = FALSE;
 		enable[PSUPASTE] = FALSE;
 	} else {
-		//Something in clipboard
+		// Something in clipboard
 		if (!strncmp(path, "mc", 2) || !strncmp(path, "vmc", 3)) {
 			if (!strncmp(clipPath, "mc", 2) || !strncmp(clipPath, "vmc", 3)) {
-				enable[MCPASTE] = FALSE;  //No mcPaste if both src and dest are MC
+				enable[MCPASTE] = FALSE;  // No mcPaste if both src and dest are MC
 				enable[PSUPASTE] = FALSE;
 			}
 		} else if (strncmp(clipPath, "mc", 2) && strncmp(clipPath, "vmc", 3)) {
-			enable[MCPASTE] = FALSE;  //No mcPaste if both src and dest non-MC
+			enable[MCPASTE] = FALSE;  // No mcPaste if both src and dest non-MC
 			enable[PSUPASTE] = FALSE;
 		}
 	}
 
-	for (sel = 0; sel < NUM_MENU; sel++)  //loop to preselect the first enabled menu entry
+	for (sel = 0; sel < NUM_MENU; sel++)  // loop to preselect the first enabled menu entry
 		if (enable[sel] == TRUE)
-			break;  //break loop if sel is at an enabled menu entry
+			break;  // break loop if sel is at an enabled menu entry
 
-	event = 1;  //event = initial entry
+	event = 1;  // event = initial entry
 	while (1) {
-		//Pad response section
+		// Pad response section
 		waitPadReady(0, 0);
 		if (readpad()) {
 			if (new_pad & PAD_UP && sel < NUM_MENU) {
-				event |= 2;  //event |= valid pad command
+				event |= 2;  // event |= valid pad command
 				do {
 					sel--;
 					if (sel < 0)
 						sel = NUM_MENU - 1;
 				} while (!enable[sel]);
 			} else if (new_pad & PAD_DOWN && sel < NUM_MENU) {
-				event |= 2;  //event |= valid pad command
+				event |= 2;  // event |= valid pad command
 				do {
 					sel++;
 					if (sel == NUM_MENU)
@@ -1800,17 +1798,17 @@ int menu(const char *path, FILEINFO *file)
 			} else if ((new_pad & PAD_TRIANGLE) || (!swapKeys && new_pad & PAD_CROSS) || (swapKeys && new_pad & PAD_CIRCLE)) {
 				return -1;
 			} else if ((swapKeys && new_pad & PAD_CROSS) || (!swapKeys && new_pad & PAD_CIRCLE)) {
-				event |= 2;  //event |= valid pad command
+				event |= 2;  // event |= valid pad command
 				break;
 			} else if (new_pad & PAD_SQUARE && sel == PASTE) {
-				event |= 2;  //event |= valid pad command
+				event |= 2;  // event |= valid pad command
 				break;
 			}
 		}
 
-		if (event || post_event) {  //NB: We need to update two frame buffers per event
+		if (event || post_event) {  // NB: We need to update two frame buffers per event
 
-			//Display section
+			// Display section
 			drawPopSprite(setting->color[COLOR_BACKGR],
 			              mSprite_X1, mSprite_Y1,
 			              mSprite_X2, mSprite_Y2);
@@ -1843,11 +1841,11 @@ int menu(const char *path, FILEINFO *file)
 					strcpy(tmp, LNG(Get_Size));
 				else if (i == TITLE_CFG)
 					strcpy(tmp, LNG(title_cfg));
-				#ifdef TMANIP
+#ifdef TMANIP
 				else if (i == TIMEMANIP)
 					strcpy(tmp, LNG(time_manip));
-				#endif //TMANIP
-				
+#endif  // TMANIP
+
 				if (enable[i])
 					color = setting->color[COLOR_TEXT];
 				else
@@ -1859,7 +1857,7 @@ int menu(const char *path, FILEINFO *file)
 			if (sel < NUM_MENU)
 				drawChar(LEFT_CUR, mSprite_X1 + FONT_WIDTH, mSprite_Y1 + (FONT_HEIGHT / 2 + sel * FONT_HEIGHT), setting->color[COLOR_TEXT]);
 
-			//Tooltip section
+			// Tooltip section
 			x = SCREEN_MARGIN;
 			y = Menu_tooltip_y;
 			drawSprite(setting->color[COLOR_BACKGR],
@@ -1883,13 +1881,13 @@ int menu(const char *path, FILEINFO *file)
 			                           "3:%s",
 			        LNG(Back));
 			printXY(tmp, x, y, setting->color[COLOR_SELECT], TRUE, 0);
-		}  //ends if(event||post_event)
+		}  // ends if(event||post_event)
 		drawScr();
 		post_event = event;
 		event = 0;
-	}  //ends while
+	}  // ends while
 	return sel;
-}  //ends menu
+}  // ends menu
 //--------------------------------------------------------------
 char *PathPad_menu(const char *path)
 {
@@ -1900,22 +1898,22 @@ char *PathPad_menu(const char *path)
 	int event, post_event = 0;
 	char textrow[80], tmp[64];
 
-	th = 10 * FONT_HEIGHT;          //Height in pixels of text area
-	tw = 68 * FONT_WIDTH;           //Width in pixels of max text row
-	dh = th + 2 * 2 + a + b + c;    //Height in pixels of entire frame
-	dw = tw + 2 * 2 + a * 2;        //Width in pixels of entire frame
-	dx = (SCREEN_WIDTH - dw) / 2;   //X position of frame (centred)
-	dy = (SCREEN_HEIGHT - dh) / 2;  //Y position of frame (centred)
+	th = 10 * FONT_HEIGHT;          // Height in pixels of text area
+	tw = 68 * FONT_WIDTH;           // Width in pixels of max text row
+	dh = th + 2 * 2 + a + b + c;    // Height in pixels of entire frame
+	dw = tw + 2 * 2 + a * 2;        // Width in pixels of entire frame
+	dx = (SCREEN_WIDTH - dw) / 2;   // X position of frame (centred)
+	dy = (SCREEN_HEIGHT - dh) / 2;  // Y position of frame (centred)
 
 	sel_x = 0;
 	sel_y = 0;
-	event = 1;  //event = initial entry
+	event = 1;  // event = initial entry
 	while (1) {
-		//Pad response section
+		// Pad response section
 		waitPadReady(0, 0);
 		if (readpad()) {
 			if (new_pad) {
-				event |= 2;  //event |= valid pad command
+				event |= 2;  // event |= valid pad command
 				if (new_pad & PAD_UP) {
 					sel_y--;
 					if (sel_y < 0)
@@ -1940,23 +1938,23 @@ char *PathPad_menu(const char *path)
 					sel_x++;
 					if (sel_x > 2)
 						sel_x = 0;
-				} else if (new_pad & PAD_TRIANGLE) {  //Pushed 'Back'
+				} else if (new_pad & PAD_TRIANGLE) {  // Pushed 'Back'
 					return NULL;
-				} else if (!setting->PathPad_Lock                                                            //if PathPad changes allowed ?
-				           && ((!swapKeys && new_pad & PAD_CROSS) || (swapKeys && new_pad & PAD_CIRCLE))) {  //Pushed 'Clear'
+				} else if (!setting->PathPad_Lock                                                            // if PathPad changes allowed ?
+				           && ((!swapKeys && new_pad & PAD_CROSS) || (swapKeys && new_pad & PAD_CIRCLE))) {  // Pushed 'Clear'
 					PathPad[sel_x * 10 + sel_y][0] = '\0';
-				} else if ((swapKeys && new_pad & PAD_CROSS) || (!swapKeys && new_pad & PAD_CIRCLE)) {  //Pushed 'Use'
+				} else if ((swapKeys && new_pad & PAD_CROSS) || (!swapKeys && new_pad & PAD_CIRCLE)) {  // Pushed 'Use'
 					return PathPad[sel_x * 10 + sel_y];
-				} else if (!setting->PathPad_Lock && (new_pad & PAD_SQUARE)) {  //Pushed 'Set'
+				} else if (!setting->PathPad_Lock && (new_pad & PAD_SQUARE)) {  // Pushed 'Set'
 					strncpy(PathPad[sel_x * 10 + sel_y], path, MAX_PATH - 1);
 					PathPad[sel_x * 10 + sel_y][MAX_PATH - 1] = '\0';
 				}
-			}  //ends 'if(new_pad)'
-		}      //ends 'if(readpad())'
+			}  // ends 'if(new_pad)'
+		}      // ends 'if(readpad())'
 
-		if (event || post_event) {  //NB: We need to update two frame buffers per event
+		if (event || post_event) {  // NB: We need to update two frame buffers per event
 
-			//Display section
+			// Display section
 			drawSprite(setting->color[COLOR_BACKGR],
 			           0, (Menu_message_y - 1),
 			           SCREEN_WIDTH, (Frame_start_y));
@@ -1975,7 +1973,7 @@ char *PathPad_menu(const char *path)
 				printXY(textrow, dx + 2 + a, (dy + a + 2 + i * FONT_HEIGHT), color, TRUE, 0);
 			}
 
-			//Tooltip section
+			// Tooltip section
 			x = SCREEN_MARGIN;
 			y = Menu_tooltip_y;
 			drawSprite(setting->color[COLOR_BACKGR], 0, y - 1, SCREEN_WIDTH, y + FONT_HEIGHT);
@@ -2008,14 +2006,14 @@ char *PathPad_menu(const char *path)
 			        LNG(Back), LNG(Page_leftright));
 			strcat(textrow, tmp);
 			printXY(textrow, x, y, setting->color[COLOR_SELECT], TRUE, 0);
-		}  //ends if(event||post_event)
+		}  // ends if(event||post_event)
 		drawScr();
 		post_event = event;
 		event = 0;
-	}  //ends while
+	}  // ends while
 }
 //------------------------------
-//endfunc PathPad_menu
+// endfunc PathPad_menu
 //--------------------------------------------------------------
 u64 getFileSize(const char *path, const FILEINFO *file)
 {
@@ -2025,24 +2023,24 @@ u64 getFileSize(const char *path, const FILEINFO *file)
 	char dir[MAX_PATH], party[MAX_NAME];
 	int nfiles, i, ret;
 
-	if (file->stats.AttrFile & sceMcFileAttrSubdir) {  //Folder object to size up
+	if (file->stats.AttrFile & sceMcFileAttrSubdir) {  // Folder object to size up
 		sprintf(dir, "%s%s/", path, file->name);
 		nfiles = getDir(dir, files);
 		for (i = size = 0; i < nfiles; i++) {
-			filesize = getFileSize(dir, &files[i]);  //recurse for each object in folder
+			filesize = getFileSize(dir, &files[i]);  // recurse for each object in folder
 			if (filesize < 0)
 				return -1;
 			else
 				size += filesize;
 		}
-	} else {  //File object to size up
+	} else {  // File object to size up
 		if (!strncmp(path, "hdd", 3)) {
 			getHddParty(path, file, party, dir);
 			ret = mountParty(party);
 			if (ret < 0)
 				return 0;
 			dir[3] = ret + '0';
-#ifdef DVRP		
+#ifdef DVRP
 		}
 		if (!strncmp(path, "dvr_hdd", 7)) {
 			getHddDVRPParty(path, file, party, dir);
@@ -2063,65 +2061,66 @@ u64 getFileSize(const char *path, const FILEINFO *file)
 	return size;
 }
 //------------------------------
-//endfunc getFileSize
+// endfunc getFileSize
 //--------------------------------------------------------------
 //
-//this function will allow you to force the date of any memory-card save file...
+// this function will allow you to force the date of any memory-card save file...
 //... into the highest date available for a ps2 (1 second before year 2100)
 // ----------=====args=====----------
 // path: mc0:/ or mc1:/
 // const FILEINFO *file = the FILEINFO struct for that save, however, this function only cares about folder name
 //_msg0 = pointer to msg0 to report what happened to the user (uLaunchELF only)
 //#ifdef TMANIP
-	void time_manip(const char *path, const FILEINFO *file, char **_msg0)
-	{
-		int rett;  //this var will be used to store the result of mcSetFileInfo()
-		int slot;
-		slot = path[2] - '0';
-		#define ARRAY_ENTRIES 64
-		static sceMcTblGetDir mcDirAAA[ARRAY_ENTRIES] __attribute__((aligned(64)));  // save file properties
-		static sceMcStDateTime new_mtime;                                            //manipulated struct for savefile properties, this will be used to change the date of the save file properties
-																					//char *result,*end;
-																					/*=====================================================================================================*/
+void time_manip(const char *path, const FILEINFO *file, char **_msg0)
+{
+	int rett;  // this var will be used to store the result of mcSetFileInfo()
+	int slot;
+	slot = path[2] - '0';
+#define ARRAY_ENTRIES 64
+	static sceMcTblGetDir mcDirAAA[ARRAY_ENTRIES] __attribute__((aligned(64)));  // save file properties
+	static sceMcStDateTime new_mtime;                                            // manipulated struct for savefile properties, this will be used to change the date of the save file properties
+	                                   // char *result,*end;
+	/*=====================================================================================================*/
 	/*
 	#ifdef TMANIP_MORON
-		McGetDir(slot, 0, HACK_FOLDER, 0x2, ARRAY_ENTRIES, &mcDirAAA);
+	    McGetDir(slot, 0, HACK_FOLDER, 0x2, ARRAY_ENTRIES, &mcDirAAA);
 	#else
-		McGetDir(slot, 0,  file->name, 0x2, ARRAY_ENTRIES, &mcDirAAA);
-	#endif*/ //till i find the real name of this func on ps2dev:1.0
-		new_mtime.Resv2 = 0;
-		new_mtime.Sec = 59;
-		new_mtime.Min = 59;
-		new_mtime.Hour = 23;
-		new_mtime.Day = 31;
-		new_mtime.Month = 12;
-		new_mtime.Year = 2099;
-		mcDirAAA->_Modify = new_mtime;
-		mcDirAAA->_Create = new_mtime;
-		/*=====================================================================================================*/
-	
-	#ifdef TMANIP_MORON
-		rett = mcSetFileInfo(slot, 0, HACK_FOLDER, mcDirAAA, 0x02);
-		if (rett == 0)
-			sprintf(_msg0, "success, folder [%s]  Mc Slot [%d] .", HACK_FOLDER, slot);
-		if (rett < 0)
-			sprintf(_msg0, "error [%d], folder[%s]  Mc Slot=[%d] .", rett, HACK_FOLDER, slot);
-	#else
-		rett = mcSetFileInfo(slot, 0, file->name, mcDirAAA, 0x02);
-		if (rett == 0)
-			sprintf(_msg0, "success, folder [%s]  Mc Slot [%d] .", file->name, slot);
-		if (rett < 0)
-			sprintf(_msg0, "error [%d], folder[%s]  Mc Slot=[%d] .", rett, file->name, slot);
-	#endif //TMANIP_MORON
-	
-	
-	
-		mcSync(0, NULL, &rett);
-	}  // TIMEMANIP
-	//------------------------------
-	//endfunc time_manip
-	//--------------------------------------------------------------
-	//
+	    McGetDir(slot, 0,  file->name, 0x2, ARRAY_ENTRIES, &mcDirAAA);
+	#endif*/
+	// till i find the real name of this func on ps2dev:1.0
+	new_mtime.Resv2 = 0;
+	new_mtime.Sec = 59;
+	new_mtime.Min = 59;
+	new_mtime.Hour = 23;
+	new_mtime.Day = 31;
+	new_mtime.Month = 12;
+	new_mtime.Year = 2099;
+	mcDirAAA->_Modify = new_mtime;
+	mcDirAAA->_Create = new_mtime;
+	/*=====================================================================================================*/
+
+#ifdef TMANIP_MORON
+	rett = mcSetFileInfo(slot, 0, HACK_FOLDER, mcDirAAA, 0x02);
+	if (rett == 0)
+		sprintf(_msg0, "success, folder [%s]  Mc Slot [%d] .", HACK_FOLDER, slot);
+	if (rett < 0)
+		sprintf(_msg0, "error [%d], folder[%s]  Mc Slot=[%d] .", rett, HACK_FOLDER, slot);
+#else
+	rett = mcSetFileInfo(slot, 0, file->name, mcDirAAA, 0x02);
+	if (rett == 0)
+		sprintf(_msg0, "success, folder [%s]  Mc Slot [%d] .", file->name, slot);
+	if (rett < 0)
+		sprintf(_msg0, "error [%d], folder[%s]  Mc Slot=[%d] .", rett, file->name, slot);
+#endif  // TMANIP_MORON
+
+
+
+	mcSync(0, NULL, &rett);
+}  // TIMEMANIP
+   //------------------------------
+   // endfunc time_manip
+//--------------------------------------------------------------
+//
 //#endif //TMANIP
 
 void make_title_cfg(const char *path, const FILEINFO *file, char **_msg0)
@@ -2129,22 +2128,21 @@ void make_title_cfg(const char *path, const FILEINFO *file, char **_msg0)
 	int fd;
 	char title_cfg_buffer[128], ELF_NAME[64];
 	strcpy(ELF_NAME, file->name);
-	ELF_NAME[strlen(ELF_NAME)-4] = '\0';//kill extension, we can do this freely without checking string length because feature is only enabled on .ELF files
-	sprintf(title_cfg_buffer,"title=%s\nboot=%s", ELF_NAME, file->name);
+	ELF_NAME[strlen(ELF_NAME) - 4] = '\0';  // kill extension, we can do this freely without checking string length because feature is only enabled on .ELF files
+	sprintf(title_cfg_buffer, "title=%s\nboot=%s", ELF_NAME, file->name);
 	char new_title_cfg[MAX_PATH];
-	strcpy(new_title_cfg,path);
+	strcpy(new_title_cfg, path);
 	strcat(new_title_cfg, "title.cfg");
 	if ((fd = genOpen(new_title_cfg, O_CREAT | O_WRONLY | O_TRUNC)) < 0) {
-			sprintf(_msg0, "Error opening title.cfg");
-			return;
-		} else {
-			genWrite(fd, title_cfg_buffer, strlen(title_cfg_buffer));
-			genClose(fd);
-		}
-
+		sprintf(_msg0, "Error opening title.cfg");
+		return;
+	} else {
+		genWrite(fd, title_cfg_buffer, strlen(title_cfg_buffer));
+		genClose(fd);
+	}
 }
 //------------------------------
-//endfunc make_title_cfg
+// endfunc make_title_cfg
 //--------------------------------------------------------------
 int delete (const char *path, const FILEINFO *file)
 {
@@ -2173,11 +2171,11 @@ int delete (const char *path, const FILEINFO *file)
 	if (!strncmp(dir, "host:/", 6))
 		makeHostPath(dir + 5, dir + 6);
 #endif
-	if (file->stats.AttrFile & sceMcFileAttrSubdir) {  //Is the object to delete a folder ?
+	if (file->stats.AttrFile & sceMcFileAttrSubdir) {  // Is the object to delete a folder ?
 		strcat(dir, "/");
 		nfiles = getDir(dir, files);
 		for (i = 0; i < nfiles; i++) {
-			ret = delete (dir, &files[i]);  //recursively delete contents of folder
+			ret = delete (dir, &files[i]);  // recursively delete contents of folder
 			if (ret < 0)
 				return -1;
 		}
@@ -2192,11 +2190,11 @@ int delete (const char *path, const FILEINFO *file)
 			ret = fileXioRmdir(dir);
 			fileXioDevctl("vmc0:", DEVCTL_VMCFS_CLEAN, NULL, 0, NULL, 0);
 
-		} else {  //For all other devices
+		} else {  // For all other devices
 			sprintf(dir, "%s%s", path, file->name);
 			ret = fileXioRmdir(dir);
 		}
-	} else {  //The object to delete is a file
+	} else {  // The object to delete is a file
 		if (!strncmp(path, "mc", 2)) {
 			mcSync(0, NULL, NULL);
 			mcDelete(dir[2] - '0', 0, &dir[4]);
@@ -2206,7 +2204,7 @@ int delete (const char *path, const FILEINFO *file)
 		} else if (!strncmp(path, "vmc", 3)) {
 			ret = fileXioRemove(dir);
 			fileXioDevctl("vmc0:", DEVCTL_VMCFS_CLEAN, NULL, 0, NULL, 0);
-		} else {  //For all other devices
+		} else {  // For all other devices
 			ret = fileXioRemove(dir);
 		}
 	}
@@ -2247,24 +2245,24 @@ int Rename(const char *path, const FILEINFO *file, const char *name)
 	} else if (!strncmp(path, "mc", 2)) {
 		sprintf(oldPath, "%s%s", path, file->name);
 		sprintf(newPath, "%s%s", path, name);
-		if ((test = fileXioDopen(newPath)) >= 0) {  //Does folder of same name exist ?
+		if ((test = fileXioDopen(newPath)) >= 0) {  // Does folder of same name exist ?
 			fileXioDclose(test);
 			ret = -EEXIST;
-		} else if ((test = fileXioOpen(newPath, O_RDONLY)) >= 0) {  //Does file of same name exist ?
+		} else if ((test = fileXioOpen(newPath, O_RDONLY)) >= 0) {  // Does file of same name exist ?
 			fileXioClose(test);
 			ret = -EEXIST;
-		} else {  //No file/folder of the same name exists
+		} else {  // No file/folder of the same name exists
 			mcGetInfo(path[2] - '0', 0, &mctype_PSx, NULL, NULL);
 			mcSync(0, NULL, &test);
-			if (mctype_PSx == 2)  //PS2 MC ?
+			if (mctype_PSx == 2)  // PS2 MC ?
 				strncpy((void *)file->stats.EntryName, name, 32);
-			mcSetFileInfo(path[2] - '0', 0, oldPath + 4, &file->stats, 0x0010);  //Fix file stats
+			mcSetFileInfo(path[2] - '0', 0, oldPath + 4, &file->stats, 0x0010);  // Fix file stats
 			mcSync(0, NULL, &test);
 			if (ret == -4)
 				ret = -EEXIST;
-			else {  //PS1 MC !
+			else {  // PS1 MC !
 				strncpy((void *)file->stats.EntryName, name, 32);
-				mcSetFileInfo(path[2] - '0', 0, oldPath + 4, &file->stats, 0x0010);  //Fix file stats
+				mcSetFileInfo(path[2] - '0', 0, oldPath + 4, &file->stats, 0x0010);  // Fix file stats
 				mcSync(0, NULL, &test);
 				if (ret == -4)
 					ret = -EEXIST;
@@ -2280,22 +2278,22 @@ int Rename(const char *path, const FILEINFO *file, const char *name)
 		strcpy(newPath, oldPath + 5);
 		strcat(oldPath, file->name);
 		strcat(newPath, name);
-		if (file->stats.AttrFile & sceMcFileAttrSubdir) {  //Rename a folder ?
+		if (file->stats.AttrFile & sceMcFileAttrSubdir) {  // Rename a folder ?
 			ret = (temp_fd = fileXioDopen(oldPath));
 			if (temp_fd >= 0) {
 				ret = fileXioIoctl(temp_fd, IOCTL_RENAME, (void *)newPath);
 				fileXioDclose(temp_fd);
 			}
-		} else if (file->stats.AttrFile & sceMcFileAttrFile) {  //Rename a file ?
+		} else if (file->stats.AttrFile & sceMcFileAttrFile) {  // Rename a file ?
 			ret = (temp_fd = fileXioOpen(oldPath, O_RDONLY));
 			if (temp_fd >= 0) {
 				ret = fileXioIoctl(temp_fd, IOCTL_RENAME, (void *)newPath);
 				fileXioClose(temp_fd);
 			}
-		} else  //This was neither a folder nor a file !!!
+		} else  // This was neither a folder nor a file !!!
 			return -1;
 #endif
-	} else {  //For all other devices
+	} else {  // For all other devices
 		sprintf(oldPath, "%s%s", path, file->name);
 		sprintf(newPath, "%s%s", path, name);
 		ret = fileXioRename(oldPath, newPath);
@@ -2336,7 +2334,7 @@ int newdir(const char *path, const char *name)
 		genLimObjName(dir, 0);
 		if ((ret = fileXioDopen(dir)) >= 0) {
 			fileXioDclose(ret);
-			ret = -EEXIST;  //return fileXio error code for pre-existing folder
+			ret = -EEXIST;  // return fileXio error code for pre-existing folder
 		} else {
 			ret = fileXioMkdir(dir, fileMode);
 		}
@@ -2347,7 +2345,7 @@ int newdir(const char *path, const char *name)
 		mcMkDir(path[2] - '0', 0, dir);
 		mcSync(0, NULL, &ret);
 		if (ret == -4)
-			ret = -EEXIST;  //return fileXio error code for pre-existing folder
+			ret = -EEXIST;  // return fileXio error code for pre-existing folder
 #ifdef ETH
 	} else if (!strncmp(path, "host", 4)) {
 		strcpy(dir, path);
@@ -2357,12 +2355,12 @@ int newdir(const char *path, const char *name)
 			makeHostPath(dir + 5, dir + 6);
 		if ((ret = fileXioDopen(dir)) >= 0) {
 			fileXioDclose(ret);
-			ret = -EEXIST;  //return fileXio error code for pre-existing folder
+			ret = -EEXIST;  // return fileXio error code for pre-existing folder
 		} else {
-			ret = fileXioMkdir(dir, fileMode);  //Create the new folder
+			ret = fileXioMkdir(dir, fileMode);  // Create the new folder
 		}
 #endif
-	} else {  //For all other devices
+	} else {  // For all other devices
 		strcpy(dir, path);
 		strcat(dir, name);
 		genLimObjName(dir, 0);
@@ -2371,10 +2369,10 @@ int newdir(const char *path, const char *name)
 	return ret;
 }
 //--------------------------------------------------------------
-//The function 'copy' below is called to copy a single object,
-//indicated by 'file' from 'inPath' to 'outPath', but this may
-//be either a single file or a folder. In the latter case the
-//folder contents should also be copied, recursively.
+// The function 'copy' below is called to copy a single object,
+// indicated by 'file' from 'inPath' to 'outPath', but this may
+// be either a single file or a folder. In the latter case the
+// folder contents should also be copied, recursively.
 //--------------------------------------------------------------
 int copy(char *outPath, const char *inPath, FILEINFO file, int recurses)
 {
@@ -2398,19 +2396,19 @@ int copy(char *outPath, const char *inPath, FILEINFO file, int recurses)
 	int psu_pad_size = 0, PSU_restart_f = 0;
 	char *cp, *np;
 
-	PM_flag[recurses + 1] = PM_NORMAL;  //assume normal mode for next level
-	PM_file[recurses + 1] = -1;         //assume that no special file is needed
+	PM_flag[recurses + 1] = PM_NORMAL;  // assume normal mode for next level
+	PM_file[recurses + 1] = -1;         // assume that no special file is needed
 
-restart_copy:  //restart point for PM_PSU_RESTORE to reprocess modified arguments
+restart_copy:  // restart point for PM_PSU_RESTORE to reprocess modified arguments
 
-	newfile = file;  //assume that no renaming is to be done
+	newfile = file;  // assume that no renaming is to be done
 
-	if (PasteMode == PM_RENAME && recurses == 0) {  //if renaming requested and valid
-		if (keyboard(newfile.name, 36) <= 0)        //if name entered by user made the result invalid
+	if (PasteMode == PM_RENAME && recurses == 0) {  // if renaming requested and valid
+		if (keyboard(newfile.name, 36) <= 0)        // if name entered by user made the result invalid
 			strcpy(newfile.name, file.name);        //  recopy newname from file.name
-	}                                               //ends if clause for renaming name entry
-	//Here the struct 'newfile' is FILEINFO for destination, regardless of renaming
-	//for non-renaming cases this is always identical to the struct 'file'
+	}                                               // ends if clause for renaming name entry
+	// Here the struct 'newfile' is FILEINFO for destination, regardless of renaming
+	// for non-renaming cases this is always identical to the struct 'file'
 
 	if (!strncmp(inPath, "hdd", 3)) {
 		getHddParty(inPath, &file, inParty, in);
@@ -2440,29 +2438,29 @@ restart_copy:  //restart point for PM_PSU_RESTORE to reprocess modified argument
 		sprintf(out, "%s%s", outPath, newfile.name);
 
 	if (!strcmp(in, out))
-		return 0;  //if in and out are identical our work is done.
+		return 0;  // if in and out are identical our work is done.
 
-	//Here 'in' and 'out' are complete pathnames for the object to copy
-	//patched to contain appropriate 'pfs' refs where args used 'hdd'
-	//The physical device specifiers remain in 'inPath' and 'outPath'
+	// Here 'in' and 'out' are complete pathnames for the object to copy
+	// patched to contain appropriate 'pfs' refs where args used 'hdd'
+	// The physical device specifiers remain in 'inPath' and 'outPath'
 
-	//Here we have an object to copy, which may be either a file or a folder
+	// Here we have an object to copy, which may be either a file or a folder
 	if (file.stats.AttrFile & sceMcFileAttrSubdir) {
-		//Here we have a folder to copy, starting with an attempt to create it
-		//This is where we must act differently for PSU backup, creating a PSU file instead
+		// Here we have a folder to copy, starting with an attempt to create it
+		// This is where we must act differently for PSU backup, creating a PSU file instead
 		if (PasteMode == PM_PSU_BACKUP) {
 			if (recurses)
-				return -1;  //abort, as subfolders are not copied to PSU backups
+				return -1;  // abort, as subfolders are not copied to PSU backups
 			i = strlen(out) - 1;
 			if (out[i] == '/')
 				out[i] = 0;
 			strcpy(tmp, out);
-			np = tmp + strlen(tmp) - strlen(file.name);  //np = start of the pure filename
-			cp = tmp + strlen(tmp);                      //cp = end of the pure filename
+			np = tmp + strlen(tmp) - strlen(file.name);  // np = start of the pure filename
+			cp = tmp + strlen(tmp);                      // cp = end of the pure filename
 			if (!setting->PSU_HugeNames)
-				cp = np;  //cp = start of the pure filename
+				cp = np;  // cp = start of the pure filename
 
-			if ((file_show == 2) || setting->PSU_HugeNames) {  //at request, use game title
+			if ((file_show == 2) || setting->PSU_HugeNames) {  // at request, use game title
 				ret = getGameTitle(inPath, &file, file.title);
 				if ((ret == 0) && file.title[0] && setting->PSU_HugeNames) {
 					*cp++ = '_';
@@ -2470,50 +2468,50 @@ restart_copy:  //restart point for PM_PSU_RESTORE to reprocess modified argument
 				}
 				transcpy_sjis(cp, file.title);
 			}
-			//Here game title has been used for the name if requested, either alone
-			//or combined with the original folder name (for PSU_HugeNames)
+			// Here game title has been used for the name if requested, either alone
+			// or combined with the original folder name (for PSU_HugeNames)
 
-			if (np[0] == 0)             //If name is now empty (bad gamesave title)
-				strcpy(np, file.name);  //revert to normal folder name
+			if (np[0] == 0)             // If name is now empty (bad gamesave title)
+				strcpy(np, file.name);  // revert to normal folder name
 
 			for (i = 0; np[i];) {
-				i = strcspn(np, "\"\\/:*?<>|");  //Filter out illegal name characters
+				i = strcspn(np, "\"\\/:*?<>|");  // Filter out illegal name characters
 				if (np[i])
 					np[i] = '_';
 			}
-			//Here illegal characters, from either title or original folder name
-			//have been filtered out (replaced by underscore) to ensure compatibility
+			// Here illegal characters, from either title or original folder name
+			// have been filtered out (replaced by underscore) to ensure compatibility
 
-			cp = tmp + strlen(tmp);        //set cp pointing to the end of the filename
-			if (setting->PSU_DateNames) {  //at request, append modification timestamp string
+			cp = tmp + strlen(tmp);        // set cp pointing to the end of the filename
+			if (setting->PSU_DateNames) {  // at request, append modification timestamp string
 				sprintf(cp, "_%04d-%02d-%02d_%02d-%02d-%02d",
 				        mcT_head_p->mTime.year, mcT_head_p->mTime.month, mcT_head_p->mTime.day,
 				        mcT_head_p->mTime.hour, mcT_head_p->mTime.min, mcT_head_p->mTime.sec);
 			}
-			//Here a timestamp has been added to the name if requested by PSU_DateNames
+			// Here a timestamp has been added to the name if requested by PSU_DateNames
 
-			genLimObjName(tmp, 4);  //Limit name to leave room for 4 characters more
-			strcat(tmp, ".psu");    //add the PSU file extension
+			genLimObjName(tmp, 4);  // Limit name to leave room for 4 characters more
+			strcat(tmp, ".psu");    // add the PSU file extension
 #ifdef ETH
 			if (!strncmp(tmp, "host:/", 6))
 				makeHostPath(tmp + 5, tmp + 6);
 #endif
 			if (setting->PSU_DateNames && setting->PSU_NoOverwrite) {
-				if (0 <= (out_fd = genOpen(tmp, O_RDONLY))) {  //Name conflict ?
+				if (0 <= (out_fd = genOpen(tmp, O_RDONLY))) {  // Name conflict ?
 					genClose(out_fd);
 					out_fd = -1;
 					return 0;
 				}
 			}
-			//here tmp is the name of an existing file, to be removed before making new one
+			// here tmp is the name of an existing file, to be removed before making new one
 			genRemove(tmp);
 			if (0 > (out_fd = genOpen(tmp, O_WRONLY | O_TRUNC | O_CREAT)))
-				return -1;  //return error on failure to create PSU file
+				return -1;  // return error on failure to create PSU file
 
 			PM_file[recurses + 1] = out_fd;
-			PM_flag[recurses + 1] = PM_PSU_BACKUP;  //Set PSU backup mode for next level
+			PM_flag[recurses + 1] = PM_PSU_BACKUP;  // Set PSU backup mode for next level
 			clear_psu_header(&PSU_head);
-			PSU_content = 2;  //2 content headers minimum, for empty PSU
+			PSU_content = 2;  // 2 content headers minimum, for empty PSU
 			PSU_head.attr = mcT_head_p->attr;
 			PSU_head.size = PSU_content;
 			PSU_head.cTime = mcT_head_p->cTime;
@@ -2528,20 +2526,20 @@ restart_copy:  //restart point for PM_PSU_RESTORE to reprocess modified argument
 				return -1;
 			}
 			clear_psu_header(&PSU_head);
-			PSU_head.attr = 0x8427;  //Standard folder attr, for pseudo "." and ".."
+			PSU_head.attr = 0x8427;  // Standard folder attr, for pseudo "." and ".."
 			PSU_head.cTime = mcT_head_p->cTime;
 			PSU_head.mTime = mcT_head_p->mTime;
-			PSU_head.name[0] = '.';  //Set name entry to "."
+			PSU_head.name[0] = '.';  // Set name entry to "."
 			size = genWrite(out_fd, (void *)&PSU_head, sizeof(PSU_head));
 			if (size != sizeof(PSU_head))
 				goto PSU_error;
-			PSU_head.name[1] = '.';  //Change name entry to ".."
+			PSU_head.name[1] = '.';  // Change name entry to ".."
 			size = genWrite(out_fd, (void *)&PSU_head, sizeof(PSU_head));
 			if (size != sizeof(PSU_head))
 				goto PSU_error;
-		} else {  //any other PasteMode than PM_PSU_BACKUP
+		} else {  // any other PasteMode than PM_PSU_BACKUP
 			ret = newdir(outPath, newfile.name);
-			if (ret == -17) {  //NB: 'newdir' must return -17 for ALL pre-existing folder cases
+			if (ret == -17) {  // NB: 'newdir' must return -17 for ALL pre-existing folder cases
 				ret = getGameTitle(outPath, &newfile, newfile.title);
 				transcpy_sjis(tmp, newfile.title);
 				sprintf(progress,
@@ -2560,7 +2558,7 @@ restart_copy:  //restart point for PM_PSU_RESTORE to reprocess modified argument
 				if (ynDialog(progress) < 0)
 					return -1;
 				if ((PasteMode == PM_MC_BACKUP) || (PasteMode == PM_MC_RESTORE) || (PasteMode == PM_PSU_RESTORE)) {
-					ret = delete (outPath, &newfile);  //Attempt recursive delete
+					ret = delete (outPath, &newfile);  // Attempt recursive delete
 					if (ret < 0)
 						return -1;
 					if (newdir(outPath, newfile.name) < 0)
@@ -2568,11 +2566,11 @@ restart_copy:  //restart point for PM_PSU_RESTORE to reprocess modified argument
 				}
 				drawMsg(LNG(Pasting));
 			} else if (ret < 0) {
-				return -1;  //return error for failure to create destination folder
+				return -1;  // return error for failure to create destination folder
 			}
 		}
-		//Here a destination folder, or a PSU file exists, ready to receive files
-		if (PasteMode == PM_MC_BACKUP) {  //MC Backup mode folder paste preparation
+		// Here a destination folder, or a PSU file exists, ready to receive files
+		if (PasteMode == PM_MC_BACKUP) {  // MC Backup mode folder paste preparation
 			sprintf(tmp, "%s/PS2_MC_Backup_Attributes.BUP.bin", out);
 			genRemove(tmp);
 			out_fd = genOpen(tmp, O_WRONLY | O_CREAT);
@@ -2585,7 +2583,7 @@ restart_copy:  //restart point for PM_PSU_RESTORE to reprocess modified argument
 				} else
 					genClose(PM_file[recurses + 1]);
 			}
-		} else if (PasteMode == PM_MC_RESTORE) {  //MC Restore mode folder paste preparation
+		} else if (PasteMode == PM_MC_RESTORE) {  // MC Restore mode folder paste preparation
 			sprintf(tmp, "%s/PS2_MC_Backup_Attributes.BUP.bin", in);
 #ifdef ETH
 			if (!strncmp(tmp, "host:/", 6))
@@ -2594,7 +2592,7 @@ restart_copy:  //restart point for PM_PSU_RESTORE to reprocess modified argument
 			in_fd = genOpen(tmp, O_RDONLY);
 
 			if (in_fd >= 0) {
-				size = genRead(in_fd, (void *)&file.stats, 64);  //Read stats for the save folder
+				size = genRead(in_fd, (void *)&file.stats, 64);  // Read stats for the save folder
 				if (size == 64) {
 					PM_file[recurses + 1] = in_fd;
 					PM_flag[recurses + 1] = PM_MC_RESTORE;
@@ -2602,32 +2600,32 @@ restart_copy:  //restart point for PM_PSU_RESTORE to reprocess modified argument
 					genClose(PM_file[recurses + 1]);
 			}
 		}
-		if (PM_flag[recurses + 1] == PM_NORMAL) {  //Normal mode folder paste preparation
+		if (PM_flag[recurses + 1] == PM_NORMAL) {  // Normal mode folder paste preparation
 		}
-		sprintf(in, "%s%s/", inPath, file.name);      //restore phys dev spec to 'in'
-		sprintf(out, "%s%s", outPath, newfile.name);  //restore phys dev spec to 'out'
-		genLimObjName(out, 0);                        //Limit dest folder name
-		strcat(out, "/");                             //Separate dest folder name
+		sprintf(in, "%s%s/", inPath, file.name);      // restore phys dev spec to 'in'
+		sprintf(out, "%s%s", outPath, newfile.name);  // restore phys dev spec to 'out'
+		genLimObjName(out, 0);                        // Limit dest folder name
+		strcat(out, "/");                             // Separate dest folder name
 
 		if (PasteMode == PM_PSU_RESTORE && PSU_restart_f) {
 			nfiles = PSU_content;
 			for (i = 0; i < nfiles; i++) {
 				size = genRead(PM_file[recurses + 1], (void *)&PSU_head, sizeof(PSU_head));
-				if (size != sizeof(PSU_head)) {  //Break with error on read failure
+				if (size != sizeof(PSU_head)) {  // Break with error on read failure
 					ret = -1;
 					break;
 				}
-				if ((PSU_head.size == 0) && (PSU_head.attr & sceMcFileAttrSubdir))  //Dummy/Pseudo folder entry ?
-					continue;                                                       //Just ignore dummies
-				if (PSU_head.attr & sceMcFileAttrSubdir) {                          //break with error on weird folder in PSU
+				if ((PSU_head.size == 0) && (PSU_head.attr & sceMcFileAttrSubdir))  // Dummy/Pseudo folder entry ?
+					continue;                                                       // Just ignore dummies
+				if (PSU_head.attr & sceMcFileAttrSubdir) {                          // break with error on weird folder in PSU
 					ret = -1;
 					break;
 				}
-				if (PSU_head.size & 0x3FF)  //Check if file is padded in PSU
+				if (PSU_head.size & 0x3FF)  // Check if file is padded in PSU
 					psu_pad_size = 0x400 - (PSU_head.size & 0x3FF);
 				else
 					psu_pad_size = 0;
-				//here we need to create a proper FILEINFO struct for PSU-contained file
+				// here we need to create a proper FILEINFO struct for PSU-contained file
 				mcT_files_p->attr = PSU_head.attr;
 				mcT_files_p->size = PSU_head.size;
 				mcT_files_p->cTime = PSU_head.cTime;
@@ -2637,33 +2635,33 @@ restart_copy:  //restart point for PM_PSU_RESTORE to reprocess modified argument
 				mcT_files_p->unknown_2_u64 = PSU_head.unknown_2_u64;
 				memcpy(files[0].name, PSU_head.name, sizeof(PSU_head.name));
 				files[0].name[sizeof(PSU_head.name)] = 0;
-				//Finally we can make the recursive call
+				// Finally we can make the recursive call
 				if ((ret = copy(out, in, files[0], recurses + 1)) < 0)
 					break;
-				//We must also step past any file padding, for next header
+				// We must also step past any file padding, for next header
 				if (psu_pad_size)
 					genLseek(PM_file[recurses + 1], psu_pad_size, SEEK_CUR);
-				//finally, we must adjust attributes of the new file copy, to ensure
-				//correct timestamps and attributes (requires MC-specific functions)
+				// finally, we must adjust attributes of the new file copy, to ensure
+				// correct timestamps and attributes (requires MC-specific functions)
 				strcpy(tmp, out);
 				strncat(tmp, (const char *)files[0].stats.EntryName, 32);
-				mcGetInfo(tmp[2] - '0', 0, &dummy, &dummy, &dummy);  //Wakeup call
+				mcGetInfo(tmp[2] - '0', 0, &dummy, &dummy, &dummy);  // Wakeup call
 				mcSync(0, NULL, &dummy);
-				mcSetFileInfo(tmp[2] - '0', 0, &tmp[4], &files[0].stats, MC_SFI);  //Fix file stats
+				mcSetFileInfo(tmp[2] - '0', 0, &tmp[4], &files[0].stats, MC_SFI);  // Fix file stats
 				mcSync(0, NULL, &dummy);
-			}                                 //ends main for loop of valid PM_PSU_RESTORE mode
-			genClose(PM_file[recurses + 1]);  //Close the PSU file
-			                                  //Finally fix the stats of the containing folder
-			                                  //It has to be done last, as timestamps would change when fixing files
+			}                                 // ends main for loop of valid PM_PSU_RESTORE mode
+			genClose(PM_file[recurses + 1]);  // Close the PSU file
+			                                  // Finally fix the stats of the containing folder
+			                                  // It has to be done last, as timestamps would change when fixing files
 			                                  //--- This has been moved to a later clause, shared with PM_MC_RESTORE ---
-		} else {                              //Any other mode than a valid PM_PSU_RESTORE
+		} else {  // Any other mode than a valid PM_PSU_RESTORE
 			nfiles = getDir(in, files);
 			for (i = 0; i < nfiles; i++) {
 				if ((ret = copy(out, in, files[i], recurses + 1)) < 0)
 					break;
-			}  //ends main for loop for all modes other than valid PM_PSU_RESTORE
+			}  // ends main for loop for all modes other than valid PM_PSU_RESTORE
 		}
-		//folder contents are copied by the recursive call above, with error handling below
+		// folder contents are copied by the recursive call above, with error handling below
 		if (ret < 0) {
 			if (PM_flag[recurses + 1] == PM_PSU_BACKUP)
 				goto PSU_error;
@@ -2671,12 +2669,12 @@ restart_copy:  //restart point for PM_PSU_RESTORE to reprocess modified argument
 				return -1;
 		}
 
-		//Here folder contents have been copied error-free, but we also need to copy
-		//attributes and timestamps, and close the attribute/PSU file if such was used
-		//Lots of stuff need to be done here to make PSU operations work properly
-		if (PM_flag[recurses + 1] == PM_MC_BACKUP) {  //MC Backup mode folder paste closure
+		// Here folder contents have been copied error-free, but we also need to copy
+		// attributes and timestamps, and close the attribute/PSU file if such was used
+		// Lots of stuff need to be done here to make PSU operations work properly
+		if (PM_flag[recurses + 1] == PM_MC_BACKUP) {  // MC Backup mode folder paste closure
 			genClose(PM_file[recurses + 1]);
-		} else if (PM_flag[recurses + 1] == PM_PSU_BACKUP) {  //PSU Backup mode folder paste closure
+		} else if (PM_flag[recurses + 1] == PM_PSU_BACKUP) {  // PSU Backup mode folder paste closure
 			genLseek(PM_file[recurses + 1], 0, SEEK_SET);
 			clear_psu_header(&PSU_head);
 			PSU_head.attr = mcT_head_p->attr;
@@ -2689,50 +2687,50 @@ restart_copy:  //restart point for PM_PSU_RESTORE to reprocess modified argument
 			size = genWrite(PM_file[recurses + 1], (void *)&PSU_head, sizeof(PSU_head));
 			genLseek(PM_file[recurses + 1], 0, SEEK_END);
 			genClose(PM_file[recurses + 1]);
-		} else if (PM_flag[recurses + 1] == PM_MC_RESTORE) {  //MC Restore mode folder paste closure
+		} else if (PM_flag[recurses + 1] == PM_MC_RESTORE) {  // MC Restore mode folder paste closure
 			in_fd = PM_file[recurses + 1];
 			for (size = 64, i = 0; size == 64;) {
 				size = genRead(in_fd, (void *)&stats, 64);
 				if (size == 64) {
 					strcpy(tmp, out);
 					strncat(tmp, (const char *)stats.EntryName, 32);
-					mcGetInfo(tmp[2] - '0', 0, &dummy, &dummy, &dummy);  //Wakeup call
+					mcGetInfo(tmp[2] - '0', 0, &dummy, &dummy, &dummy);  // Wakeup call
 					mcSync(0, NULL, &dummy);
-					mcSetFileInfo(tmp[2] - '0', 0, &tmp[4], &stats, MC_SFI);  //Fix file stats
+					mcSetFileInfo(tmp[2] - '0', 0, &tmp[4], &stats, MC_SFI);  // Fix file stats
 					mcSync(0, NULL, &dummy);
 				} else {
 					genClose(in_fd);
 				}
 			}
-			//Finally fix the stats of the containing folder
-			//It has to be done last, as timestamps would change when fixing files
+			// Finally fix the stats of the containing folder
+			// It has to be done last, as timestamps would change when fixing files
 			//--- This has been moved to a later clause, shared with PM_PSU_RESTORE ---
-		} else if (PM_flag[recurses + 1] == PM_NORMAL) {             //Normal mode folder paste closure
-			if (!strncmp(out, "mc", 2)) {                            //Handle folder copied to MC
-				mcGetInfo(out[2] - '0', 0, &dummy, &dummy, &dummy);  //Wakeup call
+		} else if (PM_flag[recurses + 1] == PM_NORMAL) {             // Normal mode folder paste closure
+			if (!strncmp(out, "mc", 2)) {                            // Handle folder copied to MC
+				mcGetInfo(out[2] - '0', 0, &dummy, &dummy, &dummy);  // Wakeup call
 				mcSync(0, NULL, &dummy);
-				ret = MC_SFI;                                   //default request for changing entire mcTable
-				if (strncmp(in, "mc", 2)) {                     //Handle file copied from non-MC to MC
-					file.stats.AttrFile = MC_ATTR_norm_folder;  //normalize MC folder attribute
+				ret = MC_SFI;                                   // default request for changing entire mcTable
+				if (strncmp(in, "mc", 2)) {                     // Handle file copied from non-MC to MC
+					file.stats.AttrFile = MC_ATTR_norm_folder;  // normalize MC folder attribute
 #ifdef ETH
-					if (!strncmp(in, "host", 4)) {              //Handle folder copied from host: to MC
-						ret = 4;                                //request change only of main attribute for host:
-					}                                           //ends host: source clause
+					if (!strncmp(in, "host", 4)) {  // Handle folder copied from host: to MC
+						ret = 4;                    // request change only of main attribute for host:
+					}                               // ends host: source clause
 #endif
-				}                                               //ends non-MC source clause
+				}  // ends non-MC source clause
 				mcSetFileInfo(out[2] - '0', 0, &out[4], &file.stats, ret);
 				mcSync(0, NULL, &dummy);
-			} else {                                    //Handle folder copied to non-MC
-				if (!strncmp(out, "host", 4)) {         //for files copied to host: we skip Chstat
-				} else if (!strncmp(out, "mass", 4)) {  //for files copied to mass: we skip Chstat
-				} else {                                //for other devices we use fileXio_ stuff
+			} else {                                    // Handle folder copied to non-MC
+				if (!strncmp(out, "host", 4)) {         // for files copied to host: we skip Chstat
+				} else if (!strncmp(out, "mass", 4)) {  // for files copied to mass: we skip Chstat
+				} else {                                // for other devices we use fileXio_ stuff
 					memcpy(iox_stat.ctime, (void *)&file.stats._Create, 8);
 					memcpy(iox_stat.mtime, (void *)&file.stats._Modify, 8);
 					memcpy(iox_stat.atime, iox_stat.mtime, 8);
-					ret = FIO_CST_CT | FIO_CST_AT | FIO_CST_MT;  //Request timestamp stat change
+					ret = FIO_CST_CT | FIO_CST_AT | FIO_CST_MT;  // Request timestamp stat change
 #ifdef ETH
-					if (!strncmp(in, "host", 4)) {               //Handle folder copied from host:
-						ret = 0;                                 //Request NO stat change
+					if (!strncmp(in, "host", 4)) {  // Handle folder copied from host:
+						ret = 0;                    // Request NO stat change
 					}
 #endif
 					dummy = fileXioChStat(out, &iox_stat, ret);
@@ -2740,23 +2738,23 @@ restart_copy:  //restart point for PM_PSU_RESTORE to reprocess modified argument
 			}
 		}
 		if ((PM_flag[recurses + 1] == PM_MC_RESTORE) || (PM_flag[recurses + 1] == PM_PSU_RESTORE)) {
-			//Finally fix the stats of the containing folder
-			//It has to be done last, as timestamps would change when fixing files
-			mcGetInfo(out[2] - '0', 0, &dummy, &dummy, &dummy);  //Wakeup call
+			// Finally fix the stats of the containing folder
+			// It has to be done last, as timestamps would change when fixing files
+			mcGetInfo(out[2] - '0', 0, &dummy, &dummy, &dummy);  // Wakeup call
 			mcSync(0, NULL, &dummy);
-			mcSetFileInfo(out[2] - '0', 0, &out[4], &file.stats, MC_SFI);  //Fix folder stats
+			mcSetFileInfo(out[2] - '0', 0, &out[4], &file.stats, MC_SFI);  // Fix folder stats
 			mcSync(0, NULL, &dummy);
 		}
-		//the return code below is used if there were no errors copying a folder
+		// the return code below is used if there were no errors copying a folder
 		return 0;
 	}
 
-	//Here we know that the object to copy is a file, not a folder
-	//But in PSU Restore mode we must treat PSU files as special folders, at level 0.
-	//and recursively call copy with higher recurse level to process the contents
+	// Here we know that the object to copy is a file, not a folder
+	// But in PSU Restore mode we must treat PSU files as special folders, at level 0.
+	// and recursively call copy with higher recurse level to process the contents
 	if (PasteMode == PM_PSU_RESTORE && recurses == 0) {
 		if (!genCmpFileExt(in, "psu"))
-			goto non_PSU_RESTORE_init;  //if not a PSU file, go do normal pasting
+			goto non_PSU_RESTORE_init;  // if not a PSU file, go do normal pasting
 
 		in_fd = genOpen(in, O_RDONLY);
 
@@ -2767,11 +2765,11 @@ restart_copy:  //restart point for PM_PSU_RESTORE to reprocess modified argument
 			genClose(in_fd);
 			return -1;
 		}
-		PM_file[recurses + 1] = in_fd;           //File descriptor for PSU
-		PM_flag[recurses + 1] = PM_PSU_RESTORE;  //Mode flag for recursive entry
-		//Here we need to prep the file struct to appear like a normal MC folder
-		//before 'restarting' this 'copy' to handle creation of destination folder
-		//as well as the copying of files from the PSU into that folder
+		PM_file[recurses + 1] = in_fd;           // File descriptor for PSU
+		PM_flag[recurses + 1] = PM_PSU_RESTORE;  // Mode flag for recursive entry
+		// Here we need to prep the file struct to appear like a normal MC folder
+		// before 'restarting' this 'copy' to handle creation of destination folder
+		// as well as the copying of files from the PSU into that folder
 		mcT_head_p->attr = PSU_head.attr;
 		PSU_content = PSU_head.size;
 		mcT_head_p->size = 0;
@@ -2786,17 +2784,17 @@ restart_copy:  //restart point for PM_PSU_RESTORE to reprocess modified argument
 		goto restart_copy;
 	}
 non_PSU_RESTORE_init:
-	//In MC Restore mode we must here avoid copying the attribute file
+	// In MC Restore mode we must here avoid copying the attribute file
 	if (PM_flag[recurses] == PM_MC_RESTORE)
 		if (!strcmp(file.name, "PS2_MC_Backup_Attributes.BUP.bin"))
 			return 0;
 
-	//It is now time to open the input file, indicated by 'in_fd'
-	//But in PSU Restore mode we must use the already open PSU file instead
+	// It is now time to open the input file, indicated by 'in_fd'
+	// But in PSU Restore mode we must use the already open PSU file instead
 	if (PM_flag[recurses] == PM_PSU_RESTORE) {
 		in_fd = PM_file[recurses];
 		size = mcT_head_p->size;
-	} else {  //Any other mode than PM_PSU_RESTORE
+	} else {  // Any other mode than PM_PSU_RESTORE
 #ifdef ETH
 		if (!strncmp(in, "host:/", 6))
 			makeHostPath(in + 5, in + 6);
@@ -2808,9 +2806,9 @@ non_PSU_RESTORE_init:
 		genLseek(in_fd, 0, SEEK_SET);
 	}
 
-	//Here the input file has been opened, indicated by 'in_fd'
-	//It is now time to open the output file, indicated by 'out_fd'
-	//except in the case of a PSU backup, when we must add a header to PSU instead
+	// Here the input file has been opened, indicated by 'in_fd'
+	// It is now time to open the output file, indicated by 'out_fd'
+	// except in the case of a PSU backup, when we must add a header to PSU instead
 	if (PM_flag[recurses] == PM_PSU_BACKUP) {
 		out_fd = PM_file[recurses];
 		clear_psu_header(&PSU_head);
@@ -2824,43 +2822,43 @@ non_PSU_RESTORE_init:
 			psu_pad_size = 0x400 - (PSU_head.size & 0x3FF);
 		else
 			psu_pad_size = 0;
-		PSU_content++;  //Increase PSU content header count
-	} else {            //Any other PasteMode than PM_PSU_BACKUP needs a new output file
+		PSU_content++;  // Increase PSU content header count
+	} else {            // Any other PasteMode than PM_PSU_BACKUP needs a new output file
 #ifdef ETH
 		if (!strncmp(out, "host:/", 6))
 			makeHostPath(out + 5, out + 6);
 #endif
-		genLimObjName(out, 0);                                //Limit dest file name
-		genRemove(out);                                       //Remove old file if present
-		out_fd = genOpen(out, O_WRONLY | O_TRUNC | O_CREAT);  //Create new file
+		genLimObjName(out, 0);                                // Limit dest file name
+		genRemove(out);                                       // Remove old file if present
+		out_fd = genOpen(out, O_WRONLY | O_TRUNC | O_CREAT);  // Create new file
 		if (out_fd < 0)
 			goto copy_file_exit;
 	}
 
-	//Here the output file has been opened, indicated by 'out_fd'
+	// Here the output file has been opened, indicated by 'out_fd'
 
 	/* Determine the block size. Since LaunchELF is single-threaded,
-       using a large block size with a slow device will result in an unresponsive UI.
-       To prevent a loss in performance, these values must each be in a multiple of the device's sector/page size.
-       They must also be in multiples of 64, to prevent FILEIO from doing alignment correction in software. */
-	buffSize = 0x100000;  //First assume buffer size = 1MB (good for HDD)
+	   using a large block size with a slow device will result in an unresponsive UI.
+	   To prevent a loss in performance, these values must each be in a multiple of the device's sector/page size.
+	   They must also be in multiples of 64, to prevent FILEIO from doing alignment correction in software. */
+	buffSize = 0x100000;  // First assume buffer size = 1MB (good for HDD)
 	if (!strncmp(out, "mc", 2) || !strncmp(out, "mass", 4) || !strncmp(out, "vmc", 3))
-		buffSize = 131072;  //Use  128KB if writing to USB (Flash RAM writes) or MC (pretty slow).
-	                        //VMC contents should use the same size, as VMCs will often be stored on USB
+		buffSize = 131072;  // Use  128KB if writing to USB (Flash RAM writes) or MC (pretty slow).
+		                    // VMC contents should use the same size, as VMCs will often be stored on USB
 	else if (!strncmp(in, "mc", 2))
-		buffSize = 262144;  //Use 256KB if reading from MC (still pretty slow)
+		buffSize = 262144;  // Use 256KB if reading from MC (still pretty slow)
 #ifdef ETH
 	else if (!strncmp(out, "host", 4))
-		buffSize = 393216;  //Use 384KB if writing to HOST (acceptable)
+		buffSize = 393216;  // Use 384KB if writing to HOST (acceptable)
 #endif
 	else if ((!strncmp(in, "mass", 4)) || (!strncmp(in, "host", 4)))
-		buffSize = 524288;  //Use 512KB reading from USB or HOST (acceptable)
+		buffSize = 524288;  // Use 512KB reading from USB or HOST (acceptable)
 
 	if (size < buffSize)
 		buffSize = size;
 
-	buff = (char *)memalign(64, buffSize);  //Attempt buffer allocation
-	if (buff == NULL) {                     //if allocation fails
+	buff = (char *)memalign(64, buffSize);  // Attempt buffer allocation
+	if (buff == NULL) {                     // if allocation fails
 		ret = -ENOMEM;
 		genClose(out_fd);
 		out_fd = -1;
@@ -2869,27 +2867,27 @@ non_PSU_RESTORE_init:
 		goto copy_file_exit_mem_err;
 	}
 
-	old_size = written_size;  //Note initial progress data pos
-	OldTime = Timer();        //Note initial progress time
+	old_size = written_size;  // Note initial progress data pos
+	OldTime = Timer();        // Note initial progress time
 
 	while (size > 0) {  // ----- The main copying loop starts here -----
 
 		if (size < buffSize)
-			buffSize = size;  //Adjust effective buffer size to remaining data
+			buffSize = size;  // Adjust effective buffer size to remaining data
 
 		TimeDiff = Timer() - OldTime;
 		OldTime = Timer();
 		SizeDiff = written_size - old_size;
 		old_size = written_size;
-		if (SizeDiff) {                            //if anything was written this time
-			speed = (SizeDiff * 1000) / TimeDiff;  //calc real speed
-			remain_time = size / speed;            //calc time remaining for that speed
-		} else if (TimeDiff) {                     //if nothing written though time passed
-			speed = 0;                             //set speed as zero
-			remain_time = -1;                      //set time remaining as unknown
-		} else {                                   //if nothing written and no time passed
-			speed = -1;                            //set speed as unknown
-			remain_time = -1;                      //set time remaining as unknown
+		if (SizeDiff) {                            // if anything was written this time
+			speed = (SizeDiff * 1000) / TimeDiff;  // calc real speed
+			remain_time = size / speed;            // calc time remaining for that speed
+		} else if (TimeDiff) {                     // if nothing written though time passed
+			speed = 0;                             // set speed as zero
+			remain_time = -1;                      // set time remaining as unknown
+		} else {                                   // if nothing written and no time passed
+			speed = -1;                            // set speed as unknown
+			remain_time = -1;                      // set time remaining as unknown
 		}
 
 		sprintf(progress, "%s : %s", LNG(Pasting_file), file.name);
@@ -2909,7 +2907,7 @@ non_PSU_RESTORE_init:
 		else if (speed <= 1024)
 			sprintf(tmp, "%d %s/sec", speed, LNG(bytes));  // bytes/sec
 		else
-			sprintf(tmp, "%d %s/sec", speed / 1024, LNG(Kbytes));  //Kbytes/sec
+			sprintf(tmp, "%d %s/sec", speed / 1024, LNG(Kbytes));  // Kbytes/sec
 		strcat(progress, tmp);
 
 		sprintf(tmp, "\n%s : ", LNG(Remain_Time));
@@ -2926,7 +2924,7 @@ non_PSU_RESTORE_init:
 
 		sprintf(tmp, "\n\n%s: ", LNG(Written_Total));
 		strcat(progress, tmp);
-		sprintf(tmp, "%lu %s", written_size / 1024, LNG(Kbytes));  //Kbytes
+		sprintf(tmp, "%lu %s", written_size / 1024, LNG(Kbytes));  // Kbytes
 		strcat(progress, tmp);
 
 		sprintf(tmp, "\n%s: ", LNG(Average_Speed));
@@ -2935,18 +2933,18 @@ non_PSU_RESTORE_init:
 		if (TimeDiff == 0)
 			strcpy(tmp, LNG(Unknown));
 		else {
-			speed = (written_size * 1000) / TimeDiff;  //calc real speed
+			speed = (written_size * 1000) / TimeDiff;  // calc real speed
 			if (speed <= 1024)
 				sprintf(tmp, "%d %s/sec", speed, LNG(bytes));  // bytes/sec
 			else
-				sprintf(tmp, "%d %s/sec", speed / 1024, LNG(Kbytes));  //Kbytes/sec
+				sprintf(tmp, "%d %s/sec", speed / 1024, LNG(Kbytes));  // Kbytes/sec
 		}
 		strcat(progress, tmp);
 
-		if (PasteProgress_f)  //if progress report was used earlier in this pasting
-			nonDialog(NULL);  //order cleanup for that screen area
-		nonDialog(progress);  //Make new progress report
-		PasteProgress_f = 1;  //and note that it was done for next time
+		if (PasteProgress_f)  // if progress report was used earlier in this pasting
+			nonDialog(NULL);  // order cleanup for that screen area
+		nonDialog(progress);  // Make new progress report
+		PasteProgress_f = 1;  // and note that it was done for next time
 		drawMsg(file.name);
 #ifdef DS34
 		if (readpad() && new_pad) {
@@ -2976,9 +2974,9 @@ non_PSU_RESTORE_init:
 		written_size += buffSize;
 	}  // ends while(size>0), ----- The main copying loop ends here -----
 	ret = 0;
-	//Here the file has been copied. without error, as indicated by 'ret' above
-	//but we also need to copy attributes and timestamps (as yet only for MC)
-	//For PSU backup output padding may be needed, but not output file closure
+	// Here the file has been copied. without error, as indicated by 'ret' above
+	// but we also need to copy attributes and timestamps (as yet only for MC)
+	// For PSU backup output padding may be needed, but not output file closure
 	if (PM_flag[recurses] == PM_PSU_BACKUP) {
 		if (psu_pad_size) {
 			pad_psu_header(&PSU_head);
@@ -2989,60 +2987,60 @@ non_PSU_RESTORE_init:
 			if (psu_pad_size)
 				genWrite(out_fd, (void *)&PSU_head, psu_pad_size);
 		}
-		out_fd = -1;  //prevent output file closure below
+		out_fd = -1;  // prevent output file closure below
 		goto copy_file_exit;
 	}
 
-	if (PM_flag[recurses] == PM_MC_BACKUP) {  //MC Backup mode file paste closure
+	if (PM_flag[recurses] == PM_MC_BACKUP) {  // MC Backup mode file paste closure
 		size = genWrite(PM_file[recurses], (void *)&file.stats, 64);
 		if (size != 64)
-			return -1;  //Abort if attribute file crashed
+			return -1;  // Abort if attribute file crashed
 	}
 
 	if (out_fd >= 0) {
 		genClose(out_fd);
-		out_fd = -1;  //prevent dual closure attempt
+		out_fd = -1;  // prevent dual closure attempt
 	}
 
-	if (!strncmp(out, "mc", 2)) {                                 //Handle file copied to MC
-		mcGetInfo(out[2] - '0', 0, &mctype_PSx, &dummy, &dummy);  //Wakeup call & MC type check
+	if (!strncmp(out, "mc", 2)) {                                 // Handle file copied to MC
+		mcGetInfo(out[2] - '0', 0, &mctype_PSx, &dummy, &dummy);  // Wakeup call & MC type check
 		mcSync(0, NULL, &dummy);
-		ret = MC_SFI;                                 //default request for changing entire mcTable
-		if (strncmp(in, "mc", 2)) {                   //Handle file copied from non-MC to MC
-			file.stats.AttrFile = MC_ATTR_norm_file;  //normalize MC file attribute
+		ret = MC_SFI;                                 // default request for changing entire mcTable
+		if (strncmp(in, "mc", 2)) {                   // Handle file copied from non-MC to MC
+			file.stats.AttrFile = MC_ATTR_norm_file;  // normalize MC file attribute
 #ifdef ETH
-			if (!strncmp(in, "host", 4)) {            //Handle folder copied from host: to MC
-				ret = 4;                              //request change only of main attribute for host:
-			}                                         //ends host: source clause
+			if (!strncmp(in, "host", 4)) {  // Handle folder copied from host: to MC
+				ret = 4;                    // request change only of main attribute for host:
+			}                               // ends host: source clause
 #endif
-		}                                             //ends non-MC source clause
-		if (mctype_PSx == 2) {                        //if copying to a PS2 MC
+		}                       // ends non-MC source clause
+		if (mctype_PSx == 2) {  // if copying to a PS2 MC
 			mcSetFileInfo(out[2] - '0', 0, &out[4], &file.stats, ret);
 			mcSync(0, NULL, &dummy);
 		}
-	} else {                                    //Handle file copied to non-MC
-		if (!strncmp(out, "host", 4)) {         //for files copied to host: we skip Chstat
-		} else if (!strncmp(out, "mass", 4)) {  //for files copied to mass: we skip Chstat
-		} else {                                //for other devices we use fileXio_ stuff
+	} else {                                    // Handle file copied to non-MC
+		if (!strncmp(out, "host", 4)) {         // for files copied to host: we skip Chstat
+		} else if (!strncmp(out, "mass", 4)) {  // for files copied to mass: we skip Chstat
+		} else {                                // for other devices we use fileXio_ stuff
 			memcpy(iox_stat.ctime, (void *)&file.stats._Create, 8);
 			memcpy(iox_stat.mtime, (void *)&file.stats._Modify, 8);
 			memcpy(iox_stat.atime, iox_stat.mtime, 8);
-			ret = FIO_CST_CT | FIO_CST_AT | FIO_CST_MT;  //Request timestamp stat change
+			ret = FIO_CST_CT | FIO_CST_AT | FIO_CST_MT;  // Request timestamp stat change
 #ifdef ETH
-			if (!strncmp(in, "host", 4)) {               //Handle file copied from host:
-				ret = 0;                                 //Request NO stat change
+			if (!strncmp(in, "host", 4)) {  // Handle file copied from host:
+				ret = 0;                    // Request NO stat change
 			}
 #endif
 			dummy = fileXioChStat(out, &iox_stat, ret);
 		}
 	}
 
-//The code below is also used for all errors in copying a file,
-//but those cases are distinguished by a negative value in 'ret'
+// The code below is also used for all errors in copying a file,
+// but those cases are distinguished by a negative value in 'ret'
 copy_file_exit:
 	free(buff);
 copy_file_exit_mem_err:
-	if (PM_flag[recurses] != PM_PSU_RESTORE) {  //Avoid closing PSU file here for PSU Restore
+	if (PM_flag[recurses] != PM_PSU_RESTORE) {  // Avoid closing PSU file here for PSU Restore
 		if (in_fd >= 0) {
 			genClose(in_fd);
 		}
@@ -3053,13 +3051,13 @@ copy_file_exit_mem_err:
 	return ret;
 }
 //------------------------------
-//endfunc copy
+// endfunc copy
 //--------------------------------------------------------------
-//dlanor: For v3.64 the virtual keyboard function is modified to
-//allow entry of empty strings. The function now returns string
-//length, except if you use 'CANCEL' when it returns -1 instead.
-//Routines that require a non-empty string (eg: Rename, Newdir)
-//must test with '>' now, instead of '>=' as used previously.
+// dlanor: For v3.64 the virtual keyboard function is modified to
+// allow entry of empty strings. The function now returns string
+// length, except if you use 'CANCEL' when it returns -1 instead.
+// Routines that require a non-empty string (eg: Rename, Newdir)
+// must test with '>' now, instead of '>=' as used previously.
 //--------------------------------------------------------------
 int keyboard(char *out, int max)
 {
@@ -3090,13 +3088,13 @@ int keyboard(char *out, int max)
 		cur = (int)(p - out);
 	KEY_LEN = strlen(KEY);
 
-	event = 1;  //event = initial entry
+	event = 1;  // event = initial entry
 	while (1) {
-		//Pad response section
+		// Pad response section
 		waitPadReady(0, 0);
 		if (readpad_no_KB()) {
 			if (new_pad)
-				event |= 2;  //event |= pad command
+				event |= 2;  // event |= pad command
 			if (new_pad & PAD_UP) {
 				if (sel <= WFONTS * HFONTS) {
 					if (sel >= WFONTS)
@@ -3136,7 +3134,7 @@ int keyboard(char *out, int max)
 					cur--;
 					t = 0;
 				}
-			} else if (new_pad & PAD_SQUARE) {  //Square => space
+			} else if (new_pad & PAD_SQUARE) {  // Square => space
 				i = strlen(out);
 				if (i < max && i < 33) {
 					strcpy(tmp, out);
@@ -3148,7 +3146,7 @@ int keyboard(char *out, int max)
 				}
 			} else if ((swapKeys && new_pad & PAD_CROSS) || (!swapKeys && new_pad & PAD_CIRCLE)) {
 				i = strlen(out);
-				if (sel < WFONTS * HFONTS) {  //Any char in matrix selected ?
+				if (sel < WFONTS * HFONTS) {  // Any char in matrix selected ?
 					if (i < max && i < 33) {
 						strcpy(tmp, out);
 						out[cur] = KEY[sel];
@@ -3158,18 +3156,18 @@ int keyboard(char *out, int max)
 						t = 0;
 					}
 				} else if (sel == WFONTS * HFONTS) {  //'OK' exit-button selected ?
-					break;                            //break out of loop with i==strlen
-				} else                                //Must be 'CANCEL' exit-button
+					break;                            // break out of loop with i==strlen
+				} else                                // Must be 'CANCEL' exit-button
 					return -1;
 			} else if (new_pad & PAD_TRIANGLE) {
 				return -1;
 			}
 		}
 
-		//Kbd response section
+		// Kbd response section
 		if (setting->usbkbd_used && PS2KbdRead(&KeyPress)) {
 
-			event |= 2;  //event |= pad command
+			event |= 2;  // event |= pad command
 
 			if (KeyPress == PS2KBD_ESCAPE_KEY) {
 				PS2KbdRead(&KeyPress);
@@ -3221,16 +3219,16 @@ int keyboard(char *out, int max)
 				}
 			}
 			KeyPress = '\0';
-		}  //ends if(setting->usbkbd_used && PS2KbdRead(&KeyPress))
+		}  // ends if(setting->usbkbd_used && PS2KbdRead(&KeyPress))
 
 		t++;
 
 		if (t & 0x0F)
-			event |= 4;  //repetitive timer event
+			event |= 4;  // repetitive timer event
 
-		if (event || post_event) {  //NB: We need to update two frame buffers per event
+		if (event || post_event) {  // NB: We need to update two frame buffers per event
 
-			//Display section
+			// Display section
 			drawPopSprite(setting->color[COLOR_BACKGR],
 			              KEY_X, KEY_Y,
 			              KEY_X + KEY_W - 1, KEY_Y + KEY_H - 1);
@@ -3259,7 +3257,7 @@ int keyboard(char *out, int max)
 			        KEY_X + KEY_W - 1 - (strlen(LNG(CANCEL)) + 2) * FONT_WIDTH,
 			        KEY_Y + LINE_THICKNESS + 1 + FONT_HEIGHT + 1 + LINE_THICKNESS + 8 + HFONTS * FONT_HEIGHT, setting->color[COLOR_TEXT], TRUE, 0);
 
-			//Cursor positioning section
+			// Cursor positioning section
 			if (sel <= WFONTS * HFONTS)
 				x = KEY_X + LINE_THICKNESS + 12 + (sel % WFONTS) * (FONT_WIDTH + 12) - 8;
 			else
@@ -3267,7 +3265,7 @@ int keyboard(char *out, int max)
 			y = KEY_Y + LINE_THICKNESS + 1 + FONT_HEIGHT + 1 + LINE_THICKNESS + 8 + (sel / WFONTS) * FONT_HEIGHT;
 			drawChar(LEFT_CUR, x, y, setting->color[COLOR_SELECT]);
 
-			//Tooltip section
+			// Tooltip section
 			x = SCREEN_MARGIN;
 			y = Menu_tooltip_y;
 			drawSprite(setting->color[COLOR_BACKGR], 0, y - 1, SCREEN_WIDTH, y + FONT_HEIGHT);
@@ -3288,184 +3286,184 @@ int keyboard(char *out, int max)
 			                           "3:%s",
 			        LNG(BackSpace), LNG(SPACE), LNG(Left), LNG(Right), LNG(Enter), LNG(Exit));
 			printXY(tmp, x, y, setting->color[COLOR_SELECT], TRUE, 0);
-		}  //ends if(event||post_event)
+		}  // ends if(event||post_event)
 		drawScr();
 		post_event = event;
 		event = 0;
-	}  //ends while
+	}  // ends while
 	return strlen(out);
 }
 //------------------------------
-//endfunc keyboard
+// endfunc keyboard
 //--------------------------------------------------------------
-//keyboard2 below is used for testing output from a USB keyboard
-//it can be commented out when not used by the programmer.
-//When using it for tests, simply replace the call to 'keyboard'
-//somewhere (Rename routine is a good choice) with a call to
+// keyboard2 below is used for testing output from a USB keyboard
+// it can be commented out when not used by the programmer.
+// When using it for tests, simply replace the call to 'keyboard'
+// somewhere (Rename routine is a good choice) with a call to
 //'keyboard2' instead. It uses the old routines for virtual keys
-//via gamepad, so you can still enter proper strings that way,
-//but each key pressed on the USB keyboard will be expanded to a
-//sequence corresponding to sprintf(somestring," %02X ", key).
-//Thus four characters are added to the output string for each
-//such key, and after character 32 the cursor loops back to the
-//first character again.
+// via gamepad, so you can still enter proper strings that way,
+// but each key pressed on the USB keyboard will be expanded to a
+// sequence corresponding to sprintf(somestring," %02X ", key).
+// Thus four characters are added to the output string for each
+// such key, and after character 32 the cursor loops back to the
+// first character again.
 //--------------------------------------------------------------
 /*
 int keyboard2(char *out, int max)
 {
-	int event, post_event=0;
-	const int	KEY_W=276,
-				KEY_H=168,
-				KEY_X=(SCREEN_WIDTH - KEY_W)/2,
-				KEY_Y=((SCREEN_HEIGHT - KEY_H)/2),
-				WFONTS=13,
-				HFONTS=7;
-	char *KEY="ABCDEFGHIJKLM"
-	          "NOPQRSTUVWXYZ"
-	          "abcdefghijklm"
-	          "nopqrstuvwxyz"
-	          "0123456789   "
-	          "()[]!#$%&@;  "
-	          "=+-'^.,_     ";
-	int KEY_LEN;
-	int cur=0, sel=0, i=0, x, y, t=0;
-	char tmp[256], *p;
-	unsigned char KeyPress;
-	
-	p=strrchr(out, '.');
-	if(p==NULL)	cur=strlen(out);
-	else		cur=(int)(p-out);
-	KEY_LEN = strlen(KEY);
+    int event, post_event=0;
+    const int	KEY_W=276,
+                KEY_H=168,
+                KEY_X=(SCREEN_WIDTH - KEY_W)/2,
+                KEY_Y=((SCREEN_HEIGHT - KEY_H)/2),
+                WFONTS=13,
+                HFONTS=7;
+    char *KEY="ABCDEFGHIJKLM"
+              "NOPQRSTUVWXYZ"
+              "abcdefghijklm"
+              "nopqrstuvwxyz"
+              "0123456789   "
+              "()[]!#$%&@;  "
+              "=+-'^.,_     ";
+    int KEY_LEN;
+    int cur=0, sel=0, i=0, x, y, t=0;
+    char tmp[256], *p;
+    unsigned char KeyPress;
 
-	event = 1;  //event = initial entry
-	while(1){
-		//Pad response section
-		waitPadReady(0, 0);
-		if(readpad_no_KB()){
-			if(new_pad)
-				event |= 2;  //event |= pad command
-			if(new_pad & PAD_UP){
-				if(sel<=WFONTS*HFONTS){
-					if(sel>=WFONTS) sel-=WFONTS;
-				}else{
-					sel-=4;
-				}
-			}else if(new_pad & PAD_DOWN){
-				if(sel/WFONTS == HFONTS-1){
-					if(sel%WFONTS < 5)	sel=WFONTS*HFONTS;
-					else				sel=WFONTS*HFONTS+1;
-				}else if(sel/WFONTS <= HFONTS-2)
-					sel+=WFONTS;
-			}else if(new_pad & PAD_LEFT){
-				if(sel>0) sel--;
-			}else if(new_pad & PAD_RIGHT){
-				if(sel<=WFONTS*HFONTS) sel++;
-			}else if(new_pad & PAD_START){
-				sel = WFONTS*HFONTS;
-			}else if(new_pad & PAD_L1){
-				if(cur>0) cur--;
-				t=0;
-			}else if(new_pad & PAD_R1){
-				if(cur<strlen(out)) cur++;
-				t=0;
-			}else if((!swapKeys && new_pad & PAD_CROSS)
-			      || (swapKeys && new_pad & PAD_CIRCLE) ){
-				if(cur>0){
-					strcpy(tmp, out);
-					out[cur-1]=0;
-					strcat(out, &tmp[cur]);
-					cur--;
-					t=0;
-				}
-			}else if((swapKeys && new_pad & PAD_CROSS)
-			      || (!swapKeys && new_pad & PAD_CIRCLE) ){
-				i=strlen(out);
-				if(sel < WFONTS*HFONTS){  //Any char in matrix selected ?
-					if(i<max && i<33){
-						strcpy(tmp, out);
-						out[cur]=KEY[sel];
-						out[cur+1]=0;
-						strcat(out, &tmp[cur]);
-						cur++;
-						t=0;
-					}
-				}else if(sel == WFONTS*HFONTS){ //'OK' exit-button selected ?
-					break;                        //break out of loop with i==strlen
-				}else  //Must be 'CANCEL' exit-button
-					return -1;
-			}
-		}
+    p=strrchr(out, '.');
+    if(p==NULL)	cur=strlen(out);
+    else		cur=(int)(p-out);
+    KEY_LEN = strlen(KEY);
 
-		//Kbd response section
-		if(PS2KbdRead(&KeyPress)) {
-			strcpy(tmp, out);
-			sprintf(out+cur," %02X %n",KeyPress, &x);
-			if(cur+x < strlen(tmp))
-				strcat(out, tmp+cur+x);
-			cur+=x;
-			if(cur>=31)
-				cur=0;
-			t=0;
-		} //ends if(PS2KbdRead(&KeyPress))
+    event = 1;  //event = initial entry
+    while(1){
+        //Pad response section
+        waitPadReady(0, 0);
+        if(readpad_no_KB()){
+            if(new_pad)
+                event |= 2;  //event |= pad command
+            if(new_pad & PAD_UP){
+                if(sel<=WFONTS*HFONTS){
+                    if(sel>=WFONTS) sel-=WFONTS;
+                }else{
+                    sel-=4;
+                }
+            }else if(new_pad & PAD_DOWN){
+                if(sel/WFONTS == HFONTS-1){
+                    if(sel%WFONTS < 5)	sel=WFONTS*HFONTS;
+                    else				sel=WFONTS*HFONTS+1;
+                }else if(sel/WFONTS <= HFONTS-2)
+                    sel+=WFONTS;
+            }else if(new_pad & PAD_LEFT){
+                if(sel>0) sel--;
+            }else if(new_pad & PAD_RIGHT){
+                if(sel<=WFONTS*HFONTS) sel++;
+            }else if(new_pad & PAD_START){
+                sel = WFONTS*HFONTS;
+            }else if(new_pad & PAD_L1){
+                if(cur>0) cur--;
+                t=0;
+            }else if(new_pad & PAD_R1){
+                if(cur<strlen(out)) cur++;
+                t=0;
+            }else if((!swapKeys && new_pad & PAD_CROSS)
+                  || (swapKeys && new_pad & PAD_CIRCLE) ){
+                if(cur>0){
+                    strcpy(tmp, out);
+                    out[cur-1]=0;
+                    strcat(out, &tmp[cur]);
+                    cur--;
+                    t=0;
+                }
+            }else if((swapKeys && new_pad & PAD_CROSS)
+                  || (!swapKeys && new_pad & PAD_CIRCLE) ){
+                i=strlen(out);
+                if(sel < WFONTS*HFONTS){  //Any char in matrix selected ?
+                    if(i<max && i<33){
+                        strcpy(tmp, out);
+                        out[cur]=KEY[sel];
+                        out[cur+1]=0;
+                        strcat(out, &tmp[cur]);
+                        cur++;
+                        t=0;
+                    }
+                }else if(sel == WFONTS*HFONTS){ //'OK' exit-button selected ?
+                    break;                        //break out of loop with i==strlen
+                }else  //Must be 'CANCEL' exit-button
+                    return -1;
+            }
+        }
 
-		t++;
+        //Kbd response section
+        if(PS2KbdRead(&KeyPress)) {
+            strcpy(tmp, out);
+            sprintf(out+cur," %02X %n",KeyPress, &x);
+            if(cur+x < strlen(tmp))
+                strcat(out, tmp+cur+x);
+            cur+=x;
+            if(cur>=31)
+                cur=0;
+            t=0;
+        } //ends if(PS2KbdRead(&KeyPress))
 
-		if(t & 0x0F) event |= 4;  //repetitive timer event
+        t++;
 
-		if(event||post_event){ //NB: We need to update two frame buffers per event
+        if(t & 0x0F) event |= 4;  //repetitive timer event
 
-			//Display section
-			drawPopSprite(setting->color[COLOR_BACKGR],
-				KEY_X, KEY_Y,
-				KEY_X+KEY_W, KEY_Y+KEY_H);
-			drawFrame(
-				KEY_X, KEY_Y,
-				KEY_X+KEY_W, KEY_Y+KEY_H, setting->color[COLOR_FRAME]);
-			drawOpSprite(setting->color[COLOR_FRAME],
-				KEY_X, KEY_Y+20,
-				KEY_X+KEY_W, KEY_Y+20+LINE_THICKNESS);
-			printXY(out, KEY_X+2+3, KEY_Y+3, setting->color[COLOR_TEXT], TRUE, 0);
-			if(((event|post_event)&4) && (t & 0x10)){
-				printXY("|",
-					KEY_X+cur*8+1, KEY_Y+3, setting->color[COLOR_TEXT], TRUE, 0);
-			}
-			for(i=0; i<KEY_LEN; i++)
-				drawChar(KEY[i],
-					KEY_X+2+4 + (i%WFONTS+1)*20 - 12,
-					KEY_Y+28 + (i/WFONTS)*16,
-					setting->color[COLOR_TEXT]);
-			printXY("OK                       CANCEL",
-				KEY_X+2+4 + 20 - 12, KEY_Y+28 + HFONTS*16, setting->color[COLOR_TEXT], TRUE, 0);
+        if(event||post_event){ //NB: We need to update two frame buffers per event
 
-			//Cursor positioning section
-			if(sel<=WFONTS*HFONTS)
-				x = KEY_X+2+4 + (sel%WFONTS+1)*20 - 20;
-			else
-				x = KEY_X+2+4 + 25*8;
-			y = KEY_Y+28 + (sel/WFONTS)*16;
-			drawChar(LEFT_CUR, x, y, setting->color[COLOR_TEXT]);
+            //Display section
+            drawPopSprite(setting->color[COLOR_BACKGR],
+                KEY_X, KEY_Y,
+                KEY_X+KEY_W, KEY_Y+KEY_H);
+            drawFrame(
+                KEY_X, KEY_Y,
+                KEY_X+KEY_W, KEY_Y+KEY_H, setting->color[COLOR_FRAME]);
+            drawOpSprite(setting->color[COLOR_FRAME],
+                KEY_X, KEY_Y+20,
+                KEY_X+KEY_W, KEY_Y+20+LINE_THICKNESS);
+            printXY(out, KEY_X+2+3, KEY_Y+3, setting->color[COLOR_TEXT], TRUE, 0);
+            if(((event|post_event)&4) && (t & 0x10)){
+                printXY("|",
+                    KEY_X+cur*8+1, KEY_Y+3, setting->color[COLOR_TEXT], TRUE, 0);
+            }
+            for(i=0; i<KEY_LEN; i++)
+                drawChar(KEY[i],
+                    KEY_X+2+4 + (i%WFONTS+1)*20 - 12,
+                    KEY_Y+28 + (i/WFONTS)*16,
+                    setting->color[COLOR_TEXT]);
+            printXY("OK                       CANCEL",
+                KEY_X+2+4 + 20 - 12, KEY_Y+28 + HFONTS*16, setting->color[COLOR_TEXT], TRUE, 0);
 
-			//Tooltip section
-			x = SCREEN_MARGIN;
-			y = Menu_tooltip_y;
-			drawSprite(setting->color[COLOR_BACKGR], 0, y-1, SCREEN_WIDTH, y+FONT_HEIGHT);
+            //Cursor positioning section
+            if(sel<=WFONTS*HFONTS)
+                x = KEY_X+2+4 + (sel%WFONTS+1)*20 - 20;
+            else
+                x = KEY_X+2+4 + 25*8;
+            y = KEY_Y+28 + (sel/WFONTS)*16;
+            drawChar(LEFT_CUR, x, y, setting->color[COLOR_TEXT]);
 
-			if (swapKeys) 
-				printXY("\xFF""1:OK \xFF""0:Back L1:Left R1:Right START:Enter",
-					x, y, setting->color[COLOR_SELECT], TRUE, 0);
-			else
-				printXY("\xFF""0:OK \xFF""1:Back L1:Left R1:Right START:Enter",
-					x, y, setting->color[COLOR_SELECT], TRUE, 0);
-		}//ends if(event||post_event)
-		drawScr();
-		post_event = event;
-		event = 0;
-	}//ends while
-	return i;
+            //Tooltip section
+            x = SCREEN_MARGIN;
+            y = Menu_tooltip_y;
+            drawSprite(setting->color[COLOR_BACKGR], 0, y-1, SCREEN_WIDTH, y+FONT_HEIGHT);
+
+            if (swapKeys)
+                printXY("\xFF""1:OK \xFF""0:Back L1:Left R1:Right START:Enter",
+                    x, y, setting->color[COLOR_SELECT], TRUE, 0);
+            else
+                printXY("\xFF""0:OK \xFF""1:Back L1:Left R1:Right START:Enter",
+                    x, y, setting->color[COLOR_SELECT], TRUE, 0);
+        }//ends if(event||post_event)
+        drawScr();
+        post_event = event;
+        event = 0;
+    }//ends while
+    return i;
 }
 */
 //------------------------------
-//endfunc keyboard2  (commented out except in testing)
+// endfunc keyboard2  (commented out except in testing)
 //--------------------------------------------------------------
 int setFileList(const char *path, const char *ext, FILEINFO *files, int cnfmode)
 {
@@ -3476,8 +3474,8 @@ int setFileList(const char *path, const char *ext, FILEINFO *files, int cnfmode)
 	nfiles = 0;
 	if (path[0] == 0) {
 		//-- Start case for browser root pseudo folder with device links --
-		if (USB_mass_scanned)  //if mass drives were scanned in earlier browsing
-			scan_USB_mass();   //then allow another scan here (timer dependent)
+		if (USB_mass_scanned)  // if mass drives were scanned in earlier browsing
+			scan_USB_mass();   // then allow another scan here (timer dependent)
 
 		strcpy(files[nfiles].name, "mc0:");
 		files[nfiles++].stats.AttrFile = sceMcFileAttrSubdir;
@@ -3486,15 +3484,13 @@ int setFileList(const char *path, const char *ext, FILEINFO *files, int cnfmode)
 		strcpy(files[nfiles].name, "hdd0:");
 		files[nfiles++].stats.AttrFile = sceMcFileAttrSubdir;
 #ifdef DVRP
-		if (console_is_PSX)
-		{
-		strcpy(files[nfiles].name, "dvr_hdd0:");
-		files[nfiles++].stats.AttrFile = sceMcFileAttrSubdir;
+		if (console_is_PSX) {
+			strcpy(files[nfiles].name, "dvr_hdd0:");
+			files[nfiles++].stats.AttrFile = sceMcFileAttrSubdir;
 		}
 #endif
 #ifdef XFROM
-		if (console_is_PSX)
-		{
+		if (console_is_PSX) {
 			strcpy(files[nfiles].name, "xfrom0:");
 			files[nfiles++].stats.AttrFile = sceMcFileAttrSubdir;
 		}
@@ -3502,7 +3498,7 @@ int setFileList(const char *path, const char *ext, FILEINFO *files, int cnfmode)
 		strcpy(files[nfiles].name, "cdfs:");
 		files[nfiles++].stats.AttrFile = sceMcFileAttrSubdir;
 		if ((cnfmode != USBD_IRX_CNF) && (cnfmode != USBKBD_IRX_CNF) && (cnfmode != USBMASS_IRX_CNF)) {
-			//The condition above blocks selecting USB drivers from USB devices
+			// The condition above blocks selecting USB drivers from USB devices
 			if (USB_mass_ix[0] || !USB_mass_scanned) {
 				strcpy(files[nfiles].name, "mass:");
 				files[nfiles++].stats.AttrFile = sceMcFileAttrSubdir;
@@ -3516,8 +3512,8 @@ int setFileList(const char *path, const char *ext, FILEINFO *files, int cnfmode)
 			}
 		}
 		if (!cnfmode || (cnfmode == JPG_CNF)) {
-			//This condition blocks selecting any CONFIG items on PC
-			//or in a virtual memory card
+			// This condition blocks selecting any CONFIG items on PC
+			// or in a virtual memory card
 #ifdef ETH
 			strcpy(files[nfiles].name, "host:");
 			files[nfiles++].stats.AttrFile = sceMcFileAttrSubdir;
@@ -3532,8 +3528,8 @@ int setFileList(const char *path, const char *ext, FILEINFO *files, int cnfmode)
 			}
 		}
 		if (cnfmode < 2) {
-			//This condition blocks use of MISC pseudo-device for drivers and skins
-			//And allows this device only for launch keys and for normal browsing
+			// This condition blocks use of MISC pseudo-device for drivers and skins
+			// And allows this device only for launch keys and for normal browsing
 			strcpy(files[nfiles].name, LNG(MISC));
 			files[nfiles].stats.AttrFile = sceMcFileAttrSubdir;
 			nfiles++;
@@ -3547,7 +3543,7 @@ int setFileList(const char *path, const char *ext, FILEINFO *files, int cnfmode)
 		nfiles = 0;
 		strcpy(files[nfiles].name, "..");
 		files[nfiles++].stats.AttrFile = sceMcFileAttrSubdir;
-		if (cnfmode) {  //Stop recursive FileBrowser entry, only allow it for launch keys
+		if (cnfmode) {  // Stop recursive FileBrowser entry, only allow it for launch keys
 			strcpy(files[nfiles].name, LNG(FileBrowser));
 			files[nfiles++].stats.AttrFile = sceMcFileAttrFile;
 		}
@@ -3555,10 +3551,10 @@ int setFileList(const char *path, const char *ext, FILEINFO *files, int cnfmode)
 		files[nfiles++].stats.AttrFile = sceMcFileAttrFile;
 		strcpy(files[nfiles].name, LNG(PS2Disc));
 		files[nfiles++].stats.AttrFile = sceMcFileAttrFile;
-		#ifdef ETH
+#ifdef ETH
 		strcpy(files[nfiles].name, LNG(PS2Net));
 		files[nfiles++].stats.AttrFile = sceMcFileAttrFile;
-		#endif
+#endif
 		strcpy(files[nfiles].name, LNG(PS2PowerOff));
 		files[nfiles++].stats.AttrFile = sceMcFileAttrFile;
 		strcpy(files[nfiles].name, LNG(HddManager));
@@ -3577,7 +3573,7 @@ int setFileList(const char *path, const char *ext, FILEINFO *files, int cnfmode)
 		files[nfiles++].stats.AttrFile = sceMcFileAttrFile;
 		strcpy(files[nfiles].name, LNG(Load_CNF));
 		files[nfiles++].stats.AttrFile = sceMcFileAttrFile;
-		//Next 2 lines add an optional font test routine
+		// Next 2 lines add an optional font test routine
 		strcpy(files[nfiles].name, LNG(ShowFont));
 		files[nfiles++].stats.AttrFile = sceMcFileAttrFile;
 		strcpy(files[nfiles].name, LNG(Debug_Info));
@@ -3623,7 +3619,7 @@ int setFileList(const char *path, const char *ext, FILEINFO *files, int cnfmode)
 	return nfiles;
 }
 //------------------------------
-//endfunc setFileList
+// endfunc setFileList
 //--------------------------------------------------------------
 int BrowserModePopup(void)
 {
@@ -3650,10 +3646,10 @@ int BrowserModePopup(void)
 		menu_len = i;
 	if (menu_len < (i = strlen(LNG(Back_to_Browser))))
 		menu_len = i;
-	menu_len += 3;  //All of the above strings are indented 3 spaces, for tooltips
+	menu_len += 3;  // All of the above strings are indented 3 spaces, for tooltips
 
-	int menu_ch_w = menu_len + 1;  //Total characters in longest menu string
-	int menu_ch_h = 14;            //Total number of menu lines
+	int menu_ch_w = menu_len + 1;  // Total characters in longest menu string
+	int menu_ch_h = 14;            // Total number of menu lines
 	int mSprite_w = (menu_ch_w + 3) * FONT_WIDTH;
 	int mSprite_h = (menu_ch_h + 1) * FONT_HEIGHT;
 	int mSprite_X1 = SCREEN_WIDTH / 2 - mSprite_w / 2;
@@ -3667,42 +3663,42 @@ int BrowserModePopup(void)
 		minuses_s[i] = '-';
 	minuses_s[80] = '\0';
 
-	event = 1;  //event = initial entry
+	event = 1;  // event = initial entry
 	while (1) {
-		//Pad response section
+		// Pad response section
 		waitPadReady(0, 0);
 		if (readpad()) {
 			switch (new_pad) {
 				case PAD_RIGHT:
 					file_sort = 0;
-					event |= 2;  //event |= valid pad command
+					event |= 2;  // event |= valid pad command
 					break;
 				case PAD_DOWN:
 					file_sort = 1;
-					event |= 2;  //event |= valid pad command
+					event |= 2;  // event |= valid pad command
 					break;
 				case PAD_LEFT:
 					file_sort = 2;
-					event |= 2;  //event |= valid pad command
+					event |= 2;  // event |= valid pad command
 					break;
 				case PAD_UP:
 					file_sort = 3;
-					event |= 2;  //event |= valid pad command
+					event |= 2;  // event |= valid pad command
 					break;
 				case PAD_CIRCLE:
 					file_show = 0;
-					event |= 2;  //event |= valid pad command
+					event |= 2;  // event |= valid pad command
 					break;
 				case PAD_CROSS:
 					file_show = 1;
-					event |= 2;  //event |= valid pad command
+					event |= 2;  // event |= valid pad command
 					break;
 				case PAD_SQUARE:
 					file_show = 2;
-					event |= 2;  //event |= valid pad command
+					event |= 2;  // event |= valid pad command
 					if ((file_show == 2) && (elisaFnt == NULL) && (elisa_failed == FALSE)) {
 						int fd, res;
-						elisa_failed = TRUE;  //Default to FAILED. If it succeeds, then this status will be cleared.
+						elisa_failed = TRUE;  // Default to FAILED. If it succeeds, then this status will be cleared.
 
 						res = genFixPath("uLE:/ELISA100.FNT", tmp);
 						if (!strncmp(tmp, "cdrom", 5))
@@ -3725,12 +3721,12 @@ int BrowserModePopup(void)
 					break;
 				case PAD_TRIANGLE:
 					return (file_show != entry_file_show) || (file_sort != entry_file_sort);
-			}  //ends switch(new_pad)
-		}      //ends if(readpad())
+			}  // ends switch(new_pad)
+		}      // ends if(readpad())
 
-		if (event || post_event) {  //NB: We need to update two frame buffers per event
+		if (event || post_event) {  // NB: We need to update two frame buffers per event
 
-			//Display section
+			// Display section
 			drawPopSprite(setting->color[COLOR_BACKGR],
 			              mSprite_X1, mSprite_Y1,
 			              mSprite_X2, mSprite_Y2);
@@ -3781,27 +3777,27 @@ int BrowserModePopup(void)
 					tmp[0] = 0;
 
 				printXY(tmp, mSprite_X1 + 2 * FONT_WIDTH, y, setting->color[COLOR_TEXT], TRUE, 0);
-				//Display marker for current modes
+				// Display marker for current modes
 				if ((file_show == i - 2) || (file_sort == i - 8))
 					drawChar(LEFT_CUR, mSprite_X1 + FONT_WIDTH / 2, y, setting->color[COLOR_SELECT]);
 				y += FONT_HEIGHT;
 
-			}  //ends for loop handling one text row per loop
+			}  // ends for loop handling one text row per loop
 
-			//Tooltip section
-			// x = SCREEN_MARGIN;
+			// Tooltip section
+			//  x = SCREEN_MARGIN;
 			y = Menu_tooltip_y;
 			drawSprite(setting->color[COLOR_BACKGR],
 			           0, y - 1,
 			           SCREEN_WIDTH, y + FONT_HEIGHT);
-		}  //ends if(event||post_event)
+		}  // ends if(event||post_event)
 		drawScr();
 		post_event = event;
 		event = 0;
-	}  //ends while
+	}  // ends while
 }
 //------------------------------
-//endfunc BrowserModePopup
+// endfunc BrowserModePopup
 //--------------------------------------------------------------
 // get_FilePath is the main browser function.
 // It also contains the menu handler for the R1 submenu
@@ -3836,12 +3832,12 @@ int getFilePath(char *out, int cnfmode)
 	FILEINFO files[MAX_ENTRY];
 	int top = 0, rows;
 	int x, y, y0, y1;
-	int i, j, ret, rv = -1;  //NB: rv is for return value of this function
+	int i, j, ret, rv = -1;  // NB: rv is for return value of this function
 	int event, post_event = 0;
 	int font_height;
 	int iconbase, iconcolr;
 
-	elisa_failed = FALSE;  //set at failure to load font, cleared at each browser entry
+	elisa_failed = FALSE;  // set at failure to load font, cleared at each browser entry
 
 	browser_cd = TRUE;
 	browser_up = FALSE;
@@ -3853,11 +3849,11 @@ int getFilePath(char *out, int cnfmode)
 	strcpy(ext, cnfmode_extL[cnfmode]);
 
 	if ((cnfmode == USBD_IRX_CNF) || (cnfmode == USBKBD_IRX_CNF) || (cnfmode == USBMASS_IRX_CNF) || ((!strncmp(LastDir, setting->Misc, strlen(setting->Misc))) && (cnfmode > LK_ELF_CNF)))
-		path[0] = '\0';  //start in main root if recent folder unreasonable
+		path[0] = '\0';  // start in main root if recent folder unreasonable
 	else
-		strcpy(path, LastDir);  //If reasonable, start in recent folder
+		strcpy(path, LastDir);  // If reasonable, start in recent folder
 
-	unmountAll();  //unmount all uLE-used mountpoints
+	unmountAll();  // unmount all uLE-used mountpoints
 
 	clipPath[0] = 0;
 	nclipFiles = 0;
@@ -3871,15 +3867,15 @@ int getFilePath(char *out, int cnfmode)
 		font_height = FONT_HEIGHT + 2;
 	rows = (Menu_end_y - Menu_start_y) / font_height;
 
-	event = 1;  //event = initial entry
+	event = 1;  // event = initial entry
 	while (1) {
 
-		//Pad response section
+		// Pad response section
 		waitPadReady(0, 0);
 		if (readpad()) {
 			if (new_pad) {
 				browser_pushed = TRUE;
-				event |= 2;  //event |= pad command
+				event |= 2;  // event |= pad command
 			}
 			if (new_pad & PAD_UP)
 				browser_sel--;
@@ -3891,9 +3887,9 @@ int getFilePath(char *out, int cnfmode)
 				browser_sel += rows / 2;
 			else if (new_pad & PAD_TRIANGLE)
 				browser_up = TRUE;
-			else if ((swapKeys && (new_pad & PAD_CROSS)) || (!swapKeys && (new_pad & PAD_CIRCLE))) {  //Pushed OK
+			else if ((swapKeys && (new_pad & PAD_CROSS)) || (!swapKeys && (new_pad & PAD_CIRCLE))) {  // Pushed OK
 				if (files[browser_sel].stats.AttrFile & sceMcFileAttrSubdir) {
-					//pushed OK for a folder
+					// pushed OK for a folder
 					if (!strcmp(files[browser_sel].name, ".."))
 						browser_up = TRUE;
 					else {
@@ -3902,7 +3898,7 @@ int getFilePath(char *out, int cnfmode)
 						browser_cd = TRUE;
 					}
 				} else {
-					//pushed OK for a file
+					// pushed OK for a file
 					sprintf(out, "%s%s", path, files[browser_sel].name);
 					// Must to include a function for check IRX Header
 					if (((cnfmode == LK_ELF_CNF) || (cnfmode == NON_CNF)) && (!IsSupportedFileType(out))) {
@@ -3911,23 +3907,23 @@ int getFilePath(char *out, int cnfmode)
 						out[0] = 0;
 					} else {
 						strcpy(LastDir, path);
-						rv = 1;  //flag pathname selected
+						rv = 1;  // flag pathname selected
 						break;
 					}
 				}
-			} else if (new_pad & PAD_R3) {  //New clause for uLE-relative paths
+			} else if (new_pad & PAD_R3) {  // New clause for uLE-relative paths
 				if (files[browser_sel].stats.AttrFile & sceMcFileAttrSubdir) {
-					//pushed R3 for a folder (navigate to uLE CNF folder)
+					// pushed R3 for a folder (navigate to uLE CNF folder)
 					strcpy(path, LaunchElfDir);
-					if ((p = strchr(path, ':'))) {                         //device separator ?
-						if (p[1] != '/') {                                 //missing path separator ? (mass: & host:)
-							p[1] = '/';                                    //insert path separator
-							strcpy(p + 2, LaunchElfDir + (p - path) + 1);  //append rest of pathname
+					if ((p = strchr(path, ':'))) {                         // device separator ?
+						if (p[1] != '/') {                                 // missing path separator ? (mass: & host:)
+							p[1] = '/';                                    // insert path separator
+							strcpy(p + 2, LaunchElfDir + (p - path) + 1);  // append rest of pathname
 						}
 					}
 					browser_cd = TRUE;
 				} else {
-					//pushed R3 for a file (treat as uLE-related)
+					// pushed R3 for a file (treat as uLE-related)
 					sprintf(out, "%s%s", path, files[browser_sel].name);
 					// Must to include a function for check IRX Header
 					if (((cnfmode == LK_ELF_CNF) || (cnfmode == NON_CNF)) && (checkELFheader(out) < 0)) {
@@ -3937,7 +3933,7 @@ int getFilePath(char *out, int cnfmode)
 					} else {
 						strcpy(LastDir, path);
 						sprintf(out, "%s%s", "uLE:/", files[browser_sel].name);
-						rv = 1;  //flag pathname selected
+						rv = 1;  // flag pathname selected
 						break;
 					}
 				}
@@ -3952,42 +3948,42 @@ int getFilePath(char *out, int cnfmode)
 			} else if (new_pad & PAD_L1) {
 				browser_cd = BrowserModePopup();
 			}
-			//pad checks above are for commands common to all browser modes
-			//pad checks below are for commands that differ depending on cnfmode
+			// pad checks above are for commands common to all browser modes
+			// pad checks below are for commands that differ depending on cnfmode
 			if (cnfmode == DIR_CNF) {
 				if (new_pad & PAD_START) {
 					strcpy(out, path);
 					strcpy(LastDir, path);
-					rv = 0;  //flag pathname selected
+					rv = 0;  // flag pathname selected
 					break;
 				}
-			} else if (cnfmode == SAVE_CNF) {  //Generic Save commands
+			} else if (cnfmode == SAVE_CNF) {  // Generic Save commands
 				if (new_pad & PAD_START) {
 					if (files[browser_sel].stats.AttrFile & sceMcFileAttrSubdir) {
-						//no file was highlighted, so prep to save with empty filename
+						// no file was highlighted, so prep to save with empty filename
 						strcpy(out, path);
-						rv = 0;  //flag pure path selected
+						rv = 0;  // flag pure path selected
 					} else {
-						//a file was highlighted, so prep to save with that filename
+						// a file was highlighted, so prep to save with that filename
 						sprintf(out, "%s%s", path, files[browser_sel].name);
-						rv = 1;  //flag pathname selected
+						rv = 1;  // flag pathname selected
 					}
 					strcpy(LastDir, path);
 					break;
 				}
 			}
-			if (cnfmode) {  //A file is to be selected, not in normal browser mode
+			if (cnfmode) {  // A file is to be selected, not in normal browser mode
 				if (new_pad & PAD_SQUARE) {
 					if (!strcmp(ext, "*"))
 						strcpy(ext, cnfmode_extL[cnfmode]);
 					else
 						strcpy(ext, "*");
 					browser_cd = TRUE;
-				} else if ((!swapKeys && (new_pad & PAD_CROSS)) || (swapKeys && (new_pad & PAD_CIRCLE))) {  //Cancel command ?
+				} else if ((!swapKeys && (new_pad & PAD_CROSS)) || (swapKeys && (new_pad & PAD_CIRCLE))) {  // Cancel command ?
 					unmountAll();
 					return rv;
 				}
-			} else {  //cnfmode == FALSE
+			} else {  // cnfmode == FALSE
 				if (new_pad & PAD_R1) {
 					ret = menu(path, &files[browser_sel]);
 					if (ret == COPY || ret == CUT) {
@@ -4006,9 +4002,9 @@ int getFilePath(char *out, int cnfmode)
 							browser_cut = TRUE;
 						else
 							browser_cut = FALSE;
-					}  //ends COPY and CUT
+					}  // ends COPY and CUT
 					else if (ret == DELETE) {
-						if (nmarks == 0) {  //dlanor: using title was inappropriate here (filesystem op)
+						if (nmarks == 0) {  // dlanor: using title was inappropriate here (filesystem op)
 							sprintf(tmp, "%s", files[browser_sel].name);
 							if (files[browser_sel].stats.AttrFile & sceMcFileAttrSubdir)
 								strcat(tmp, "/");
@@ -4031,8 +4027,8 @@ int getFilePath(char *out, int cnfmode)
 							} else {
 								for (i = 0; i < browser_nfiles; i++) {
 									if (marks[i]) {
-										if (!first_deleted)     //if this is the first mark
-											first_deleted = i;  //then memorize it for cursor positioning
+										if (!first_deleted)     // if this is the first mark
+											first_deleted = i;  // then memorize it for cursor positioning
 										strcpy(tmp, files[i].name);
 										if (files[i].stats.AttrFile & sceMcFileAttrSubdir)
 											strcat(tmp, "/");
@@ -4058,7 +4054,7 @@ int getFilePath(char *out, int cnfmode)
 							browser_cd = TRUE;
 							browser_repos = TRUE;
 						}
-					}  //ends DELETE
+					}  // ends DELETE
 					else if (ret == RENAME) {
 						strcpy(tmp, files[browser_sel].name);
 						if (keyboard(tmp, 36) > 0) {
@@ -4068,7 +4064,7 @@ int getFilePath(char *out, int cnfmode)
 							} else
 								browser_cd = TRUE;
 						}
-					}  //ends RENAME
+					}  // ends RENAME
 					else if (ret == PASTE)
 						submenu_func_Paste(msg0, path);
 					else if (ret == MCPASTE)
@@ -4085,7 +4081,7 @@ int getFilePath(char *out, int cnfmode)
 							} else if (ret < 0) {
 								strcpy(msg0, LNG(NewDir_Failed));
 								browser_pushed = FALSE;
-							} else {  //dlanor: modified for similarity to PC browsers
+							} else {  // dlanor: modified for similarity to PC browsers
 								sprintf(msg0, "%s: ", LNG(Created_folder));
 								strcat(msg0, tmp);
 								browser_pushed = FALSE;
@@ -4094,14 +4090,14 @@ int getFilePath(char *out, int cnfmode)
 								browser_cd = TRUE;
 							}
 						}
-					}  //ends NEWDIR
+					}  // ends NEWDIR
 					else if (ret == NEWICON) {
 						strcpy(tmp, LNG(Icon_Title));
 						if (keyboard(tmp, 36) <= 0)
 							goto DoneIcon;
 						genFixPath(path, tmp1);
 						strcat(tmp1, "icon.sys");
-						if ((ret = genOpen(tmp1, O_RDONLY)) >= 0) {  //if old "icon.sys" file exists
+						if ((ret = genOpen(tmp1, O_RDONLY)) >= 0) {  // if old "icon.sys" file exists
 							genClose(ret);
 							sprintf(msg1,
 							        "\n\"icon.sys\" %s.\n\n%s ?", LNG(file_alredy_exists),
@@ -4116,7 +4112,7 @@ int getFilePath(char *out, int cnfmode)
 						keyboard(tmp, 36);
 						genFixPath(path, tmp1);
 						strcat(tmp1, "icon.icn");
-						if ((ret = genOpen(tmp1, O_RDONLY)) >= 0) {  //if old "icon.icn" file exists
+						if ((ret = genOpen(tmp1, O_RDONLY)) >= 0) {  // if old "icon.icn" file exists
 							genClose(ret);
 							sprintf(msg1,
 							        "\n\"icon.icn\" %s.\n\n%s ?", LNG(file_alredy_exists),
@@ -4127,8 +4123,8 @@ int getFilePath(char *out, int cnfmode)
 						}
 						make_icon(tmp, tmp1);
 					DoneIcon:
-						strcpy(tmp, tmp1);  //Dummy code to make 'goto DoneIcon' legal for gcc
-					}                       //ends NEWICON
+						strcpy(tmp, tmp1);  // Dummy code to make 'goto DoneIcon' legal for gcc
+					}                       // ends NEWICON
 					else if ((ret == MOUNTVMC0) || (ret == MOUNTVMC1)) {
 						i = ret - MOUNTVMC0;
 						load_vmc_fs();
@@ -4165,35 +4161,34 @@ int getFilePath(char *out, int cnfmode)
 							        LNG(Mount), i, tmp2, x);
 							(void)ynDialog(msg1);
 						}
-					}  //ends MOUNTVMCx
+					}  // ends MOUNTVMCx
 					else if (ret == GETSIZE) {
 						submenu_func_GetSize(msg0, path, files);
-					}  //ends GETSIZE
-//#ifdef TMANIP
+					}  // ends GETSIZE
+					//#ifdef TMANIP
 					else if (ret == TIMEMANIP) {
 #ifdef TMANIP_MORON
 						sprintf(msg1, "\n\n %s  [%s]  ?\n", LNG(change_timestamp_of), HACK_FOLDER);
 #else
 						sprintf(msg1, "\n\n %s  [%s]  ?\n", LNG(change_timestamp_of), files[browser_sel].name);
-#endif //TMANIP_MORON
+#endif  // TMANIP_MORON
 						if (ynDialog(msg1) > 0) {
 							time_manip(path, &files[browser_sel], &msg0);
 							browser_pushed = FALSE;
 							browser_repos = TRUE;  // TEST
-							browser_cd = TRUE;     //TEST
+							browser_cd = TRUE;     // TEST
 						}
 					}
-//#endif //TMANIP
-					
-					else if (ret == TITLE_CFG)
-					{
+					//#endif //TMANIP
+
+					else if (ret == TITLE_CFG) {
 						make_title_cfg(path, &files[browser_sel], &msg0);
 						browser_pushed = FALSE;
 						browser_repos = TRUE;  // TEST
-						browser_cd = TRUE;     //TEST
+						browser_cd = TRUE;     // TEST
 					}
 
-					   //R1 menu handling is completed above
+					// R1 menu handling is completed above
 				} else if ((!swapKeys && new_pad & PAD_CROSS) || (swapKeys && new_pad & PAD_CIRCLE)) {
 					if (browser_sel != 0 && path[0] != 0 && (strcmp(path, "hdd0:/") && strcmp(path, "dvr_hdd0:/"))) {
 						if (marks[browser_sel]) {
@@ -4217,14 +4212,14 @@ int getFilePath(char *out, int cnfmode)
 							}
 						}
 					}
-				} else if (new_pad & PAD_SELECT) {  //Leaving the browser ?
+				} else if (new_pad & PAD_SELECT) {  // Leaving the browser ?
 					unmountAll();
 					return rv;
 				}
 			}
-		}  //ends pad response section
+		}  // ends pad response section
 
-		//browser path adjustment section
+		// browser path adjustment section
 		if (browser_up) {
 			if ((p = strrchr(path, '/')) != NULL)
 				*p = 0;
@@ -4238,11 +4233,11 @@ int getFilePath(char *out, int cnfmode)
 			}
 			browser_cd = TRUE;
 			browser_repos = TRUE;
-		}  //ends 'if(browser_up)'
+		}  // ends 'if(browser_up)'
 		//----- Process newly entered directory here (incl initial entry)
 		if (browser_cd) {
 			browser_nfiles = setFileList(path, ext, files, cnfmode);
-			if (!cnfmode) {  //Calculate free space (unless configuring)
+			if (!cnfmode) {  // Calculate free space (unless configuring)
 				if (!strncmp(path, "mc", 2)) {
 					mcGetInfo(path[2] - '0', 0, &mctype_PSx, &mcfreeSpace, NULL);
 					mcSync(0, NULL, &ret);
@@ -4272,7 +4267,7 @@ int getFilePath(char *out, int cnfmode)
 					pfs_str[7] += latestMount;
 					ZoneFree = fileXioDevctl(pfs_str, PFSCTL_GET_ZONE_FREE, NULL, 0, NULL, 0);
 					ZoneSize = fileXioDevctl(pfs_str, PFSCTL_GET_ZONE_SIZE, NULL, 0, NULL, 0);
-					//printf("ZoneFree==%d  ZoneSize==%d\r\n", ZoneFree, ZoneSize);
+					// printf("ZoneFree==%d  ZoneSize==%d\r\n", ZoneFree, ZoneSize);
 					freeSpace = ZoneFree * ZoneSize;
 					vfreeSpace = TRUE;
 #endif
@@ -4289,12 +4284,12 @@ int getFilePath(char *out, int cnfmode)
 						break;
 					}
 				}
-			}  //ends if(browser_repos)
+			}  // ends if(browser_repos)
 			nmarks = 0;
 			memset(marks, 0, MAX_ENTRY);
 			browser_cd = FALSE;
 			browser_up = FALSE;
-		}  //ends if(browser_cd)
+		}  // ends if(browser_cd)
 		if (!strncmp(path, "cdfs", 4))
 			uLE_cdStop();
 		if (top > browser_nfiles - rows)
@@ -4310,9 +4305,9 @@ int getFilePath(char *out, int cnfmode)
 		if (browser_sel < top)
 			top = browser_sel;
 
-		if (event || post_event) {  //NB: We need to update two frame buffers per event
+		if (event || post_event) {  // NB: We need to update two frame buffers per event
 
-			//Display section
+			// Display section
 			clrScr(setting->color[COLOR_BACKGR]);
 
 			x = Menu_start_x;
@@ -4324,15 +4319,15 @@ int getFilePath(char *out, int cnfmode)
 			}
 			rows = (Menu_end_y - Menu_start_y) / font_height;
 
-			for (i = 0; i < rows; i++)  //Repeat loop for each browser text row
+			for (i = 0; i < rows; i++)  // Repeat loop for each browser text row
 			{
-				mcTitle = NULL;      //Assume that normal file/folder names are to be displayed
-				int name_limit = 0;  //Assume that no name length problems exist
+				mcTitle = NULL;      // Assume that normal file/folder names are to be displayed
+				int name_limit = 0;  // Assume that no name length problems exist
 
 				if (top + i >= browser_nfiles)
 					break;
 				if (top + i == browser_sel)
-					color = setting->color[COLOR_SELECT];  //Highlight cursor line
+					color = setting->color[COLOR_SELECT];  // Highlight cursor line
 				else
 					color = setting->color[COLOR_TEXT];
 
@@ -4341,35 +4336,35 @@ int getFilePath(char *out, int cnfmode)
 
 				else if ((file_show == 2) && files[top + i].title[0] != 0) {
 					mcTitle = files[top + i].title;
-				} else {  //Show normal file/folder names
+				} else {  // Show normal file/folder names
 #ifdef MX4SIO
-					if (path[0] == 0) { // we are on root. apply the unique "alias" here
-						if ((!strncmp(files[top + i].name, "mass", 4)) //
-						&& (files[top + i].name[4] == ('0' + mx4sio_idx) || (mx4sio_idx == 0 && files[top + i].name[4] == ':')) //index corresponds to mx4sio index, also assume that if device path index 4 is equal to ':' then it is index 0
+					if (path[0] == 0) {                                                                                              // we are on root. apply the unique "alias" here
+						if ((!strncmp(files[top + i].name, "mass", 4))                                                               //
+						    && (files[top + i].name[4] == ('0' + mx4sio_idx) || (mx4sio_idx == 0 && files[top + i].name[4] == ':'))  // index corresponds to mx4sio index, also assume that if device path index 4 is equal to ':' then it is index 0
 						)
 							strcpy(tmp, "mx4sio:");
-						else 
+						else
 							strcpy(tmp, files[top + i].name);
-				} else {
-					strcpy(tmp, files[top + i].name);
-				}
+					} else {
+						strcpy(tmp, files[top + i].name);
+					}
 #else
-				strcpy(tmp, files[top + i].name);
+					strcpy(tmp, files[top + i].name);
 #endif
-					if (file_show > 0) {  //Does display mode include file details ?
+					if (file_show > 0) {  // Does display mode include file details ?
 						name_limit = 43 * 8;
-					} else {  //Filenames are shown without file details
+					} else {  // Filenames are shown without file details
 						name_limit = 71 * 8;
 					}
 				}
-				if (name_limit) {                   //Do we need to check name length ?
-					int name_end = name_limit / 7;  //Max string length for acceptable spacing
+				if (name_limit) {                   // Do we need to check name length ?
+					int name_end = name_limit / 7;  // Max string length for acceptable spacing
 
 					if (files[top + i].stats.AttrFile & sceMcFileAttrSubdir)
-						name_end -= 1;             //For folders, reserve one character for final '/'
-					if (strlen(tmp) > name_end) {  //Is name too long for clean display ?
-						tmp[name_end - 1] = '~';   //indicate filename abbreviation
-						tmp[name_end] = 0;         //abbreviate name length to make room for details
+						name_end -= 1;             // For folders, reserve one character for final '/'
+					if (strlen(tmp) > name_end) {  // Is name too long for clean display ?
+						tmp[name_end - 1] = '~';   // indicate filename abbreviation
+						tmp[name_end] = 0;         // abbreviate name length to make room for details
 					}
 				}
 
@@ -4382,7 +4377,7 @@ int getFilePath(char *out, int cnfmode)
 				if (file_show > 0) {
 					//					unsigned int size = files[top+i].stats.fileSizeByte;
 					unsigned long long size = ((unsigned long long)files[top + i].stats.Reserve2 << 32) | files[top + i].stats.FileSizeByte;
-					int scale = 0;  //0==Bytes, 1==KBytes, 2==MBytes, 3==GB
+					int scale = 0;  // 0==Bytes, 1==KBytes, 2==MBytes, 3==GB
 					char scale_s[6] = " KMGTP";
 					PS2TIME timestamp = *(PS2TIME *)&files[top + i].stats._Modify;
 
@@ -4399,7 +4394,7 @@ int getFilePath(char *out, int cnfmode)
 							size /= 1024;
 						}
 						//						sprintf(tmp, "%5u%cB", size, scale_s[scale]);
-						//size shouldn't be over 99999, and seems sprintf doesn't support unsigned long long (%llu crashes)
+						// size shouldn't be over 99999, and seems sprintf doesn't support unsigned long long (%llu crashes)
 						sprintf(tmp, "%5u%cB", (unsigned)size, scale_s[scale]);
 					}
 
@@ -4417,10 +4412,10 @@ int getFilePath(char *out, int cnfmode)
 
 					printXY(tmp, x + 4 + 44 * FONT_WIDTH, y, color, TRUE, 0);
 				}
-				if (setting->FB_NoIcons) {  //if FileBrowser should not use icons
+				if (setting->FB_NoIcons) {  // if FileBrowser should not use icons
 					if (marks[top + i])
 						drawChar('*', x - 6, y, setting->color[COLOR_TEXT]);
-				} else {  //if Icons must be used in front of file/folder names
+				} else {  // if Icons must be used in front of file/folder names
 					if (files[top + i].stats.AttrFile & sceMcFileAttrSubdir) {
 						iconbase = ICON_FOLDER;
 						iconcolr = COLOR_GRAPH1;
@@ -4429,14 +4424,13 @@ int getFilePath(char *out, int cnfmode)
 						if (genCmpFileExt(files[top + i].name, "ELF"))
 							iconcolr = COLOR_GRAPH2;
 						else if (
-									genCmpFileExt(files[top + i].name, "TXT") || 
-									genCmpFileExt(files[top + i].name, "CFG") || 
-									genCmpFileExt(files[top + i].name, "CNF") || 
-									genCmpFileExt(files[top + i].name, "INI") || 
-									genCmpFileExt(files[top + i].name, "CHT") || 
-									genCmpFileExt(files[top + i].name, "JPG") || 
-									genCmpFileExt(files[top + i].name, "JPEG")
-									)
+						    genCmpFileExt(files[top + i].name, "TXT") ||
+						    genCmpFileExt(files[top + i].name, "CFG") ||
+						    genCmpFileExt(files[top + i].name, "CNF") ||
+						    genCmpFileExt(files[top + i].name, "INI") ||
+						    genCmpFileExt(files[top + i].name, "CHT") ||
+						    genCmpFileExt(files[top + i].name, "JPG") ||
+						    genCmpFileExt(files[top + i].name, "JPEG"))
 							iconcolr = COLOR_GRAPH4;
 						else
 							iconcolr = COLOR_GRAPH3;
@@ -4447,8 +4441,8 @@ int getFilePath(char *out, int cnfmode)
 					drawChar(iconbase + 1, x - 3, y, setting->color[iconcolr]);
 				}
 				y += font_height;
-			}                             //ends for, so all browser rows were fixed above
-			if (browser_nfiles > rows) {  //if more files than available rows, use scrollbar
+			}                             // ends for, so all browser rows were fixed above
+			if (browser_nfiles > rows) {  // if more files than available rows, use scrollbar
 				drawFrame(SCREEN_WIDTH - SCREEN_MARGIN - LINE_THICKNESS * 8, Frame_start_y,
 				          SCREEN_WIDTH - SCREEN_MARGIN, Frame_end_y, setting->color[COLOR_FRAME]);
 				y0 = (Menu_end_y - Menu_start_y + 8) * ((double)top / browser_nfiles);
@@ -4456,25 +4450,25 @@ int getFilePath(char *out, int cnfmode)
 				drawOpSprite(setting->color[COLOR_FRAME],
 				             SCREEN_WIDTH - SCREEN_MARGIN - LINE_THICKNESS * 6, (y0 + Menu_start_y - 4),
 				             SCREEN_WIDTH - SCREEN_MARGIN - LINE_THICKNESS * 2, (y1 + Menu_start_y - 4));
-			}                  //ends clause for scrollbar
-			if (nclipFiles) {  //if Something in clipboard, emulate LED indicator
+			}                  // ends clause for scrollbar
+			if (nclipFiles) {  // if Something in clipboard, emulate LED indicator
 				u64 LED_colour, RIM_colour = GS_SETREG_RGBA(0, 0, 0, 0);
 				int RIM_w = 4, LED_w = 6, indicator_w = LED_w + 2 * RIM_w;
 				int x2 = SCREEN_WIDTH - SCREEN_MARGIN - 2, x1 = x2 - indicator_w;
 				int y1 = Frame_start_y + 2, y2 = y1 + indicator_w;
 
 				if (browser_cut)
-					LED_colour = GS_SETREG_RGBA(0xC0, 0, 0, 0);  //Red LED == CUT
+					LED_colour = GS_SETREG_RGBA(0xC0, 0, 0, 0);  // Red LED == CUT
 				else
-					LED_colour = GS_SETREG_RGBA(0, 0xC0, 0, 0);  //Green LED == COPY
+					LED_colour = GS_SETREG_RGBA(0, 0xC0, 0, 0);  // Green LED == COPY
 				drawOpSprite(RIM_colour, x1, y1, x2, y2);
 				drawOpSprite(LED_colour, x1 + RIM_w, y1 + RIM_w, x2 - RIM_w, y2 - RIM_w);
-			}  //ends clause for clipboard indicator
+			}  // ends clause for clipboard indicator
 			if (browser_pushed)
 				sprintf(msg0, "%s: %s", LNG(Path), path);
 
-			//Tooltip section
-			if (cnfmode) {  //cnfmode indicates configurable file selection
+			// Tooltip section
+			if (cnfmode) {  // cnfmode indicates configurable file selection
 				if (swapKeys)
 					sprintf(msg1, "\xFF"
 					              "1:%s \xFF"
@@ -4496,7 +4490,7 @@ int getFilePath(char *out, int cnfmode)
 					strcat(msg1, "->*");
 				sprintf(tmp, " R2:%s", LNG(PathPad));
 				strcat(msg1, tmp);
-				if ((cnfmode == DIR_CNF) || (cnfmode == SAVE_CNF)) {  //modes using Start
+				if ((cnfmode == DIR_CNF) || (cnfmode == SAVE_CNF)) {  // modes using Start
 					sprintf(tmp, " Start:%s", LNG(Choose));
 					strcat(msg1, tmp);
 				}
@@ -4535,18 +4529,18 @@ int getFilePath(char *out, int cnfmode)
 				        (Menu_message_y),
 				        setting->color[COLOR_SELECT], TRUE, 0);
 			}
-		}  //ends if(event||post_event)
+		}  // ends if(event||post_event)
 		drawScr();
 		post_event = event;
 		event = 0;
-	}  //ends while
+	}  // ends while
 
-	//Leaving the browser
+	// Leaving the browser
 	unmountAll();
 	return rv;
 }
 //------------------------------
-//endfunc getFilePath
+// endfunc getFilePath
 //--------------------------------------------------------------
 void submenu_func_GetSize(char *mess, char *path, FILEINFO *files)
 {
@@ -4563,12 +4557,12 @@ void submenu_func_GetSize(char *mess, char *path, FILEINFO *files)
 	drawMsg(LNG(Checking_Size));
 	if (nmarks == 0) {
 		size = getFileSize(path, &files[browser_sel]);
-		sel = browser_sel;  //for stat checking
+		sel = browser_sel;  // for stat checking
 	} else {
 		for (i = size = 0; i < browser_nfiles; i++) {
 			if (marks[i]) {
 				size += getFileSize(path, &files[i]);
-				sel = i;  //for stat checking
+				sel = i;  // for stat checking
 			}
 			if (size < 0)
 				size = -1;
@@ -4597,7 +4591,7 @@ void submenu_func_GetSize(char *mess, char *path, FILEINFO *files)
 		printf("path =\"%s\"\r\n", path);
 		printf("file =\"%s\"\r\n", files[sel].name);
 		if	(!strncmp(filepath, "host:/", 6))
-			makeHostPath(filepath+5, filepath+6);
+		    makeHostPath(filepath+5, filepath+6);
 		test = fileXioGetStat(filepath, &stats);
 		printf("test = %d\r\n", test);
 		printf("mode = %08X\r\n", stats.mode);
@@ -4605,16 +4599,16 @@ void submenu_func_GetSize(char *mess, char *path, FILEINFO *files)
 		printf("size = %08X\r\n", stats.size);
 		time = (PS2TIME *) stats.ctime;
 		printf("ctime = %04d.%02d.%02d %02d:%02d:%02d.%02d\r\n",
-			time->year,time->month,time->day,
-			time->hour,time->min,time->sec,time->unknown);
+		    time->year,time->month,time->day,
+		    time->hour,time->min,time->sec,time->unknown);
 		time = (PS2TIME *) stats.atime;
 		printf("atime = %04d.%02d.%02d %02d:%02d:%02d.%02d\r\n",
-			time->year,time->month,time->day,
-			time->hour,time->min,time->sec,time->unknown);
+		    time->year,time->month,time->day,
+		    time->hour,time->min,time->sec,time->unknown);
 		time = (PS2TIME *) stats.mtime;
 		printf("mtime = %04d.%02d.%02d %02d:%02d:%02d.%02d\r\n",
-			time->year,time->month,time->day,
-			time->hour,time->min,time->sec,time->unknown);
+		    time->year,time->month,time->day,
+		    time->hour,time->min,time->sec,time->unknown);
 */
 		//----- End of section for debug display of attributes -----
 		sprintf(mess + text_pos, " m=%04X %04d.%02d.%02d %02d:%02d:%02d%n",
@@ -4633,9 +4627,9 @@ void submenu_func_GetSize(char *mess, char *path, FILEINFO *files)
 			sprintf(mess + text_pos, " %s=%d%n", LNG(mctype), mctype_PSx, &text_inc);
 			text_pos += text_inc;
 		}
-		//sprintf(mess+text_pos, " mcTsz=%d%n", files[sel].stats.fileSizeByte, &text_inc);
+		// sprintf(mess+text_pos, " mcTsz=%d%n", files[sel].stats.fileSizeByte, &text_inc);
 		unsigned long long size = ((unsigned long long)files[sel].stats.Reserve2 << 32) | files[sel].stats.FileSizeByte;
-		//Max length is 20 characters+NULL
+		// Max length is 20 characters+NULL
 		char sizeC[21] = {0};
 		char *sizeP = &sizeC[21];
 		do {
@@ -4648,7 +4642,7 @@ void submenu_func_GetSize(char *mess, char *path, FILEINFO *files)
 	browser_pushed = FALSE;
 }
 //------------------------------
-//endfunc submenu_func_GetSize
+// endfunc submenu_func_GetSize
 //--------------------------------------------------------------
 void subfunc_Paste(char *mess, char *path)
 {
@@ -4656,7 +4650,7 @@ void subfunc_Paste(char *mess, char *path)
 	int i, ret = -1;
 
 	written_size = 0;
-	PasteTime = Timer();  //Note initial pasting time
+	PasteTime = Timer();  // Note initial pasting time
 	drawMsg(LNG(Pasting));
 	if (!strcmp(path, clipPath))
 		goto finished;
@@ -4668,8 +4662,8 @@ void subfunc_Paste(char *mess, char *path)
 		sprintf(tmp1, " %s", LNG(pasting));
 		strcat(tmp, tmp1);
 		drawMsg(tmp);
-		PM_flag[0] = PM_NORMAL;  //Always use normal mode at top level
-		PM_file[0] = -1;         //Thus no attribute file is used here
+		PM_flag[0] = PM_NORMAL;  // Always use normal mode at top level
+		PM_file[0] = -1;         // Thus no attribute file is used here
 		ret = copy(path, clipPath, clipFiles[i], 0);
 		if (ret < 0)
 			break;
@@ -4680,7 +4674,7 @@ void subfunc_Paste(char *mess, char *path)
 		}
 	}
 
-//	unmountAll(); //disabled to avoid interference with VMC implementation
+	//	unmountAll(); //disabled to avoid interference with VMC implementation
 
 finished:
 	if (ret < 0) {
@@ -4691,7 +4685,7 @@ finished:
 	browser_cd = TRUE;
 }
 //------------------------------
-//endfunc subfunc_Paste
+// endfunc subfunc_Paste
 //--------------------------------------------------------------
 void submenu_func_Paste(char *mess, char *path)
 {
@@ -4702,7 +4696,7 @@ void submenu_func_Paste(char *mess, char *path)
 	subfunc_Paste(mess, path);
 }
 //------------------------------
-//endfunc submenu_func_Paste
+// endfunc submenu_func_Paste
 //--------------------------------------------------------------
 void submenu_func_mcPaste(char *mess, char *path)
 {
@@ -4714,7 +4708,7 @@ void submenu_func_mcPaste(char *mess, char *path)
 	subfunc_Paste(mess, path);
 }
 //------------------------------
-//endfunc submenu_func_mcPaste
+// endfunc submenu_func_mcPaste
 //--------------------------------------------------------------
 void submenu_func_psuPaste(char *mess, char *path)
 {
@@ -4726,7 +4720,7 @@ void submenu_func_psuPaste(char *mess, char *path)
 	subfunc_Paste(mess, path);
 }
 //------------------------------
-//endfunc submenu_func_psuPaste
+// endfunc submenu_func_psuPaste
 //--------------------------------------------------------------
-//End of file: filer.c
+// End of file: filer.c
 //--------------------------------------------------------------

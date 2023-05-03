@@ -15,7 +15,7 @@
 // The debugging functions, very very handy
 #ifdef DEBUG
 #define DEBUGPRINT(level, fmt, args...) \
-	if (DEBUG >= level)            \
+	if (DEBUG >= level)                 \
 	printf(MODNAME ": " fmt, ##args)
 #else
 #define DEBUGPRINT(args...)
@@ -98,15 +98,15 @@ typedef enum {
 #ifdef PROFILING
 void profilerStart(iop_sys_clock_t *iopclock);
 void profilerEnd(const char *function, const char *name, iop_sys_clock_t *iopclock1);
-//This creates 2 variables with the names name1/name2, and starts the profiler
+// This creates 2 variables with the names name1/name2, and starts the profiler
 #define PROF_START(name)  \
 	iop_sys_clock_t name; \
 	profilerStart(&name);
-//this takes the 2 variable names and ends the profiler, printing the time taken
+// this takes the 2 variable names and ends the profiler, printing the time taken
 #define PROF_END(name) \
 	profilerEnd(__func__, #name, &name);
 #else
-//define away the profiler functions
+// define away the profiler functions
 #define PROF_START(args) ;
 #define PROF_END(args) ;
 #endif
