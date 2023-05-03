@@ -27,7 +27,7 @@ EE_OBJS = main.o config.o elf.o draw.o loader_elf.o filer.o \
 	hdd.o hdl_rpc.o hdl_info_irx.o editor.o timer.o jpgviewer.o icon.o lang.o \
 	font_uLE.o makeicon.o chkesr.o allowdvdv_irx.o
 
-EE_INCS := -I$(PS2DEV)/gsKit/include -I$(PS2SDK)/ports/include -Ioldlibs/libcdvd/ee -Iinclude
+EE_INCS := -I$(PS2DEV)/gsKit/include -I$(PS2SDK)/ports/include -Iiop/oldlibs/libcdvd/ee -Iinclude
 
 EE_LDFLAGS := -L$(PS2DEV)/gsKit/lib -L$(PS2SDK)/ports/lib -Liop/oldlibs/libcdvd/lib -s
 EE_LIBS = -lgskit -ldmakit -ljpeg -lmc -lhdd -lcdvdfs -lkbd -lmf \
