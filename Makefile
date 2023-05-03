@@ -173,13 +173,13 @@ githash.h:
 	printf '"\n#endif\n' >> $@
 
 clean:
-	$(MAKE) -C hdl_info clean
-	$(MAKE) -C ps2host clean
 	$(MAKE) -C loader clean
-	$(MAKE) -C vmc_fs clean
-	$(MAKE) -C AllowDVDV clean
-	$(MAKE) -C oldlibs/libcdvd clean
-	$(MAKE) -C oldlibs/ps2ftpd clean
+	$(MAKE) -C iop/hdl_info clean
+	$(MAKE) -C iop/ps2host clean
+	$(MAKE) -C iop/vmc_fs clean
+	$(MAKE) -C iop/AllowDVDV clean
+	$(MAKE) -C iop/oldlibs/libcdvd clean
+	$(MAKE) -C iop/oldlibs/ps2ftpd clean
 	rm -f githash.h $(EE_BIN) $(EE_BIN_PKD)
 	rm -rf $(EE_OBJS_DIR)
 	rm -rf $(EE_ASM_DIR)
