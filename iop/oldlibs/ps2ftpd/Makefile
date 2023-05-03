@@ -22,7 +22,7 @@ IOP_INCS += -I$(PS2SDK)/iop/include
 all: $(IOP_OBJS_DIR) $(IOP_BIN_DIR) $(IOP_BIN)
 
 clean:
-	rm -f -r $(IOP_OBJS_DIR) $(IOP_BIN_DIR)
+	rm -f -r $(IOP_OBJS_DIR)
 
 include $(PS2SDK)/Defs.make
 include Rules.make
