@@ -8,15 +8,18 @@
 #include <sys/fcntl.h>
 #include <cdvdman.h>
 
+#define MODMAJOR 1
+#define MODMINOR 2
+#define MODNAME "vmc_fs"
 
-//  Define this to enable debugging, will later support debugging levels, so only messages greater then a certain level will be displayed
-//#define DEBUG 8
-//For release versions of uLE, DEBUG should not be defined
-//To avoid slowdown and size bloat
-
-//  Define this to enable some basic profiling support, each function will display the time it took to run.
-//  #define PROFILING
-
+// The debugging functions, very very handy
+#ifdef DEBUG
+#define DEBUGPRINT(level, fmt, args...) \
+	if (DEBUG >= level)            \
+	printf(MODNAME ": " fmt, ##args)
+#else
+#define DEBUGPRINT(args...)
+#endif
 
 //  Memory allocation helpers.
 void *malloc(int size);
@@ -90,17 +93,6 @@ typedef enum {
 #define ERROR_CLUSTER 0xFFFFFFFF
 #define NOFOUND_CLUSTER 0xFFFFFFFF
 #define MASK_CLUSTER 0x80000000
-
-
-// The debugging functions, very very handy
-#ifdef DEBUG
-#define DEBUGPRINT(level, args...) \
-	if (DEBUG >= level)            \
-	printf(args)
-#else
-#define DEBUGPRINT(args...)
-#endif
-
 
 // Used for timing functions, use this to optimize stuff
 #ifdef PROFILING

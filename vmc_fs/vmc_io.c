@@ -15,7 +15,7 @@ int Vmc_Format(iop_file_t *f, const char *dev, const char *blockdev, void *arg, 
 	if (!g_Vmc_Initialized)
 		return VMCFS_ERR_INITIALIZED;
 
-	DEBUGPRINT(1, "vmc_fs: format %d\n", f->unit);
+	DEBUGPRINT(1, " format %d\n", f->unit);
 
 	int mode = FORMAT_FULL;
 
@@ -36,7 +36,7 @@ int Vmc_Format(iop_file_t *f, const char *dev, const char *blockdev, void *arg, 
 
 		for (i = 0; i < g_Vmc_Image[f->unit].total_pages / g_Vmc_Image[f->unit].header.pages_per_block; i++) {
 
-			DEBUGPRINT(7, "vmc_fs: format erasing block %d / %d\r", i, g_Vmc_Image[f->unit].total_pages / g_Vmc_Image[f->unit].header.pages_per_block);
+			DEBUGPRINT(7, " format erasing block %d / %d\r", i, g_Vmc_Image[f->unit].total_pages / g_Vmc_Image[f->unit].header.pages_per_block);
 			eraseBlock(g_Vmc_Image[f->unit].fd, i);
 		}
 	}
@@ -44,7 +44,7 @@ int Vmc_Format(iop_file_t *f, const char *dev, const char *blockdev, void *arg, 
 	mcbuffer = (u8 *)malloc((g_Vmc_Image[f->unit].header.page_size + 0xFF) & ~(unsigned int)0xFF);
 	mcbuffer2 = (u8 *)malloc((g_Vmc_Image[f->unit].header.page_size + 0xFF) & ~(unsigned int)0xFF);
 
-	DEBUGPRINT(3, "vmc_fs: format start\n");
+	DEBUGPRINT(3, " format start\n");
 
 	memset(mcbuffer, g_Vmc_Image[f->unit].erase_byte, g_Vmc_Image[f->unit].header.page_size);
 	memcpy(mcbuffer, &g_Vmc_Image[f->unit].header, sizeof(struct superblock));
@@ -54,7 +54,7 @@ int Vmc_Format(iop_file_t *f, const char *dev, const char *blockdev, void *arg, 
 
 	Page_Num++;
 
-	DEBUGPRINT(3, "vmc_fs: format indirect fat cluster\n");
+	DEBUGPRINT(3, " format indirect fat cluster\n");
 
 	//  goto fat table
 	for (i = 1; i < (g_Vmc_Image[f->unit].header.indir_fat_clusters[0] * g_Vmc_Image[f->unit].header.pages_per_cluster); i++, Page_Num++) {
@@ -63,7 +63,7 @@ int Vmc_Format(iop_file_t *f, const char *dev, const char *blockdev, void *arg, 
 	all_sector = 0;
 	last_blk_sector = g_Vmc_Image[f->unit].header.indir_fat_clusters[0];
 
-	DEBUGPRINT(3, "vmc_fs: format fat table\n");
+	DEBUGPRINT(3, " format fat table\n");
 
 	//  Write fat table pages
 	for (x = 0; g_Vmc_Image[f->unit].header.indir_fat_clusters[x] != 0; x++) {
@@ -111,7 +111,7 @@ int Vmc_Format(iop_file_t *f, const char *dev, const char *blockdev, void *arg, 
 		}
 	}
 
-	DEBUGPRINT(3, "vmc_fs: format root directory\n");
+	DEBUGPRINT(3, " format root directory\n");
 
 	Page_Num = g_Vmc_Image[f->unit].header.first_allocatable * g_Vmc_Image[f->unit].header.pages_per_cluster;
 
@@ -140,7 +140,7 @@ int Vmc_Format(iop_file_t *f, const char *dev, const char *blockdev, void *arg, 
 	free(mcbuffer);
 	free(mcbuffer2);
 
-	DEBUGPRINT(3, "vmc_fs: format finished\n");
+	DEBUGPRINT(3, " format finished\n");
 
 	PROF_END(vmc_formatProf)
 
@@ -157,7 +157,7 @@ int Vmc_Open(iop_file_t *f, const char *path1, int flags, int mode)
 	if (!g_Vmc_Initialized)
 		return VMCFS_ERR_INITIALIZED;
 
-	DEBUGPRINT(1, "vmc_fs: Open %i %s\n", f->unit, path1);
+	DEBUGPRINT(1, " Open %i %s\n", f->unit, path1);
 
 	if (g_Vmc_Image[f->unit].fd < 0)
 		return VMCFS_ERR_NOT_MOUNT;
@@ -195,7 +195,7 @@ int Vmc_Open(iop_file_t *f, const char *path1, int flags, int mode)
 
 		if (flags & O_CREAT) {
 
-			DEBUGPRINT(2, "vmc_fs: Open with O_CREAT.\n");
+			DEBUGPRINT(2, " Open with O_CREAT.\n");
 
 			struct direntry parent;
 			unsigned int parent_cluster = 0;
@@ -209,7 +209,7 @@ int Vmc_Open(iop_file_t *f, const char *path1, int flags, int mode)
 			filename[0] = '\0';
 			filename++;
 
-			DEBUGPRINT(2, "vmc_fs: Creating file %s in parent folder %s\n", filename, path);
+			DEBUGPRINT(2, " Creating file %s in parent folder %s\n", filename, path);
 
 			memset(&dirent, 0, sizeof(dirent));
 
@@ -235,7 +235,7 @@ int Vmc_Open(iop_file_t *f, const char *path1, int flags, int mode)
 
 			if (parent_cluster == NOFOUND_CLUSTER) {
 
-				DEBUGPRINT(3, "vmc_fs: Unable to find parent directory.\n");
+				DEBUGPRINT(3, " Unable to find parent directory.\n");
 
 				free(path);
 				free(fprivdata);  //  Release the allocated memory
@@ -249,7 +249,7 @@ int Vmc_Open(iop_file_t *f, const char *path1, int flags, int mode)
 
 			if (dirent_cluster == ERROR_CLUSTER) {
 
-				DEBUGPRINT(2, "vmc_fs: open failed on %s\n", path1);
+				DEBUGPRINT(2, " open failed on %s\n", path1);
 
 				free(path);
 				free(fprivdata);  //  Release the allocated memory
@@ -274,13 +274,13 @@ int Vmc_Open(iop_file_t *f, const char *path1, int flags, int mode)
 	{
 
 		if (flags & O_TRUNC)
-			DEBUGPRINT(3, "vmc_fs: Open with O_TRUNC.\n");
+			DEBUGPRINT(3, " Open with O_TRUNC.\n");
 
 		int first_cluster = 1;
 		unsigned int current_cluster = 0;
 		unsigned int last_cluster = dirent.cluster;
 
-		DEBUGPRINT(4, "vmc_fs: Searching last cluster of file ...\n");
+		DEBUGPRINT(4, " Searching last cluster of file ...\n");
 
 		while (1) {
 
@@ -289,14 +289,14 @@ int Vmc_Open(iop_file_t *f, const char *path1, int flags, int mode)
 			if (current_cluster == FREE_CLUSTER) {
 
 				// FREE_CLUSTER mean last cluster of the hidden file is found
-				DEBUGPRINT(8, "vmc_fs: Last cluster of file at %u\n", last_cluster);
+				DEBUGPRINT(8, " Last cluster of file at %u\n", last_cluster);
 
 				break;
 
 			} else if (current_cluster == EOF_CLUSTER) {
 
 				// EOF_CLUSTER mean last cluster of the file is found
-				DEBUGPRINT(8, "vmc_fs: EOF_CLUSTER found.\n");
+				DEBUGPRINT(8, " EOF_CLUSTER found.\n");
 
 				setFatEntry(fprivdata->gendata.fd, last_cluster, FREE_CLUSTER, fprivdata->gendata.indir_fat_clusters, FAT_SET);
 
@@ -304,7 +304,7 @@ int Vmc_Open(iop_file_t *f, const char *path1, int flags, int mode)
 
 			} else {
 
-				DEBUGPRINT(8, "vmc_fs: Testing cluster %u ... value is %u\n", last_cluster, current_cluster);
+				DEBUGPRINT(8, " Testing cluster %u ... value is %u\n", last_cluster, current_cluster);
 
 				// Otherwise set first cluster as eof and remaining clusters as free
 				if (first_cluster == 1) {
@@ -338,7 +338,7 @@ int Vmc_Open(iop_file_t *f, const char *path1, int flags, int mode)
 	fprivdata->file_startcluster = dirent.cluster;
 	fprivdata->file_length = dirent.length;  //  set the length to what it should be, and go from there
 
-	DEBUGPRINT(2, "vmc_fs: File %s opened with length %u\n", path1, fprivdata->file_length);
+	DEBUGPRINT(2, " File %s opened with length %u\n", path1, fprivdata->file_length);
 
 	PROF_END(vmc_openProf)
 
@@ -355,7 +355,7 @@ int Vmc_Close(iop_file_t *f)
 	if (!g_Vmc_Initialized)
 		return VMCFS_ERR_INITIALIZED;
 
-	DEBUGPRINT(1, "vmc_fs: Close %i\n", f->unit);
+	DEBUGPRINT(1, " Close %i\n", f->unit);
 
 	if (g_Vmc_Image[f->unit].fd < 0)
 		return VMCFS_ERR_NOT_MOUNT;
@@ -384,7 +384,7 @@ int Vmc_Read(iop_file_t *f, void *buffer, int size)
 	if (!g_Vmc_Initialized)
 		return VMCFS_ERR_INITIALIZED;
 
-	DEBUGPRINT(1, "vmc_fs: Read %d bytes\n", size);
+	DEBUGPRINT(1, " Read %d bytes\n", size);
 
 	if (g_Vmc_Image[f->unit].fd < 0)
 		return VMCFS_ERR_NOT_MOUNT;
@@ -416,12 +416,12 @@ int Vmc_Read(iop_file_t *f, void *buffer, int size)
 		return 0;
 	}
 
-	DEBUGPRINT(3, "vmc_fs: Reading in %i bytes\n", size);
+	DEBUGPRINT(3, " Reading in %i bytes\n", size);
 
 	//  we need to read in size, unless size is larger then length
 	if (size > fprivdata->file_length - fprivdata->file_position) {
 
-		DEBUGPRINT(3, "vmc_fs: Adjusting size to read in to be %u\n", fprivdata->file_length - fprivdata->file_position);
+		DEBUGPRINT(3, " Adjusting size to read in to be %u\n", fprivdata->file_length - fprivdata->file_position);
 
 		size = fprivdata->file_length - fprivdata->file_position;
 	}
@@ -446,13 +446,13 @@ int Vmc_Read(iop_file_t *f, void *buffer, int size)
 		//  We have 1024 bytes in cluster_data now, but we already read in cluster_offset bytes
 		//  So we now need to copy whats left into the buffer that was passed to us
 
-		DEBUGPRINT(3, "vmc_fs: There are %i bytes remaining\n", size - data_read);
-		DEBUGPRINT(3, "vmc_fs: There are %i bytes left in cluster %u\n", (fprivdata->cluster_offset == 0) ? 0 : g_Vmc_Image[f->unit].cluster_size - fprivdata->cluster_offset, fprivdata->file_cluster + fprivdata->gendata.first_allocatable);
+		DEBUGPRINT(3, " There are %i bytes remaining\n", size - data_read);
+		DEBUGPRINT(3, " There are %i bytes left in cluster %u\n", (fprivdata->cluster_offset == 0) ? 0 : g_Vmc_Image[f->unit].cluster_size - fprivdata->cluster_offset, fprivdata->file_cluster + fprivdata->gendata.first_allocatable);
 
 		//  If the data remaining in a cluster is larger then the buffer passed to us, we can only read in size data
 		if (size - data_read < g_Vmc_Image[f->unit].cluster_size - fprivdata->cluster_offset) {
 
-			DEBUGPRINT(3, "vmc_fs: Read in %i bytes\n", size);
+			DEBUGPRINT(3, " Read in %i bytes\n", size);
 
 			memcpy(buffer + data_read, cluster_data + fprivdata->cluster_offset, size - data_read);
 			fprivdata->cluster_offset += (size - data_read);
@@ -461,7 +461,7 @@ int Vmc_Read(iop_file_t *f, void *buffer, int size)
 		} else  //  We can copy in the rest of the cluster, since there is space in the buffer passed to us
 		{
 
-			DEBUGPRINT(3, "vmc_fs: Read in %i bytes\n", g_Vmc_Image[f->unit].cluster_size - fprivdata->cluster_offset);
+			DEBUGPRINT(3, " Read in %i bytes\n", g_Vmc_Image[f->unit].cluster_size - fprivdata->cluster_offset);
 
 			memcpy(buffer + data_read, cluster_data + fprivdata->cluster_offset, g_Vmc_Image[f->unit].cluster_size - fprivdata->cluster_offset);
 			data_read += (g_Vmc_Image[f->unit].cluster_size - fprivdata->cluster_offset);
@@ -471,7 +471,7 @@ int Vmc_Read(iop_file_t *f, void *buffer, int size)
 		//  If we have used up all of the data in a cluster, we need to tell it that the current cluster is the next one in the list
 		if (fprivdata->cluster_offset == g_Vmc_Image[f->unit].cluster_size) {
 
-			DEBUGPRINT(6, "vmc_fs: Moving onto next cluster\n");
+			DEBUGPRINT(6, " Moving onto next cluster\n");
 
 			fprivdata->file_cluster = getFatEntry(fprivdata->gendata.fd, fprivdata->file_cluster, fprivdata->gendata.indir_fat_clusters, FAT_VALUE);
 			fprivdata->cluster_offset = 0;
@@ -499,7 +499,7 @@ int Vmc_Write(iop_file_t *f, void *buffer, int size)
 	if (!g_Vmc_Initialized)
 		return VMCFS_ERR_INITIALIZED;
 
-	DEBUGPRINT(1, "vmc_fs: Write %i bytes\n", size);
+	DEBUGPRINT(1, " Write %i bytes\n", size);
 
 	if (g_Vmc_Image[f->unit].fd < 0)
 		return VMCFS_ERR_NOT_MOUNT;
@@ -525,7 +525,7 @@ int Vmc_Write(iop_file_t *f, void *buffer, int size)
 
 	if (f->mode & O_APPEND) {
 
-		DEBUGPRINT(8, "vmc_fs: Write with O_APPEND.\n");
+		DEBUGPRINT(8, " Write with O_APPEND.\n");
 
 		fprivdata->file_position = fprivdata->file_length;
 	}
@@ -539,27 +539,27 @@ int Vmc_Write(iop_file_t *f, void *buffer, int size)
 	if ((fprivdata->file_length % g_Vmc_Image[f->unit].cluster_size) > 0)
 		num_clusters++;
 
-	DEBUGPRINT(5, "vmc_fs: File lenght in cluster before this write: %u\n", num_clusters);
+	DEBUGPRINT(5, " File lenght in cluster before this write: %u\n", num_clusters);
 
 	int num_clusters_required = (fprivdata->file_position + size) / g_Vmc_Image[f->unit].cluster_size;
 
 	if (((fprivdata->file_position + size) % g_Vmc_Image[f->unit].cluster_size) > 0)
 		num_clusters_required++;
 
-	DEBUGPRINT(5, "vmc_fs: File lenght in cluster after this write : %u\n", num_clusters_required);
+	DEBUGPRINT(5, " File lenght in cluster after this write : %u\n", num_clusters_required);
 
 	if (num_clusters_required > num_clusters) {
 
 		fprivdata->file_length = fprivdata->file_position + size;
 
-		DEBUGPRINT(3, "vmc_fs: File position:  %u\n", fprivdata->file_position);
-		DEBUGPRINT(3, "vmc_fs: Size to write:  %u\n", size);
-		DEBUGPRINT(3, "vmc_fs: File length  :  %u\n", fprivdata->file_length);
+		DEBUGPRINT(3, " File position:  %u\n", fprivdata->file_position);
+		DEBUGPRINT(3, " Size to write:  %u\n", size);
+		DEBUGPRINT(3, " File length  :  %u\n", fprivdata->file_length);
 
 		//  now determine how many clusters we need forthis write
 		unsigned int clusters_needed = num_clusters_required - num_clusters;
 
-		DEBUGPRINT(3, "vmc_fs: We need to allocate %u more clusters for storage\n", clusters_needed);
+		DEBUGPRINT(3, " We need to allocate %u more clusters for storage\n", clusters_needed);
 
 		int i = 0;
 		unsigned int free_cluster = 0;
@@ -578,7 +578,7 @@ int Vmc_Write(iop_file_t *f, void *buffer, int size)
 				return -1;
 			}
 
-			DEBUGPRINT(3, "vmc_fs: Initial cluster at %u\n", free_cluster);
+			DEBUGPRINT(3, " Initial cluster at %u\n", free_cluster);
 
 			//  mark the free cluster as eof
 			setFatEntry(fprivdata->gendata.fd, free_cluster, EOF_CLUSTER, fprivdata->gendata.indir_fat_clusters, FAT_SET);
@@ -597,7 +597,7 @@ int Vmc_Write(iop_file_t *f, void *buffer, int size)
 			//  loop to find the last cluster of the file.
 			last_cluster = fprivdata->file_startcluster;
 
-			DEBUGPRINT(3, "vmc_fs: Searching last cluster of file\n");
+			DEBUGPRINT(3, " Searching last cluster of file\n");
 
 			while (1) {
 
@@ -621,7 +621,7 @@ int Vmc_Write(iop_file_t *f, void *buffer, int size)
 				i++;
 			}
 
-			DEBUGPRINT(3, "vmc_fs: Last cluster of file at %u\n", last_cluster);
+			DEBUGPRINT(3, " Last cluster of file at %u\n", last_cluster);
 
 			free_cluster = getFreeCluster(&(fprivdata->gendata), f->unit);
 
@@ -634,7 +634,7 @@ int Vmc_Write(iop_file_t *f, void *buffer, int size)
 				return -1;
 			}
 
-			DEBUGPRINT(3, "vmc_fs: Restart cluster for the file at %u\n", free_cluster);
+			DEBUGPRINT(3, " Restart cluster for the file at %u\n", free_cluster);
 
 			//  mark the last cluster as restart of our file
 			setFatEntry(fprivdata->gendata.fd, last_cluster, free_cluster, fprivdata->gendata.indir_fat_clusters, FAT_SET);
@@ -666,7 +666,7 @@ int Vmc_Write(iop_file_t *f, void *buffer, int size)
 				return -1;
 			}
 
-			DEBUGPRINT(3, "vmc_fs: Adding cluster %u to the chain for the file\n", free_cluster);
+			DEBUGPRINT(3, " Adding cluster %u to the chain for the file\n", free_cluster);
 
 			setFatEntry(fprivdata->gendata.fd, last_cluster, free_cluster, fprivdata->gendata.indir_fat_clusters, FAT_SET);
 			last_cluster = free_cluster;
@@ -690,14 +690,14 @@ int Vmc_Write(iop_file_t *f, void *buffer, int size)
 
 			if (fprivdata->cluster_offset == 0) {
 
-				DEBUGPRINT(4, "vmc_fs: Writing to cluster %u\n", current_cluster);
+				DEBUGPRINT(4, " Writing to cluster %u\n", current_cluster);
 
 				writeCluster(fprivdata->gendata.fd, ((unsigned char *)buffer) + data_written, current_cluster + fprivdata->gendata.first_allocatable);
 				sizewritten = g_Vmc_Image[f->unit].cluster_size;
 
 			} else {
 
-				DEBUGPRINT(4, "vmc_fs: Writing to cluster %u at offset %u for length %u\n", current_cluster, fprivdata->cluster_offset, g_Vmc_Image[f->unit].cluster_size - fprivdata->cluster_offset);
+				DEBUGPRINT(4, " Writing to cluster %u at offset %u for length %u\n", current_cluster, fprivdata->cluster_offset, g_Vmc_Image[f->unit].cluster_size - fprivdata->cluster_offset);
 
 				writeClusterPart(fprivdata->gendata.fd, ((unsigned char *)buffer) + data_written, current_cluster + fprivdata->gendata.first_allocatable, fprivdata->cluster_offset, g_Vmc_Image[f->unit].cluster_size - fprivdata->cluster_offset);
 				sizewritten = g_Vmc_Image[f->unit].cluster_size - fprivdata->cluster_offset;
@@ -705,13 +705,13 @@ int Vmc_Write(iop_file_t *f, void *buffer, int size)
 
 		} else {
 
-			DEBUGPRINT(4, "vmc_fs: Writing to cluster %u at offset %u for length %u\n", current_cluster, fprivdata->cluster_offset, size - data_written);
+			DEBUGPRINT(4, " Writing to cluster %u at offset %u for length %u\n", current_cluster, fprivdata->cluster_offset, size - data_written);
 
 			writeClusterPart(fprivdata->gendata.fd, ((unsigned char *)buffer) + data_written, current_cluster + fprivdata->gendata.first_allocatable, fprivdata->cluster_offset, size - data_written);
 			sizewritten = size - data_written;
 		}
 
-		DEBUGPRINT(5, "vmc_fs: Wrote %i bytes\n", sizewritten);
+		DEBUGPRINT(5, " Wrote %i bytes\n", sizewritten);
 
 		data_written += sizewritten;
 		fprivdata->file_position += sizewritten;
@@ -719,7 +719,7 @@ int Vmc_Write(iop_file_t *f, void *buffer, int size)
 
 		if (fprivdata->cluster_offset == g_Vmc_Image[f->unit].cluster_size) {
 
-			DEBUGPRINT(7, "vmc_fs: Moving onto next cluster\n");
+			DEBUGPRINT(7, " Moving onto next cluster\n");
 
 			current_cluster = getFatEntry(fprivdata->gendata.fd, current_cluster, fprivdata->gendata.indir_fat_clusters, FAT_VALUE);
 			fprivdata->cluster_offset = 0;
@@ -730,7 +730,7 @@ int Vmc_Write(iop_file_t *f, void *buffer, int size)
 
 	if (f->mode & O_TRUNC || f->mode & O_APPEND) {
 
-		DEBUGPRINT(8, "vmc_fs: Write with O_TRUNC.\n");
+		DEBUGPRINT(8, " Write with O_TRUNC.\n");
 
 		fprivdata->file_length = fprivdata->file_position;
 	}
@@ -763,7 +763,7 @@ int Vmc_Lseek(iop_file_t *f, int offset, int whence)
 	if (!g_Vmc_Initialized)
 		return VMCFS_ERR_INITIALIZED;
 
-	DEBUGPRINT(1, "vmc_fs: Seek\n");
+	DEBUGPRINT(1, " Seek\n");
 
 	if (g_Vmc_Image[f->unit].fd < 0)
 		return VMCFS_ERR_NOT_MOUNT;
@@ -834,7 +834,7 @@ int Vmc_Ioctl(iop_file_t *f, int cmd, void *data)
 
 		default:
 
-			DEBUGPRINT(1, "vmc_fs: Unrecognized ioctl command %d\n", cmd);
+			DEBUGPRINT(1, " Unrecognized ioctl command %d\n", cmd);
 			break;
 	}
 
@@ -851,7 +851,7 @@ int Vmc_Remove(iop_file_t *f, const char *path)
 	if (!g_Vmc_Initialized)
 		return VMCFS_ERR_INITIALIZED;
 
-	DEBUGPRINT(1, "vmc_fs: remove %s\n", path);
+	DEBUGPRINT(1, " remove %s\n", path);
 
 	if (g_Vmc_Image[f->unit].fd < 0)
 		return VMCFS_ERR_NOT_MOUNT;
@@ -874,7 +874,7 @@ int Vmc_Remove(iop_file_t *f, const char *path)
 
 	if (dirent_cluster == ROOT_CLUSTER) {
 
-		DEBUGPRINT(2, "vmc_fs: remove failed. Root directory is protected.\n");
+		DEBUGPRINT(2, " remove failed. Root directory is protected.\n");
 
 		PROF_END(vmc_removeProf)
 
@@ -882,7 +882,7 @@ int Vmc_Remove(iop_file_t *f, const char *path)
 
 	} else if (dirent_cluster == NOFOUND_CLUSTER) {
 
-		DEBUGPRINT(2, "vmc_fs: remove failed. %s not found.\n", path);
+		DEBUGPRINT(2, " remove failed. %s not found.\n", path);
 
 		PROF_END(vmc_removeProf)
 
@@ -893,11 +893,11 @@ int Vmc_Remove(iop_file_t *f, const char *path)
 
 		removeObject(&gendata, dirent_cluster, &dirent, f->unit);
 
-		DEBUGPRINT(2, "vmc_fs: file %s removed.\n", path);
+		DEBUGPRINT(2, " file %s removed.\n", path);
 
 	} else {
 
-		DEBUGPRINT(2, "vmc_fs: remove failed. %s is not a valid file.\n", path);
+		DEBUGPRINT(2, " remove failed. %s is not a valid file.\n", path);
 
 		PROF_END(vmc_removeProf)
 
@@ -919,7 +919,7 @@ int Vmc_Mkdir(iop_file_t *f, const char *path1, int mode)
 	if (!g_Vmc_Initialized)
 		return VMCFS_ERR_INITIALIZED;
 
-	DEBUGPRINT(1, "vmc_fs: mkdir %s\n", path1);
+	DEBUGPRINT(1, " mkdir %s\n", path1);
 
 	if (g_Vmc_Image[f->unit].fd < 0)
 		return VMCFS_ERR_NOT_MOUNT;
@@ -951,7 +951,7 @@ int Vmc_Mkdir(iop_file_t *f, const char *path1, int mode)
 
 	if (dirent_cluster == ROOT_CLUSTER) {
 
-		DEBUGPRINT(2, "vmc_fs: mkdir failed. Root directory is protected.\n");
+		DEBUGPRINT(2, " mkdir failed. Root directory is protected.\n");
 
 		free(path);
 
@@ -979,7 +979,7 @@ int Vmc_Mkdir(iop_file_t *f, const char *path1, int mode)
 		newdir[0] = '\0';
 		newdir++;
 
-		DEBUGPRINT(2, "vmc_fs: Creating folder %s in parent folder %s\n", newdir, (path[0] == '\0') ? "Root" : path);
+		DEBUGPRINT(2, " Creating folder %s in parent folder %s\n", newdir, (path[0] == '\0') ? "Root" : path);
 
 		memset(&new_dirent, 0, sizeof(new_dirent));
 
@@ -1002,7 +1002,7 @@ int Vmc_Mkdir(iop_file_t *f, const char *path1, int mode)
 
 		if (parent_cluster == NOFOUND_CLUSTER) {
 
-			DEBUGPRINT(3, "vmc_fs: Unable to find parent directory\n");
+			DEBUGPRINT(3, " Unable to find parent directory\n");
 
 			free(path);
 
@@ -1011,19 +1011,19 @@ int Vmc_Mkdir(iop_file_t *f, const char *path1, int mode)
 			return -1;
 		}
 
-		DEBUGPRINT(3, "vmc_fs: Parent Information.\n");
-		DEBUGPRINT(3, "vmc_fs: parent_cluster  = %u\n", parent_cluster);
-		DEBUGPRINT(3, "vmc_fs: dir_cluster    = %u\n", parent_dirent.cluster);
-		DEBUGPRINT(3, "vmc_fs: dirent.name    = %s\n", parent_dirent.name);
-		DEBUGPRINT(3, "vmc_fs: dirent.length  = %u\n", parent_dirent.length);
-		DEBUGPRINT(3, "vmc_fs: dirent.mode    = %X\n", parent_dirent.mode);
-		DEBUGPRINT(3, "vmc_fs: dirent_page    = %i\n", parent_gendata.dirent_page);
+		DEBUGPRINT(3, " Parent Information.\n");
+		DEBUGPRINT(3, " parent_cluster  = %u\n", parent_cluster);
+		DEBUGPRINT(3, " dir_cluster    = %u\n", parent_dirent.cluster);
+		DEBUGPRINT(3, " dirent.name    = %s\n", parent_dirent.name);
+		DEBUGPRINT(3, " dirent.length  = %u\n", parent_dirent.length);
+		DEBUGPRINT(3, " dirent.mode    = %X\n", parent_dirent.mode);
+		DEBUGPRINT(3, " dirent_page    = %i\n", parent_gendata.dirent_page);
 
 		new_dirent_cluster = addObject(&parent_gendata, parent_cluster, &parent_dirent, &new_dirent, f->unit);
 
 		if (new_dirent_cluster == ERROR_CLUSTER) {
 
-			DEBUGPRINT(2, "vmc_fs: mkdir failed on %s\n", path);
+			DEBUGPRINT(2, " mkdir failed on %s\n", path);
 
 			free(path);
 
@@ -1037,7 +1037,7 @@ int Vmc_Mkdir(iop_file_t *f, const char *path1, int mode)
 
 		if (dirent.mode & DF_EXISTS) {
 
-			DEBUGPRINT(2, "vmc_fs: mkdir failed on %s. Directory allready exist.\n", path1);
+			DEBUGPRINT(2, " mkdir failed on %s. Directory allready exist.\n", path1);
 
 			free(path);
 
@@ -1047,18 +1047,18 @@ int Vmc_Mkdir(iop_file_t *f, const char *path1, int mode)
 
 		} else {
 
-			DEBUGPRINT(8, "vmc_fs: mkdir directory %s allready exist but is hidden. Changing attributs.\n", path1);
+			DEBUGPRINT(8, " mkdir directory %s allready exist but is hidden. Changing attributs.\n", path1);
 
-			DEBUGPRINT(8, "vmc_fs: Following fat table cluster %u\n", dirent.cluster);
+			DEBUGPRINT(8, " Following fat table cluster %u\n", dirent.cluster);
 
 			unsigned int pseudo_entry_cluster = getFatEntry(gendata.fd, dirent.cluster, gendata.indir_fat_clusters, FAT_VALUE);
 
-			DEBUGPRINT(8, "vmc_fs: Changing cluster mask of fat table cluster %u.\n", pseudo_entry_cluster);
+			DEBUGPRINT(8, " Changing cluster mask of fat table cluster %u.\n", pseudo_entry_cluster);
 
 			// change cluster mask of the direntry
 			setFatEntry(gendata.fd, dirent.cluster, pseudo_entry_cluster, gendata.indir_fat_clusters, FAT_SET);
 
-			DEBUGPRINT(8, "vmc_fs: Changing direntry %s attributs.\n", path1);
+			DEBUGPRINT(8, " Changing direntry %s attributs.\n", path1);
 
 			//  Update time stamp, and set dirent.mode to exist flag
 			dirent.mode = dirent.mode | DF_EXISTS;
@@ -1066,13 +1066,13 @@ int Vmc_Mkdir(iop_file_t *f, const char *path1, int mode)
 			getPs2Time(&dirent.modified);
 			writePage(gendata.fd, (unsigned char *)&dirent, (dirent_cluster + gendata.first_allocatable) * g_Vmc_Image[f->unit].header.pages_per_cluster + gendata.dirent_page);
 
-			DEBUGPRINT(8, "vmc_fs: Restoring EOF cluster at %u.\n", pseudo_entry_cluster);
+			DEBUGPRINT(8, " Restoring EOF cluster at %u.\n", pseudo_entry_cluster);
 
 			setFatEntry(gendata.fd, pseudo_entry_cluster, EOF_CLUSTER, gendata.indir_fat_clusters, FAT_SET);
 
 			struct direntry pseudo_entries;
 
-			DEBUGPRINT(8, "vmc_fs: Updating pseudo entries time stamps at cluster %u / page %u.\n", dirent.cluster + gendata.first_allocatable, (dirent.cluster + gendata.first_allocatable) * g_Vmc_Image[f->unit].header.pages_per_cluster);
+			DEBUGPRINT(8, " Updating pseudo entries time stamps at cluster %u / page %u.\n", dirent.cluster + gendata.first_allocatable, (dirent.cluster + gendata.first_allocatable) * g_Vmc_Image[f->unit].header.pages_per_cluster);
 
 			//  Update time stamp of '.' entry
 			readPage(gendata.fd, (unsigned char *)&pseudo_entries, (dirent.cluster + gendata.first_allocatable) * g_Vmc_Image[f->unit].header.pages_per_cluster);
@@ -1080,7 +1080,7 @@ int Vmc_Mkdir(iop_file_t *f, const char *path1, int mode)
 			getPs2Time(&pseudo_entries.modified);
 			writePage(gendata.fd, (unsigned char *)&pseudo_entries, (dirent.cluster + gendata.first_allocatable) * g_Vmc_Image[f->unit].header.pages_per_cluster);
 
-			DEBUGPRINT(8, "vmc_fs: Updating pseudo entries time stamps at cluster %u / page %u.\n", dirent.cluster + gendata.first_allocatable, (dirent.cluster + gendata.first_allocatable) * g_Vmc_Image[f->unit].header.pages_per_cluster + 1);
+			DEBUGPRINT(8, " Updating pseudo entries time stamps at cluster %u / page %u.\n", dirent.cluster + gendata.first_allocatable, (dirent.cluster + gendata.first_allocatable) * g_Vmc_Image[f->unit].header.pages_per_cluster + 1);
 
 			//  Update time stamp of '..' entry
 			readPage(gendata.fd, (unsigned char *)&pseudo_entries, (dirent.cluster + gendata.first_allocatable) * g_Vmc_Image[f->unit].header.pages_per_cluster + 1);
@@ -1092,7 +1092,7 @@ int Vmc_Mkdir(iop_file_t *f, const char *path1, int mode)
 		}
 	}
 
-	DEBUGPRINT(3, "vmc_fs: Directory %s created.\n", path1);
+	DEBUGPRINT(3, " Directory %s created.\n", path1);
 
 	PROF_END(vmc_mkdirProf)
 
@@ -1109,7 +1109,7 @@ int Vmc_Rmdir(iop_file_t *f, const char *path1)
 	if (!g_Vmc_Initialized)
 		return VMCFS_ERR_INITIALIZED;
 
-	DEBUGPRINT(1, "vmc_fs: rmdir %s\n", path1);
+	DEBUGPRINT(1, " rmdir %s\n", path1);
 
 	if (g_Vmc_Image[f->unit].fd < 0)
 		return VMCFS_ERR_NOT_MOUNT;
@@ -1139,7 +1139,7 @@ int Vmc_Rmdir(iop_file_t *f, const char *path1)
 
 	if (dirent_cluster == ROOT_CLUSTER) {
 
-		DEBUGPRINT(2, "vmc_fs: rmdir failed. Root directory is protected.\n");
+		DEBUGPRINT(2, " rmdir failed. Root directory is protected.\n");
 
 		free(path);
 
@@ -1149,7 +1149,7 @@ int Vmc_Rmdir(iop_file_t *f, const char *path1)
 
 	} else if (dirent_cluster == NOFOUND_CLUSTER) {
 
-		DEBUGPRINT(2, "vmc_fs: rmdir failed. %s not found.\n", path1);
+		DEBUGPRINT(2, " rmdir failed. %s not found.\n", path1);
 
 		free(path);
 
@@ -1160,7 +1160,7 @@ int Vmc_Rmdir(iop_file_t *f, const char *path1)
 
 	if (!(dirent.mode & DF_EXISTS)) {
 
-		DEBUGPRINT(2, "vmc_fs: rmdir failed. %s is allready removed.\n", path1);
+		DEBUGPRINT(2, " rmdir failed. %s is allready removed.\n", path1);
 
 		free(path);
 
@@ -1233,7 +1233,7 @@ int Vmc_Rmdir(iop_file_t *f, const char *path1)
 
 	} else {
 
-		DEBUGPRINT(2, "vmc_fs: rmdir failed. %s is not a valid directory.\n", path1);
+		DEBUGPRINT(2, " rmdir failed. %s is not a valid directory.\n", path1);
 
 		free(path);
 
@@ -1242,7 +1242,7 @@ int Vmc_Rmdir(iop_file_t *f, const char *path1)
 		return -1;
 	}
 
-	DEBUGPRINT(3, "vmc_fs: Directory %s removed.\n", path1);
+	DEBUGPRINT(3, " Directory %s removed.\n", path1);
 
 	PROF_END(vmc_removeProf)
 
@@ -1259,7 +1259,7 @@ int Vmc_Dopen(iop_file_t *f, const char *path)
 	if (!g_Vmc_Initialized)
 		return VMCFS_ERR_INITIALIZED;
 
-	DEBUGPRINT(1, "vmc_fs: dopen %i %s\n", f->unit, path);
+	DEBUGPRINT(1, " dopen %i %s\n", f->unit, path);
 
 	if (g_Vmc_Image[f->unit].fd < 0)
 		return VMCFS_ERR_NOT_MOUNT;
@@ -1286,7 +1286,7 @@ int Vmc_Dopen(iop_file_t *f, const char *path)
 
 	if (dirent_cluster == NOFOUND_CLUSTER) {
 
-		DEBUGPRINT(2, "vmc_fs: dopen failed. %s not found.\n", path);
+		DEBUGPRINT(2, " dopen failed. %s not found.\n", path);
 
 		free(fprivdata);  //  Release the allocated memory
 
@@ -1297,7 +1297,7 @@ int Vmc_Dopen(iop_file_t *f, const char *path)
 
 	if (!(dirent.mode & DF_EXISTS)) {
 
-		DEBUGPRINT(2, "vmc_fs: dopen failed. %s is hidden.\n", path);
+		DEBUGPRINT(2, " dopen failed. %s is hidden.\n", path);
 
 		free(fprivdata);  //  Release the allocated memory
 
@@ -1310,7 +1310,7 @@ int Vmc_Dopen(iop_file_t *f, const char *path)
 	fprivdata->dir_length = dirent.length;
 	fprivdata->dir_number = 0;
 
-	DEBUGPRINT(2, "vmc_fs: Directory %s opened with length %u\n", path, fprivdata->dir_length);
+	DEBUGPRINT(2, " Directory %s opened with length %u\n", path, fprivdata->dir_length);
 
 	PROF_END(vmc_dopenProf)
 
@@ -1327,7 +1327,7 @@ int Vmc_Dclose(iop_file_t *f)
 	if (!g_Vmc_Initialized)
 		return VMCFS_ERR_INITIALIZED;
 
-	DEBUGPRINT(1, "vmc_fs: dclose %i\n", f->unit);
+	DEBUGPRINT(1, " dclose %i\n", f->unit);
 
 	if ((f->unit == 2) || (f->unit == 3))
 		return 0;  //  Close our fake device used only for ioctl commands
@@ -1353,7 +1353,7 @@ int Vmc_Dread(iop_file_t *f, iox_dirent_t *buffer)
 	if (!g_Vmc_Initialized)
 		return VMCFS_ERR_INITIALIZED;
 
-	DEBUGPRINT(1, "vmc_fs: dread %i\n", f->unit);
+	DEBUGPRINT(1, " dread %i\n", f->unit);
 
 	if (g_Vmc_Image[f->unit].fd < 0)
 		return VMCFS_ERR_NOT_MOUNT;
@@ -1381,7 +1381,7 @@ next_entry:
 	//  read in the next directory entry
 	readPage(fprivdata->gendata.fd, (unsigned char *)&dirent, (fprivdata->dir_cluster + fprivdata->gendata.first_allocatable) * g_Vmc_Image[f->unit].header.pages_per_cluster + fprivdata->dir_number);
 
-	DEBUGPRINT(4, "vmc_fs: name: %s; cluster %u; length %u; mode 0x%02x\n", dirent.name, dirent.cluster, dirent.length, dirent.mode);
+	DEBUGPRINT(4, " name: %s; cluster %u; length %u; mode 0x%02x\n", dirent.name, dirent.cluster, dirent.length, dirent.mode);
 
 	if (dirent.mode & DF_EXISTS) {
 
@@ -1439,7 +1439,7 @@ int Vmc_Getstat(iop_file_t *f, const char *path, iox_stat_t *stat)
 	if (!g_Vmc_Initialized)
 		return VMCFS_ERR_INITIALIZED;
 
-	DEBUGPRINT(1, "vmc_fs: getstat %i %s\n", f->unit, path);
+	DEBUGPRINT(1, " getstat %i %s\n", f->unit, path);
 
 	if (g_Vmc_Image[f->unit].fd < 0)
 		return VMCFS_ERR_NOT_MOUNT;
@@ -1463,7 +1463,7 @@ int Vmc_Getstat(iop_file_t *f, const char *path, iox_stat_t *stat)
 
 	if (dirent_cluster == NOFOUND_CLUSTER) {
 
-		DEBUGPRINT(2, "vmc_fs: getstat failed. %s not found.\n", path);
+		DEBUGPRINT(2, " getstat failed. %s not found.\n", path);
 
 		PROF_END(vmc_getstatProf)
 
@@ -1501,7 +1501,7 @@ int Vmc_Chstat(iop_file_t *f, const char *path, iox_stat_t *stat, unsigned int s
 	if (!g_Vmc_Initialized)
 		return VMCFS_ERR_INITIALIZED;
 
-	DEBUGPRINT(1, "vmc_fs: chstat %i %s\n", f->unit, path);
+	DEBUGPRINT(1, " chstat %i %s\n", f->unit, path);
 
 	if (g_Vmc_Image[f->unit].fd < 0)
 		return VMCFS_ERR_NOT_MOUNT;
@@ -1524,7 +1524,7 @@ int Vmc_Chstat(iop_file_t *f, const char *path, iox_stat_t *stat, unsigned int s
 
 	if (dirent_cluster == NOFOUND_CLUSTER) {
 
-		DEBUGPRINT(2, "vmc_fs: chstat failed. %s not found.\n", path);
+		DEBUGPRINT(2, " chstat failed. %s not found.\n", path);
 
 		PROF_END(vmc_chstatProf)
 
@@ -1567,7 +1567,7 @@ int Vmc_Rename(iop_file_t *f, const char *path, const char *new_name)
 	if (!g_Vmc_Initialized)
 		return VMCFS_ERR_INITIALIZED;
 
-	DEBUGPRINT(1, "vmc_fs: rename %s\n", path);
+	DEBUGPRINT(1, " rename %s\n", path);
 
 	if (g_Vmc_Image[f->unit].fd < 0)
 		return VMCFS_ERR_NOT_MOUNT;
@@ -1590,7 +1590,7 @@ int Vmc_Rename(iop_file_t *f, const char *path, const char *new_name)
 
 	if (dirent_cluster == ROOT_CLUSTER) {
 
-		DEBUGPRINT(2, "vmc_fs: rename failed. Root directory is protected.\n");
+		DEBUGPRINT(2, " rename failed. Root directory is protected.\n");
 
 		PROF_END(vmc_renameProf)
 
@@ -1598,7 +1598,7 @@ int Vmc_Rename(iop_file_t *f, const char *path, const char *new_name)
 
 	} else if (dirent_cluster == NOFOUND_CLUSTER) {
 
-		DEBUGPRINT(2, "vmc_fs: rename failed. %s not found.\n", path);
+		DEBUGPRINT(2, " rename failed. %s not found.\n", path);
 
 		PROF_END(vmc_renameProf)
 
@@ -1614,7 +1614,7 @@ int Vmc_Rename(iop_file_t *f, const char *path, const char *new_name)
 	//  Write this change
 	writePage(gendata.fd, (unsigned char *)&dirent, (dirent_cluster + gendata.first_allocatable) * g_Vmc_Image[f->unit].header.pages_per_cluster + gendata.dirent_page);
 
-	DEBUGPRINT(2, "vmc_fs: Object %s renamed to %s\n", path, new_name);
+	DEBUGPRINT(2, " Object %s renamed to %s\n", path, new_name);
 
 	PROF_END(vmc_renameProf)
 
@@ -1649,7 +1649,7 @@ int Vmc_Mount(iop_file_t *f, const char *fsname, const char *devname, int flag, 
 {
 	int errcode;
 
-	DEBUGPRINT(2, "vmc_fs: Mount %s at mount point: %d\n", devname, f->unit);
+	DEBUGPRINT(2, " Mount %s at mount point: %d\n", devname, f->unit);
 
 	if (g_Vmc_Image[f->unit].fd >= 0)
 		return VMCFS_ERR_MOUNT_BUSY;
@@ -1657,8 +1657,8 @@ int Vmc_Mount(iop_file_t *f, const char *fsname, const char *devname, int flag, 
 	g_Vmc_Image[f->unit].fd = open(devname, O_RDWR, 0x666);
 
 	if (g_Vmc_Image[f->unit].fd < 0) {
-		DEBUGPRINT(1, "vmc_fs: Error opening vmc file %s\n", devname);
-		DEBUGPRINT(1, "vmc_fs: open error code: %d\n", g_Vmc_Image[f->unit].fd);
+		DEBUGPRINT(1, " Error opening vmc file %s\n", devname);
+		DEBUGPRINT(1, " open error code: %d\n", g_Vmc_Image[f->unit].fd);
 
 		return VMCFS_ERR_VMC_OPEN;
 	}
@@ -1667,8 +1667,8 @@ int Vmc_Mount(iop_file_t *f, const char *fsname, const char *devname, int flag, 
 	int r = read(g_Vmc_Image[f->unit].fd, &g_Vmc_Image[f->unit].header, sizeof(struct superblock));
 
 	if (r != sizeof(struct superblock)) {
-		DEBUGPRINT(1, "vmc_fs: Error reading vmc file %s\n", devname);
-		DEBUGPRINT(1, "vmc_fs: fd: %d, error code:%d\n", g_Vmc_Image[f->unit].fd, r);
+		DEBUGPRINT(1, " Error reading vmc file %s\n", devname);
+		DEBUGPRINT(1, " fd: %d, error code:%d\n", g_Vmc_Image[f->unit].fd, r);
 
 		errcode = VMCFS_ERR_VMC_READ;
 
@@ -1683,10 +1683,10 @@ int Vmc_Mount(iop_file_t *f, const char *fsname, const char *devname, int flag, 
 
 	if (g_Vmc_Image[f->unit].header.magic[0] != 'S' || g_Vmc_Image[f->unit].header.magic[1] != 'o' || g_Vmc_Image[f->unit].header.magic[2] != 'n' || g_Vmc_Image[f->unit].header.magic[3] != 'y' || g_Vmc_Image[f->unit].header.magic[4] != ' ' || g_Vmc_Image[f->unit].header.magic[5] != 'P' || g_Vmc_Image[f->unit].header.magic[6] != 'S' || g_Vmc_Image[f->unit].header.magic[7] != '2' || g_Vmc_Image[f->unit].header.magic[8] != ' ' || g_Vmc_Image[f->unit].header.magic[9] != 'M' || g_Vmc_Image[f->unit].header.magic[10] != 'e' || g_Vmc_Image[f->unit].header.magic[11] != 'm' || g_Vmc_Image[f->unit].header.magic[12] != 'o' || g_Vmc_Image[f->unit].header.magic[13] != 'r' || g_Vmc_Image[f->unit].header.magic[14] != 'y' || g_Vmc_Image[f->unit].header.magic[15] != ' ' || g_Vmc_Image[f->unit].header.magic[16] != 'C' || g_Vmc_Image[f->unit].header.magic[17] != 'a' || g_Vmc_Image[f->unit].header.magic[18] != 'r' || g_Vmc_Image[f->unit].header.magic[19] != 'd' || g_Vmc_Image[f->unit].header.magic[20] != ' ' || g_Vmc_Image[f->unit].header.magic[21] != 'F' || g_Vmc_Image[f->unit].header.magic[22] != 'o' || g_Vmc_Image[f->unit].header.magic[23] != 'r' || g_Vmc_Image[f->unit].header.magic[24] != 'm' || g_Vmc_Image[f->unit].header.magic[25] != 'a' || g_Vmc_Image[f->unit].header.magic[26] != 't') {
 		//  Card is not formated
-		DEBUGPRINT(1, "vmc_fs: Warning vmc file %s is not formated\n", devname);
+		DEBUGPRINT(1, " Warning vmc file %s is not formated\n", devname);
 		if (!setDefaultSpec(f->unit)) {
 			//  Card size error
-			DEBUGPRINT(1, "vmc_fs: Error size of vmc file %s is incompatible\n", devname);
+			DEBUGPRINT(1, " Error size of vmc file %s is incompatible\n", devname);
 
 			errcode = VMCFS_ERR_VMC_SIZE;
 			goto mountAbort;
@@ -1695,33 +1695,33 @@ int Vmc_Mount(iop_file_t *f, const char *fsname, const char *devname, int flag, 
 	} else {
 		g_Vmc_Image[f->unit].formated = TRUE;
 
-		DEBUGPRINT(4, "vmc_fs: SuperBlock readed from vmc file %s.\n", devname);
+		DEBUGPRINT(4, " SuperBlock readed from vmc file %s.\n", devname);
 
-		DEBUGPRINT(4, "vmc_fs: SuperBlock Info: magic[40]             : %s\n", g_Vmc_Image[f->unit].header.magic);
-		DEBUGPRINT(4, "vmc_fs: SuperBlock Info: page_size             : 0x%02x\n", g_Vmc_Image[f->unit].header.page_size);
-		DEBUGPRINT(4, "vmc_fs: SuperBlock Info: pages_per_cluster     : 0x%02x\n", g_Vmc_Image[f->unit].header.pages_per_cluster);
-		DEBUGPRINT(4, "vmc_fs: SuperBlock Info: pages_per_block       : 0x%02x\n", g_Vmc_Image[f->unit].header.pages_per_block);
-		DEBUGPRINT(4, "vmc_fs: SuperBlock Info: clusters_per_card     : 0x%02x\n", g_Vmc_Image[f->unit].header.clusters_per_card);
-		DEBUGPRINT(4, "vmc_fs: SuperBlock Info: first_allocatable     : 0x%02x\n", g_Vmc_Image[f->unit].header.first_allocatable);
-		DEBUGPRINT(4, "vmc_fs: SuperBlock Info: last_allocatable      : 0x%02x\n", g_Vmc_Image[f->unit].header.last_allocatable);
-		DEBUGPRINT(4, "vmc_fs: SuperBlock Info: root_cluster          : 0x%02x\n", g_Vmc_Image[f->unit].header.root_cluster);
-		DEBUGPRINT(4, "vmc_fs: SuperBlock Info: backup_block1         : 0x%02x\n", g_Vmc_Image[f->unit].header.backup_block1);
-		DEBUGPRINT(4, "vmc_fs: SuperBlock Info: backup_block2         : 0x%02x\n", g_Vmc_Image[f->unit].header.backup_block2);
+		DEBUGPRINT(4, " SuperBlock Info: magic[40]             : %s\n", g_Vmc_Image[f->unit].header.magic);
+		DEBUGPRINT(4, " SuperBlock Info: page_size             : 0x%02x\n", g_Vmc_Image[f->unit].header.page_size);
+		DEBUGPRINT(4, " SuperBlock Info: pages_per_cluster     : 0x%02x\n", g_Vmc_Image[f->unit].header.pages_per_cluster);
+		DEBUGPRINT(4, " SuperBlock Info: pages_per_block       : 0x%02x\n", g_Vmc_Image[f->unit].header.pages_per_block);
+		DEBUGPRINT(4, " SuperBlock Info: clusters_per_card     : 0x%02x\n", g_Vmc_Image[f->unit].header.clusters_per_card);
+		DEBUGPRINT(4, " SuperBlock Info: first_allocatable     : 0x%02x\n", g_Vmc_Image[f->unit].header.first_allocatable);
+		DEBUGPRINT(4, " SuperBlock Info: last_allocatable      : 0x%02x\n", g_Vmc_Image[f->unit].header.last_allocatable);
+		DEBUGPRINT(4, " SuperBlock Info: root_cluster          : 0x%02x\n", g_Vmc_Image[f->unit].header.root_cluster);
+		DEBUGPRINT(4, " SuperBlock Info: backup_block1         : 0x%02x\n", g_Vmc_Image[f->unit].header.backup_block1);
+		DEBUGPRINT(4, " SuperBlock Info: backup_block2         : 0x%02x\n", g_Vmc_Image[f->unit].header.backup_block2);
 		for (r = 0; g_Vmc_Image[f->unit].header.indir_fat_clusters[r] != 0; r++)
-			DEBUGPRINT(4, "vmc_fs: SuperBlock Info: indir_fat_clusters[%d] : 0x%02x\n", r, g_Vmc_Image[f->unit].header.indir_fat_clusters[r]);
-		DEBUGPRINT(4, "vmc_fs: SuperBlock Info: mc_type               : 0x%02x\n", g_Vmc_Image[f->unit].header.mc_type);
-		DEBUGPRINT(4, "vmc_fs: SuperBlock Info: mc_flag               : 0x%02x\n", g_Vmc_Image[f->unit].header.mc_flag);
+			DEBUGPRINT(4, " SuperBlock Info: indir_fat_clusters[%d] : 0x%02x\n", r, g_Vmc_Image[f->unit].header.indir_fat_clusters[r]);
+		DEBUGPRINT(4, " SuperBlock Info: mc_type               : 0x%02x\n", g_Vmc_Image[f->unit].header.mc_type);
+		DEBUGPRINT(4, " SuperBlock Info: mc_flag               : 0x%02x\n", g_Vmc_Image[f->unit].header.mc_flag);
 
 		if (g_Vmc_Image[f->unit].header.mc_type != PS2_MEMORYCARD) {
 			//  Card is not a PS2 one
-			DEBUGPRINT(1, "vmc_fs: Error vmc file %s is not a valid PS2 image\n", devname);
+			DEBUGPRINT(1, " Error vmc file %s is not a valid PS2 image\n", devname);
 
 			errcode = VMCFS_ERR_CARD_TYPE;
 			goto mountAbort;
 		}
 
 		//Reaching this point means we have a valid PS2 image
-		DEBUGPRINT(4, "vmc_fs: Image file Info: Vmc card type         : %s MemoryCard.\n", (g_Vmc_Image[f->unit].header.mc_type == PSX_MEMORYCARD ? "PSX" : (g_Vmc_Image[f->unit].header.mc_type == PS2_MEMORYCARD ? "PS2" : "PDA")));
+		DEBUGPRINT(4, " Image file Info: Vmc card type         : %s MemoryCard.\n", (g_Vmc_Image[f->unit].header.mc_type == PSX_MEMORYCARD ? "PSX" : (g_Vmc_Image[f->unit].header.mc_type == PS2_MEMORYCARD ? "PS2" : "PDA")));
 
 		g_Vmc_Image[f->unit].total_pages = g_Vmc_Image[f->unit].header.pages_per_cluster * g_Vmc_Image[f->unit].header.clusters_per_card;
 		g_Vmc_Image[f->unit].cluster_size = g_Vmc_Image[f->unit].header.page_size * g_Vmc_Image[f->unit].header.pages_per_cluster;
@@ -1739,14 +1739,14 @@ int Vmc_Mount(iop_file_t *f, const char *fsname, const char *devname, int flag, 
 			g_Vmc_Image[f->unit].ecc_flag = FALSE;
 		} else {
 			//  Card size error
-			DEBUGPRINT(1, "vmc_fs: Error size of vmc file %s is incompatible\n", devname);
+			DEBUGPRINT(1, " Error size of vmc file %s is incompatible\n", devname);
 			errcode = VMCFS_ERR_VMC_SIZE;
 			goto mountAbort;
 		}
 
-		DEBUGPRINT(4, "vmc_fs: Image file Info: Number of pages       : %d\n", g_Vmc_Image[f->unit].total_pages);
-		DEBUGPRINT(4, "vmc_fs: Image file Info: Size of a cluster     : %d bytes\n", g_Vmc_Image[f->unit].cluster_size);
-		DEBUGPRINT(4, "vmc_fs: Image file Info: ECC shunk found       : %s\n", g_Vmc_Image[f->unit].ecc_flag ? "YES" : "NO");
+		DEBUGPRINT(4, " Image file Info: Number of pages       : %d\n", g_Vmc_Image[f->unit].total_pages);
+		DEBUGPRINT(4, " Image file Info: Size of a cluster     : %d bytes\n", g_Vmc_Image[f->unit].cluster_size);
+		DEBUGPRINT(4, " Image file Info: ECC shunk found       : %s\n", g_Vmc_Image[f->unit].ecc_flag ? "YES" : "NO");
 	}
 
 	if (g_Vmc_Image[f->unit].formated == FALSE) {
@@ -1763,7 +1763,7 @@ int Vmc_Mount(iop_file_t *f, const char *fsname, const char *devname, int flag, 
 int Vmc_Umount(iop_file_t *f, const char *fsname)
 {
 
-	DEBUGPRINT(2, "vmc_fs: UnMount %s at mount point: %d\n", fsname, f->unit);
+	DEBUGPRINT(2, " UnMount %s at mount point: %d\n", fsname, f->unit);
 
 	close(g_Vmc_Image[f->unit].fd);
 	g_Vmc_Image[f->unit].fd = VMCFS_ERR_NOT_MOUNT;
@@ -1810,7 +1810,7 @@ int Vmc_Devctl(iop_file_t *f, const char *path, int cmd, void *arg, unsigned int
 
 		default:
 
-			DEBUGPRINT(1, "vmc_fs: Unrecognized devctl command %d\n", cmd);
+			DEBUGPRINT(1, " Unrecognized devctl command %d\n", cmd);
 			break;
 	}
 
@@ -1861,7 +1861,7 @@ int Vmc_Recover(int unit, const char *path1)
 	if (!g_Vmc_Initialized)
 		return VMCFS_ERR_INITIALIZED;
 
-	DEBUGPRINT(1, "vmc_fs: recover %s\n", path1);
+	DEBUGPRINT(1, " recover %s\n", path1);
 
 	if (g_Vmc_Image[unit].fd < 0)
 		return VMCFS_ERR_NOT_MOUNT;
@@ -1891,7 +1891,7 @@ int Vmc_Recover(int unit, const char *path1)
 
 	if (dirent_cluster == ROOT_CLUSTER) {
 
-		DEBUGPRINT(2, "vmc_fs: recover failed. Root directory is protected.\n");
+		DEBUGPRINT(2, " recover failed. Root directory is protected.\n");
 
 		free(path);
 
@@ -1901,7 +1901,7 @@ int Vmc_Recover(int unit, const char *path1)
 
 	} else if (dirent_cluster == NOFOUND_CLUSTER) {
 
-		DEBUGPRINT(2, "vmc_fs: recover failed. %s not found.\n", path1);
+		DEBUGPRINT(2, " recover failed. %s not found.\n", path1);
 
 		free(path);
 
@@ -1926,7 +1926,7 @@ int Vmc_Recover(int unit, const char *path1)
 	filename[0] = '\0';
 	filename++;
 
-	DEBUGPRINT(4, "vmc_fs: Checking attributs parent directory %s\n", path);
+	DEBUGPRINT(4, " Checking attributs parent directory %s\n", path);
 
 	if (path[0] == '\0') {
 
@@ -1941,7 +1941,7 @@ int Vmc_Recover(int unit, const char *path1)
 
 	if (parent_cluster == NOFOUND_CLUSTER) {
 
-		DEBUGPRINT(3, "vmc_fs: Unable to recover %s. Parent directory not found.\n", path1);
+		DEBUGPRINT(3, " Unable to recover %s. Parent directory not found.\n", path1);
 
 		free(path);
 
@@ -1950,17 +1950,17 @@ int Vmc_Recover(int unit, const char *path1)
 		return -1;
 	}
 
-	DEBUGPRINT(6, "vmc_fs: Parent Information.\n");
-	DEBUGPRINT(6, "vmc_fs: parent_cluster  = %u\n", parent_cluster);
-	DEBUGPRINT(6, "vmc_fs: dir_cluster    = %u\n", parent.cluster);
-	DEBUGPRINT(6, "vmc_fs: dirent.name    = %s\n", parent.name);
-	DEBUGPRINT(6, "vmc_fs: dirent.length  = %u\n", parent.length);
-	DEBUGPRINT(6, "vmc_fs: dirent.mode    = %X\n", parent.mode);
-	DEBUGPRINT(6, "vmc_fs: dirent_page    = %i\n", parent_gendata.dirent_page);
+	DEBUGPRINT(6, " Parent Information.\n");
+	DEBUGPRINT(6, " parent_cluster  = %u\n", parent_cluster);
+	DEBUGPRINT(6, " dir_cluster    = %u\n", parent.cluster);
+	DEBUGPRINT(6, " dirent.name    = %s\n", parent.name);
+	DEBUGPRINT(6, " dirent.length  = %u\n", parent.length);
+	DEBUGPRINT(6, " dirent.mode    = %X\n", parent.mode);
+	DEBUGPRINT(6, " dirent_page    = %i\n", parent_gendata.dirent_page);
 
 	if (!(parent.mode & DF_EXISTS)) {
 
-		DEBUGPRINT(3, "vmc_fs: Unable to restore %s. Parent directory %s is hidden.\n", path1, path);
+		DEBUGPRINT(3, " Unable to restore %s. Parent directory %s is hidden.\n", path1, path);
 
 		free(path);
 
@@ -1974,7 +1974,7 @@ int Vmc_Recover(int unit, const char *path1)
 
 		if (dirent.mode & DF_EXISTS) {
 
-			DEBUGPRINT(2, "vmc_fs: recover failed on %s. Directory allready exist.\n", path1);
+			DEBUGPRINT(2, " recover failed on %s. Directory allready exist.\n", path1);
 
 			free(path);
 
@@ -1984,18 +1984,18 @@ int Vmc_Recover(int unit, const char *path1)
 
 		} else {
 
-			DEBUGPRINT(8, "vmc_fs: recover directory %s allready exist but is hidden. Changing attributs.\n", path1);
+			DEBUGPRINT(8, " recover directory %s allready exist but is hidden. Changing attributs.\n", path1);
 
-			DEBUGPRINT(8, "vmc_fs: Following fat table cluster %u\n", dirent.cluster);
+			DEBUGPRINT(8, " Following fat table cluster %u\n", dirent.cluster);
 
 			unsigned int pseudo_entry_cluster = getFatEntry(gendata.fd, dirent.cluster, gendata.indir_fat_clusters, FAT_VALUE);
 
-			DEBUGPRINT(8, "vmc_fs: Changing cluster mask of fat table cluster %u.\n", pseudo_entry_cluster);
+			DEBUGPRINT(8, " Changing cluster mask of fat table cluster %u.\n", pseudo_entry_cluster);
 
 			// change cluster mask of the direntry
 			setFatEntry(gendata.fd, dirent.cluster, pseudo_entry_cluster, gendata.indir_fat_clusters, FAT_SET);
 
-			DEBUGPRINT(8, "vmc_fs: Changing direntry %s attributs.\n", path1);
+			DEBUGPRINT(8, " Changing direntry %s attributs.\n", path1);
 
 			//  Update time stamp, and set dirent.mode to exist flag
 			dirent.mode = dirent.mode | DF_EXISTS;
@@ -2003,13 +2003,13 @@ int Vmc_Recover(int unit, const char *path1)
 			getPs2Time(&dirent.modified);
 			writePage(gendata.fd, (unsigned char *)&dirent, (dirent_cluster + gendata.first_allocatable) * g_Vmc_Image[unit].header.pages_per_cluster + gendata.dirent_page);
 
-			DEBUGPRINT(8, "vmc_fs: Restoring EOF cluster at %u.\n", pseudo_entry_cluster);
+			DEBUGPRINT(8, " Restoring EOF cluster at %u.\n", pseudo_entry_cluster);
 
 			setFatEntry(gendata.fd, pseudo_entry_cluster, EOF_CLUSTER, gendata.indir_fat_clusters, FAT_SET);
 
 			struct direntry pseudo_entries;
 
-			DEBUGPRINT(8, "vmc_fs: Updating pseudo entries time stamps at cluster %u / page %u.\n", dirent.cluster + gendata.first_allocatable, (dirent.cluster + gendata.first_allocatable) * g_Vmc_Image[unit].header.pages_per_cluster);
+			DEBUGPRINT(8, " Updating pseudo entries time stamps at cluster %u / page %u.\n", dirent.cluster + gendata.first_allocatable, (dirent.cluster + gendata.first_allocatable) * g_Vmc_Image[unit].header.pages_per_cluster);
 
 			//  Update time stamp of '.' entry
 			readPage(gendata.fd, (unsigned char *)&pseudo_entries, (dirent.cluster + gendata.first_allocatable) * g_Vmc_Image[unit].header.pages_per_cluster);
@@ -2017,7 +2017,7 @@ int Vmc_Recover(int unit, const char *path1)
 			getPs2Time(&pseudo_entries.modified);
 			writePage(gendata.fd, (unsigned char *)&pseudo_entries, (dirent.cluster + gendata.first_allocatable) * g_Vmc_Image[unit].header.pages_per_cluster);
 
-			DEBUGPRINT(8, "vmc_fs: Updating pseudo entries time stamps at cluster %u / page %u.\n", dirent.cluster + gendata.first_allocatable, (dirent.cluster + gendata.first_allocatable) * g_Vmc_Image[unit].header.pages_per_cluster + 1);
+			DEBUGPRINT(8, " Updating pseudo entries time stamps at cluster %u / page %u.\n", dirent.cluster + gendata.first_allocatable, (dirent.cluster + gendata.first_allocatable) * g_Vmc_Image[unit].header.pages_per_cluster + 1);
 
 			//  Update time stamp of '..' entry
 			readPage(gendata.fd, (unsigned char *)&pseudo_entries, (dirent.cluster + gendata.first_allocatable) * g_Vmc_Image[unit].header.pages_per_cluster + 1);
@@ -2025,7 +2025,7 @@ int Vmc_Recover(int unit, const char *path1)
 			getPs2Time(&pseudo_entries.modified);
 			writePage(gendata.fd, (unsigned char *)&pseudo_entries, (dirent.cluster + gendata.first_allocatable) * g_Vmc_Image[unit].header.pages_per_cluster + 1);
 
-			DEBUGPRINT(2, "vmc_fs: Directory %s recovered.\n", path1);
+			DEBUGPRINT(2, " Directory %s recovered.\n", path1);
 
 			free(path);
 
@@ -2037,7 +2037,7 @@ int Vmc_Recover(int unit, const char *path1)
 
 		if (dirent.mode & DF_EXISTS) {
 
-			DEBUGPRINT(2, "vmc_fs: recover failed on %s. File allready exist.\n", path);
+			DEBUGPRINT(2, " recover failed on %s. File allready exist.\n", path);
 
 			free(path);
 
@@ -2050,7 +2050,7 @@ int Vmc_Recover(int unit, const char *path1)
 			unsigned int current_cluster = 0;
 			unsigned int last_cluster = dirent.cluster;
 
-			DEBUGPRINT(8, "vmc_fs: Restoring fat table clusters of file %s\n", filename);
+			DEBUGPRINT(8, " Restoring fat table clusters of file %s\n", filename);
 
 			while (1) {
 
@@ -2059,9 +2059,9 @@ int Vmc_Recover(int unit, const char *path1)
 				if (current_cluster == FREE_CLUSTER) {
 
 					// FREE_CLUSTER mean last cluster of the direntry is found
-					DEBUGPRINT(8, "vmc_fs: Last cluster of file at %u\n", last_cluster);
+					DEBUGPRINT(8, " Last cluster of file at %u\n", last_cluster);
 
-					DEBUGPRINT(8, "vmc_fs: Restoring End Of File at fat table cluster %u\n", last_cluster);
+					DEBUGPRINT(8, " Restoring End Of File at fat table cluster %u\n", last_cluster);
 
 					setFatEntry(gendata.fd, last_cluster, EOF_CLUSTER, gendata.indir_fat_clusters, FAT_SET);
 
@@ -2070,7 +2070,7 @@ int Vmc_Recover(int unit, const char *path1)
 				} else if (current_cluster == EOF_CLUSTER) {
 
 					// EOF_CLUSTER mean nothing to create or error, so goto end
-					DEBUGPRINT(3, "vmc_fs: Error. EOF_CLUSTER found !!!\n");
+					DEBUGPRINT(3, " Error. EOF_CLUSTER found !!!\n");
 
 					free(path);
 
@@ -2081,7 +2081,7 @@ int Vmc_Recover(int unit, const char *path1)
 					// Otherwise set cluster as free
 					DEBUGPRINT(10, "vmc_fs: Testing cluster %u ... value is %u\n", last_cluster, current_cluster);
 
-					DEBUGPRINT(8, "vmc_fs: Restoring cluster mask at fat table cluster %u\n", last_cluster);
+					DEBUGPRINT(8, " Restoring cluster mask at fat table cluster %u\n", last_cluster);
 
 					setFatEntry(gendata.fd, last_cluster, current_cluster, gendata.indir_fat_clusters, FAT_SET);
 				}
@@ -2089,7 +2089,7 @@ int Vmc_Recover(int unit, const char *path1)
 				last_cluster = current_cluster;
 			}
 
-			DEBUGPRINT(8, "vmc_fs: Restoring direntry at cluster %u / page %u\n", dirent_cluster + gendata.first_allocatable, (dirent.cluster + gendata.first_allocatable) * g_Vmc_Image[unit].header.pages_per_cluster + gendata.dirent_page);
+			DEBUGPRINT(8, " Restoring direntry at cluster %u / page %u\n", dirent_cluster + gendata.first_allocatable, (dirent.cluster + gendata.first_allocatable) * g_Vmc_Image[unit].header.pages_per_cluster + gendata.dirent_page);
 
 			dirent.mode = dirent.mode | DF_EXISTS;
 			getPs2Time(&dirent.created);
@@ -2098,7 +2098,7 @@ int Vmc_Recover(int unit, const char *path1)
 
 			free(path);
 
-			DEBUGPRINT(3, "vmc_fs: File %s restored.\n", path1);
+			DEBUGPRINT(3, " File %s restored.\n", path1);
 		}
 	}
 
@@ -2119,7 +2119,7 @@ unsigned int Vmc_Checkfree(int unit)
 	if (!g_Vmc_Initialized)
 		return VMCFS_ERR_INITIALIZED;
 
-	DEBUGPRINT(1, "vmc_fs: check free %d\n", unit);
+	DEBUGPRINT(1, " check free %d\n", unit);
 
 	if (g_Vmc_Image[unit].fd < 0)
 		return VMCFS_ERR_NOT_MOUNT;
@@ -2150,7 +2150,7 @@ unsigned int Vmc_Checkfree(int unit)
 
 			DEBUGPRINT(10, "vmc_fs: Testing cluster %d ... value is FREE_CLUSTER\n", i);
 
-			DEBUGPRINT(6, "vmc_fs: Free cluster found at %d\n", i);
+			DEBUGPRINT(6, " Free cluster found at %d\n", i);
 
 			free_cluster_num++;
 
@@ -2166,7 +2166,7 @@ unsigned int Vmc_Checkfree(int unit)
 
 			if (cluster_mask != MASK_CLUSTER) {
 
-				DEBUGPRINT(6, "vmc_fs: Free cluster found at %d\n", i);
+				DEBUGPRINT(6, " Free cluster found at %d\n", i);
 
 				free_cluster_num++;
 			}
@@ -2177,7 +2177,7 @@ unsigned int Vmc_Checkfree(int unit)
 
 	PROF_END(vmc_checkfreeProf)
 
-	DEBUGPRINT(3, "vmc_fs: Total free space: %u\n", free_space);
+	DEBUGPRINT(3, " Total free space: %u\n", free_space);
 
 	return free_space;
 }
@@ -2192,7 +2192,7 @@ int Vmc_Clean(int unit)
 	if (!g_Vmc_Initialized)
 		return VMCFS_ERR_INITIALIZED;
 
-	DEBUGPRINT(1, "vmc_fs: clean %d\n", unit);
+	DEBUGPRINT(1, " clean %d\n", unit);
 
 	if (g_Vmc_Image[unit].fd < 0)
 		return VMCFS_ERR_NOT_MOUNT;
@@ -2233,7 +2233,7 @@ int Vmc_Clean(int unit)
 
 			if (cluster_mask != MASK_CLUSTER) {
 
-				DEBUGPRINT(6, "vmc_fs: Setting cluster %d as free cluster.\n", i);
+				DEBUGPRINT(6, " Setting cluster %d as free cluster.\n", i);
 
 				setFatEntry(gendata.fd, i - gendata.first_allocatable, FREE_CLUSTER, gendata.indir_fat_clusters, FAT_SET);
 			}
