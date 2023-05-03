@@ -274,7 +274,8 @@ int FileSystem_ReadDir(FSContext *pContext, FSFileInfo *pInfo)
 	if (stat(buffer, &s) < 0)
 		return -1;
 
-	pInfo->m_eType = S_ISDIR(s.st_mode) ? FT_DIRECTORY : S_ISLNK(s.st_mode) ? FT_LINK : FT_FILE;
+	pInfo->m_eType = S_ISDIR(s.st_mode) ? FT_DIRECTORY : S_ISLNK(s.st_mode) ? FT_LINK :
+	                                                                          FT_FILE;
 	pInfo->m_iSize = s.st_size;
 
 	t = localtime(&s.st_mtime);
@@ -352,11 +353,11 @@ int FileSystem_ReadDir(FSContext *pContext, FSFileInfo *pInfo)
 					printf( "Modified:      \t%02i/%02i/%i \t", ent.stat.mtime[5], ent.stat.mtime[4], (ent.stat.mtime[7] << 8) + ent.stat.mtime[6] );
 					printf( "%02i:%02i:%02i\n", ent.stat.mtime[3], ent.stat.mtime[2], ent.stat.mtime[1] );
 					if( !strcmp(pContext->m_kFile.device->name, "mass") )
-						printf( "Accessed:      \t%02i/%02i/%i\n", ent.stat.atime[5], ent.stat.atime[4], (ent.stat.atime[7] << 8) + ent.stat.atime[6] );
+					    printf( "Accessed:      \t%02i/%02i/%i\n", ent.stat.atime[5], ent.stat.atime[4], (ent.stat.atime[7] << 8) + ent.stat.atime[6] );
 					else if( strcmp(pContext->m_kFile.device->name, "mc") )
 					{
-						printf( "Accessed:      \t%02i/%02i/%i \t", ent.stat.atime[5], ent.stat.atime[4], (ent.stat.atime[7] << 8) + ent.stat.atime[6] );
-						printf( "%02i:%02i:%02i\n", ent.stat.atime[3], ent.stat.atime[2], ent.stat.atime[1] );
+					    printf( "Accessed:      \t%02i/%02i/%i \t", ent.stat.atime[5], ent.stat.atime[4], (ent.stat.atime[7] << 8) + ent.stat.atime[6] );
+					    printf( "%02i:%02i:%02i\n", ent.stat.atime[3], ent.stat.atime[2], ent.stat.atime[1] );
 					}
 					printf( "System time:   \t%02i/%02i/%i \t", tm.month, tm.day, tm.year );
 					printf( "%02i:%02i:%02i  (%i days between)\n\n", tm.hour, tm.min, tm.sec, pInfo->m_iDaysBetween );

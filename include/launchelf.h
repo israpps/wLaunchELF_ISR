@@ -52,13 +52,13 @@
 #include <sior_rpc.h>
 
 #ifdef SIO_DEBUG
-	#define DPRINTF(format, args...) \
-    	sio_printf(format, ##args)
+#define DPRINTF(format, args...) \
+	sio_printf(format, ##args)
 #elif defined(TTY2SIOR) || defined(COMMON_PRINTF) || defined(UDPTTY)
-	#define DPRINTF(format, args...) \
-    	printf("\033[1;94;40m"format"\033[m", ##args)
+#define DPRINTF(format, args...) \
+	printf("\033[1;94;40m" format "\033[m", ##args)
 #else
-	#define DPRINTF(format, args...) // strip away printf from consumer builds
+#define DPRINTF(format, args...)  // strip away printf from consumer builds
 #endif
 
 #define TRUE 1
@@ -132,7 +132,7 @@ enum SETTING_LK {
 
 	SETTING_LK_BTN_COUNT,
 
-	//Special paths
+	// Special paths
 	SETTING_LK_ESR = SETTING_LK_BTN_COUNT,
 	SETTING_LK_OSDSYS,
 
@@ -212,7 +212,7 @@ extern char LaunchElfDir[MAX_PATH], LastDir[MAX_NAME];
 extern int TV_mode;
 extern int swapKeys;
 extern int GUI_active;  // Skin and Main Skin switch
-extern int cdmode;      //Last detected disc type
+extern int cdmode;      // Last detected disc type
 extern u8 console_is_PSX;
 
 void load_vmc_fs(void);
@@ -282,8 +282,8 @@ int printXY_sjis(const unsigned char *s, int x, int y, u64 colour, int);
 char *transcpy_sjis(char *d, const unsigned char *s);
 void loadIcon(void);
 int loadFont(char *path_arg);
-//Comment out WriteFont_C when not used (also requires patch in draw.c)
-//int	WriteFont_C(char *pathname);
+// Comment out WriteFont_C when not used (also requires patch in draw.c)
+// int	WriteFont_C(char *pathname);
 
 /* pad.c */
 #define PAD_R3_V0 0x010000
@@ -298,7 +298,7 @@ int loadFont(char *path_arg);
 extern u32 joy_value;
 extern u32 new_pad;
 #ifdef DS34
-extern int semRunning,semFinish;
+extern int semRunning, semFinish;
 extern int isRunning;
 #endif
 int setupPad(void);
@@ -322,12 +322,12 @@ enum TV_mode {
 extern char PathPad[30][MAX_PATH];
 extern SETTING *setting;
 void initConfig(void);
-int loadConfig(char *, char *);  //0==OK, -1==load failed
+int loadConfig(char *, char *);  // 0==OK, -1==load failed
 void config(char *, char *);
 int get_CNF_string(char **CNF_p_p,
                    char **name_p_p,
-                   char **value_p_p);  //main CNF name,value parser
-char *preloadCNF(char *path);          //loads file into RAM it allocates
+                   char **value_p_p);  // main CNF name,value parser
+char *preloadCNF(char *path);          // loads file into RAM it allocates
 
 /* filer.c */
 typedef struct
@@ -341,9 +341,9 @@ typedef struct
 extern char mountedParty[MOUNT_LIMIT][MAX_NAME];
 extern int latestMount;
 extern int vmcMounted[2];
-extern int vmc_PartyIndex[2];            //PFS index for each VMC, unless -1
-extern int Party_vmcIndex[MOUNT_LIMIT];  //VMC index for each PFS, unless -1
-extern int nparties;                     //Clearing this causes FileBrowser to refresh party list
+extern int vmc_PartyIndex[2];            // PFS index for each VMC, unless -1
+extern int Party_vmcIndex[MOUNT_LIMIT];  // VMC index for each PFS, unless -1
+extern int nparties;                     // Clearing this causes FileBrowser to refresh party list
 extern unsigned char *elisaFnt;
 char *PathPad_menu(const char *path);
 int getFilePath(char *out, const int cnfmode);
@@ -418,26 +418,26 @@ void Load_External_Language(void);
 
 extern unsigned char font_uLE[];
 enum {
-	//0x100-0x109 are 5 double width characters for D-Pad buttons, which are accessed as:
+	// 0x100-0x109 are 5 double width characters for D-Pad buttons, which are accessed as:
 	//"ÿ0"==Circle  "ÿ1"==Cross  "ÿ2"==Square  "ÿ3"==Triangle  "ÿ4"==filled Square
-	RIGHT_CUR = 0x10A,  //Triangle pointing left, for use to the right of an item
-	LEFT_CUR = 0x10B,   //Triangle pointing right, for use to the left of an item
-	UP_ARROW = 0x10C,   //Arrow pointing up
-	DN_ARROW = 0x10D,   //Arrow pointing up
-	LT_ARROW = 0x10E,   //Arrow pointing up
-	RT_ARROW = 0x10F,   //Arrow pointing up
-	TEXT_CUR = 0x110,   //Vertical bar, for use between two text characters
-	UL_ARROW = 0x111,   //Arrow pointing up and to the left, from a vertical start.
-	BR_SPLIT = 0x112,   //Splits rectangle from BL to TR with BR portion filled
-	BL_SPLIT = 0x113,   //Splits rectangle from TL to BR with BL portion filled
-	                    //0x114-0x11B are 4 double width characters for D-Pad buttons, which are accessed as:
-	                    //"ÿ:"==Right  "ÿ;"==Down  "ÿ<"==Left  "ÿ="==Up
-	                    //0x11C-0x123 are 4 doubled characters used as normal/marked folder/file icons
+	RIGHT_CUR = 0x10A,  // Triangle pointing left, for use to the right of an item
+	LEFT_CUR = 0x10B,   // Triangle pointing right, for use to the left of an item
+	UP_ARROW = 0x10C,   // Arrow pointing up
+	DN_ARROW = 0x10D,   // Arrow pointing up
+	LT_ARROW = 0x10E,   // Arrow pointing up
+	RT_ARROW = 0x10F,   // Arrow pointing up
+	TEXT_CUR = 0x110,   // Vertical bar, for use between two text characters
+	UL_ARROW = 0x111,   // Arrow pointing up and to the left, from a vertical start.
+	BR_SPLIT = 0x112,   // Splits rectangle from BL to TR with BR portion filled
+	BL_SPLIT = 0x113,   // Splits rectangle from TL to BR with BL portion filled
+	                   // 0x114-0x11B are 4 double width characters for D-Pad buttons, which are accessed as:
+	                   //"ÿ:"==Right  "ÿ;"==Down  "ÿ<"==Left  "ÿ="==Up
+	                   // 0x11C-0x123 are 4 doubled characters used as normal/marked folder/file icons
 	ICON_FOLDER = 0x11C,
 	ICON_M_FOLDER = 0x11E,
 	ICON_FILE = 0x120,
 	ICON_M_FILE = 0x122,
-	FONT_COUNT = 0x124  //Total number of characters in font
+	FONT_COUNT = 0x124  // Total number of characters in font
 };
 
 /* makeicon.c */
@@ -445,7 +445,7 @@ int make_icon(char *icontext, char *filename);
 int make_iconsys(char *title, char *iconname, char *filename);
 
 
-//vmcfs definitions
+// vmcfs definitions
 
 //  The devctl commands: 0x56 == V, 0x4D == M, 0x43 == C, 0x01, 0x02, ... == command number.
 #define DEVCTL_VMCFS_CLEAN 0x564D4301   //  Set as free all fat cluster corresponding to a none existing object. ( Object are just marked as none existing but not removed from fat table when rmdir or remove fonctions are call. This allow to recover a deleted file. )
@@ -464,7 +464,7 @@ typedef enum {
 // chkesr_rpc.c
 extern int Check_ESR_Disc(void);
 
-//USB_mass definitions for multiple drive usage
+// USB_mass definitions for multiple drive usage
 
 #define USB_MASS_MAX_DRIVES 10
 
@@ -472,6 +472,6 @@ extern char USB_mass_ix[10];
 extern int USB_mass_max_drives;
 extern u64 USB_mass_scan_time;
 extern int USB_mass_scanned;
-extern int USB_mass_loaded;  //0==none, 1==internal, 2==external
+extern int USB_mass_loaded;  // 0==none, 1==internal, 2==external
 
 #endif

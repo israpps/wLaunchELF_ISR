@@ -1,5 +1,5 @@
 //---------------------------------------------------------------------------
-//File name:    lang.c
+// File name:    lang.c
 //---------------------------------------------------------------------------
 #include "launchelf.h"
 
@@ -40,136 +40,136 @@ int get_LANG_string(u8 **LANG_p_p, u8 **id_p_p, u8 **value_p_p)
 
 start_line:
 	while (*tp <= ' ' && *tp > '\0')
-		tp += 1;  //Skip leading whitespace, if any
+		tp += 1;  // Skip leading whitespace, if any
 	if (*tp == '\0')
-		goto exit;  //but exit at EOF
-	//Current pos is potential "lang(" entry, but we must verify this
-	if (tp[0] == '/' && tp[1] == '/')  //It may be a comment line
-	{                                  //We must skip a comment line
+		goto exit;  // but exit at EOF
+	// Current pos is potential "lang(" entry, but we must verify this
+	if (tp[0] == '/' && tp[1] == '/')  // It may be a comment line
+	{                                  // We must skip a comment line
 		while (*tp != '\r' && *tp != '\n' && *tp > '\0')
-			tp += 1;      //Seek line end
-		goto start_line;  //Go back to try next line
+			tp += 1;      // Seek line end
+		goto start_line;  // Go back to try next line
 	}
 	ret = -2;
-	//Here tp points to a non-zero string that is not a comment
+	// Here tp points to a non-zero string that is not a comment
 	if (strncmp(tp, "lang", 4))
-		goto exit;  //Return error if not 'lang' macro
-	tp += 4;        //but if it is, step past that name
+		goto exit;  // Return error if not 'lang' macro
+	tp += 4;        // but if it is, step past that name
 	ret = -3;
 	while (*tp <= ' ' && *tp != '\r' && *tp != '\n' && *tp > '\0')
-		tp += 1;  //skip inline whitespace
+		tp += 1;  // skip inline whitespace
 	if (*tp == '\0')
-		goto exit;  //but exit at EOF
+		goto exit;  // but exit at EOF
 	ret = -4;
-	//Here tp points to a non-zero string that should be an opening parenthesis
+	// Here tp points to a non-zero string that should be an opening parenthesis
 	if (*tp != '(')
-		goto exit;  //Return error if no opening parenthesis
-	tp += 1;        //but if it is, step past this character
+		goto exit;  // Return error if no opening parenthesis
+	tp += 1;        // but if it is, step past this character
 	ret = -5;
 	while (*tp <= ' ' && *tp != '\r' && *tp != '\n' && *tp > '\0')
-		tp += 1;  //skip inline whitespace
+		tp += 1;  // skip inline whitespace
 	if (*tp == '\0')
-		goto exit;  //but exit at EOF
+		goto exit;  // but exit at EOF
 	ret = -6;
-	//Here tp points to a non-zero string that should be an index number
+	// Here tp points to a non-zero string that should be an index number
 	if (*tp < '0' || *tp > '9')
-		goto exit;  //Return error if it's not a number
-	ip = tp;        //but if it is, save this pos as id start
+		goto exit;  // Return error if it's not a number
+	ip = tp;        // but if it is, save this pos as id start
 	while (*tp >= '0' && *tp <= '9')
-		tp += 1;  //skip past the index number
+		tp += 1;  // skip past the index number
 	ret = -7;
 	while (*tp <= ' ' && *tp != '\r' && *tp != '\n' && *tp > '\0')
-		tp += 1;  //skip inline whitespace
+		tp += 1;  // skip inline whitespace
 	if (*tp == '\0')
-		goto exit;  //but exit at EOF
+		goto exit;  // but exit at EOF
 	ret = -8;
-	//Here tp points to a non-zero string that should be a comma
+	// Here tp points to a non-zero string that should be a comma
 	if (*tp != ',')
-		goto exit;  //Return error if no comma after index
-	tp += 1;        //but if present, step past that comma
+		goto exit;  // Return error if no comma after index
+	tp += 1;        // but if present, step past that comma
 	ret = -9;
 	while (*tp <= ' ' && *tp != '\r' && *tp != '\n' && *tp > '\0')
-		tp += 1;  //skip inline whitespace
+		tp += 1;  // skip inline whitespace
 	if (*tp == '\0')
-		goto exit;  //but exit at EOF
+		goto exit;  // but exit at EOF
 	ret = -10;
-	//Here tp points to a non-zero string that should be a symbolic string name
-	//But we don't need to process this for language switch purposes, so we ignore it
-	//This may be changed later, to use the name for generating error messages
+	// Here tp points to a non-zero string that should be a symbolic string name
+	// But we don't need to process this for language switch purposes, so we ignore it
+	// This may be changed later, to use the name for generating error messages
 	while (*tp != ',' && *tp != '\r' && *tp != '\n' && *tp > '\0')
-		tp += 1;  //seek inline comma
+		tp += 1;  // seek inline comma
 	if (*tp != ',')
-		goto exit;  //Return error if no comma after string name
-	tp += 1;        //but if present, step past that comma
+		goto exit;  // Return error if no comma after string name
+	tp += 1;        // but if present, step past that comma
 	ret = -11;
 	while (*tp <= ' ' && *tp != '\r' && *tp != '\n' && *tp > '\0')
-		tp += 1;  //skip inline whitespace
+		tp += 1;  // skip inline whitespace
 	if (*tp == '\0')
-		goto exit;  //but exit at EOF
+		goto exit;  // but exit at EOF
 	ret = -12;
-	//Here tp points to a non-zero string that should be the opening quote character
+	// Here tp points to a non-zero string that should be the opening quote character
 	if (*tp != '\"')
-		goto exit;  //Return error if no opening quote
-	tp += 1;        //but if present, step past that quote
+		goto exit;  // Return error if no opening quote
+	tp += 1;        // but if present, step past that quote
 	ret = -13;
-	vp = tp;  //save this pos as value start
+	vp = tp;  // save this pos as value start
 close_quote:
 	while (*tp != '\"' && *tp != '\r' && *tp != '\n' && *tp > '\0')
-		tp += 1;  //seek inline quote
+		tp += 1;  // seek inline quote
 	if (*tp != '\"')
-		return -13;  //Return error if no closing quote
-	cp = tp - 1;     //save previous pos as check pointer
-	tp += 1;         //step past the quote character
+		return -13;  // Return error if no closing quote
+	cp = tp - 1;     // save previous pos as check pointer
+	tp += 1;         // step past the quote character
 	if (*cp == '\\')
-		goto close_quote;  //if this was an 'escaped' quote, try again
-	//Here tp points to the character after the closing quote.
-	length = (tp - 1) - vp;  //prepare string length for return value
+		goto close_quote;  // if this was an 'escaped' quote, try again
+	// Here tp points to the character after the closing quote.
+	length = (tp - 1) - vp;  // prepare string length for return value
 	ret = -14;
 	while (*tp <= ' ' && *tp != '\r' && *tp != '\n' && *tp > '\0')
-		tp += 1;  //skip inline whitespace
+		tp += 1;  // skip inline whitespace
 	if (*tp == '\0')
-		goto exit;  //but exit at EOF
+		goto exit;  // but exit at EOF
 	ret = -15;
-	//Here tp points to a non-zero string that should be closing parenthesis
+	// Here tp points to a non-zero string that should be closing parenthesis
 	if (*tp != ')')
-		goto exit;  //Return error if no closing parenthesis
-	tp += 1;        //but if present, step past the parenthesis
+		goto exit;  // Return error if no closing parenthesis
+	tp += 1;        // but if present, step past the parenthesis
 	ret = -16;
 	while (*tp <= ' ' && *tp != '\r' && *tp != '\n' && *tp > '\0')
-		tp += 1;  //skip inline whitespace
+		tp += 1;  // skip inline whitespace
 	if (*tp == '\0')
-		goto exit;  //but exit at EOF
-	//Here tp points to a non-zero string that should be line end or a comment
+		goto exit;  // but exit at EOF
+	// Here tp points to a non-zero string that should be line end or a comment
 	if (tp[0] != '/' || tp[1] != '/')
-		goto finish_line;  //if no comment, go handle line end
+		goto finish_line;  // if no comment, go handle line end
 	ret = -17;
 	while (*tp != '\r' && *tp != '\n' && *tp > '\0')
-		tp += 1;  //Seek line end
+		tp += 1;  // Seek line end
 	if (*tp == '\0')
-		goto exit;  //but exit at EOF
+		goto exit;  // but exit at EOF
 finish_line:
 	ret = -18;
 	if (*tp != '\r' && *tp != '\n')
-		goto exit;  //Return error if not valid line end
+		goto exit;  // Return error if not valid line end
 	if (tp[0] == '\r' && tp[1] == '\n')
-		tp += 1;  //Step an extra pos for CR+LF
-	tp += 1;      //Step past valid line end
-	//Here tp points beyond the line of the processed string, so we're done
+		tp += 1;  // Step an extra pos for CR+LF
+	tp += 1;      // Step past valid line end
+	// Here tp points beyond the line of the processed string, so we're done
 	ret = length;
 
 exit:
-	*LANG_p_p = tp;   //return new LANG file position
-	*id_p_p = ip;     //return found index
-	*value_p_p = vp;  //return found string value
-	return ret;       //return control to caller
+	*LANG_p_p = tp;   // return new LANG file position
+	*id_p_p = ip;     // return found index
+	*value_p_p = vp;  // return found string value
+	return ret;       // return control to caller
 }
-//Ends get_LANG_string
+// Ends get_LANG_string
 //---------------------------------------------------------------------------
 void Init_Default_Language(void)
 {
 	memcpy(Lang_String, Lang_Default, sizeof(Lang_String));
 }
-//Ends Init_Default_Language
+// Ends Init_Default_Language
 //---------------------------------------------------------------------------
 void Load_External_Language(void)
 {
@@ -182,24 +182,24 @@ void Load_External_Language(void)
 	int lang_size = 0;
 	int fd;
 
-	if (External_Lang_Buffer != NULL) {  //if an external buffer was allocated before
-		free(External_Lang_Buffer);      //release that buffer before the new attempt
+	if (External_Lang_Buffer != NULL) {  // if an external buffer was allocated before
+		free(External_Lang_Buffer);      // release that buffer before the new attempt
 		External_Lang_Buffer = NULL;
 	}
 
 	Language *Lang = Lang_Default;
 	memcpy(Lang_String, Lang, sizeof(Lang_String));
 
-	if (strlen(setting->lang_file) != 0) {  //if language file string set
+	if (strlen(setting->lang_file) != 0) {  // if language file string set
 
 		error_id = -2;
 		genFixPath(setting->lang_file, filePath);
 		fd = genOpen(filePath, O_RDONLY);
-		if (fd >= 0) {  //if file opened OK
+		if (fd >= 0) {  // if file opened OK
 			int file_size = genLseek(fd, 0, SEEK_END);
 
 			error_id = -3;
-			if (file_size > 0) {  //if file size OK
+			if (file_size > 0) {  // if file size OK
 				error_id = -4;
 				file_bp = (u8 *)malloc(file_size + 1);
 				if (file_bp == NULL)
@@ -209,43 +209,43 @@ void Load_External_Language(void)
 				genLseek(fd, 0, SEEK_SET);
 				if (genRead(fd, file_bp, file_size) != file_size)
 					goto release_1;
-				file_bp[file_size] = '\0';  //enforce termination at buffer end
+				file_bp[file_size] = '\0';  // enforce termination at buffer end
 
 				error_id = -6;
 				file_tp = file_bp;
 				while (1) {
 					oldf_tp = file_tp;
 					test = get_LANG_string(&file_tp, &id_p, &value_p);
-					if (test == -1)           //if EOF reached without other error
-						break;                //break from the loop normally
-					if (test < 0)             //At any fatal error result
-						goto release_1;       //go release file buffer
-					index = atoi(id_p);       //get the string index
-					if (index >= LANG_COUNT)  //At any fatal error result
-						goto release_1;       //go release file buffer
-					lang_size += test + 1;    //Include terminator space for total size
+					if (test == -1)           // if EOF reached without other error
+						break;                // break from the loop normally
+					if (test < 0)             // At any fatal error result
+						goto release_1;       // go release file buffer
+					index = atoi(id_p);       // get the string index
+					if (index >= LANG_COUNT)  // At any fatal error result
+						goto release_1;       // go release file buffer
+					lang_size += test + 1;    // Include terminator space for total size
 				}
-				//Here lang_size is the space needed for real language buffer,
+				// Here lang_size is the space needed for real language buffer,
 
 				error_id = -7;
-				lang_bp = (u8 *)malloc(lang_size + 1);  //allocate real language buffer
+				lang_bp = (u8 *)malloc(lang_size + 1);  // allocate real language buffer
 				if (lang_bp == NULL)
 					goto release_1;
 
-				//We're ready to read language strings, but must first init all pointers
-				//to use default strings, for any indexes left undefined by the file
+				// We're ready to read language strings, but must first init all pointers
+				// to use default strings, for any indexes left undefined by the file
 				memcpy(Lang_Extern, Lang, sizeof(Lang_Extern));
 
 				file_tp = file_bp;
 				lang_tp = lang_bp;
 				while ((test = get_LANG_string(&file_tp, &id_p, &value_p)) >= 0) {
-					index = atoi(id_p);                   //get the string index
-					Lang_Extern[index].String = lang_tp;  //save pointer to this string base
-					strncpy(lang_tp, value_p, test);      //transfer the string
-					lang_tp[test] = '\0';                 //transfer a terminator
-					lang_tp += test + 1;                  //move dest pointer past this string
+					index = atoi(id_p);                   // get the string index
+					Lang_Extern[index].String = lang_tp;  // save pointer to this string base
+					strncpy(lang_tp, value_p, test);      // transfer the string
+					lang_tp[test] = '\0';                 // transfer a terminator
+					lang_tp += test + 1;                  // move dest pointer past this string
 				}
-				External_Lang_Buffer = (Language *)lang_bp;  //Save base pointer for releases
+				External_Lang_Buffer = (Language *)lang_bp;  // Save base pointer for releases
 				Lang = Lang_Extern;
 				error_id = 0;
 			release_1:
@@ -265,13 +265,13 @@ void Load_External_Language(void)
 		        "%n",
 		        error_id, test, index, &stp);
 		pos += stp;
-		if (error_id == -2) {  //if file open failure
+		if (error_id == -2) {  // if file open failure
 			sprintf(tmp_s + pos,
 			        "This was a failure to open the file:\n"
 			        "\"%s\"\n",
 			        filePath);
 		}
-		if (error_id == -6) {  //if parsing error
+		if (error_id == -6) {  // if parsing error
 			strncpy(t1_s, oldf_tp, 100);
 			t1_s[100] = '\0';
 			strncpy(t2_s, file_tp, 100);
@@ -293,7 +293,7 @@ void Load_External_Language(void)
 	char *tmp;
 
 	if (strlen(setting->Misc) > 0) {
-		for (i = 0; i < 16; i++) {  //Loop to rename the ELF paths with new language for launch keys
+		for (i = 0; i < 16; i++) {  // Loop to rename the ELF paths with new language for launch keys
 			if ((i < 12) || (setting->LK_Flag[i] != 0)) {
 				if (!strncmp(setting->LK_Path[i], setting->Misc, strlen(setting->Misc))) {
 					tmp = strrchr(setting->LK_Path[i], '/');
@@ -358,7 +358,7 @@ void Load_External_Language(void)
 	sprintf(setting->Misc_Show_Build_Info, "%s/%s", LNG(MISC), LNG(Build_Info));
 	sprintf(setting->Misc_OSDSYS, "%s/%s", LNG(MISC), LNG(OSDSYS));
 }
-//Ends Load_External_Language
+// Ends Load_External_Language
 //---------------------------------------------------------------------------
-//End of file:  lang.c
+// End of file:  lang.c
 //---------------------------------------------------------------------------
