@@ -1,4 +1,5 @@
 IOP_BIN = AllowDVDV.irx
+IOP_BIN_DIR = ../
 IOP_OBJS = AllowDVDV.o imports.o
 
 IOP_CFLAGS += -Wall -fno-builtin -D_IOP

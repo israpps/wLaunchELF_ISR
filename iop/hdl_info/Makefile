@@ -1,5 +1,6 @@
 IOP_BIN		= hdl_info.irx
 IOP_OBJS	= main.o hdd.o apa.o hdl.o imports.o exports.o
+IOP_BIN_DIR = ../
 
 all: $(IOP_BIN)
 

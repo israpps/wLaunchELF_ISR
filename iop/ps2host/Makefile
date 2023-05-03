@@ -1,5 +1,6 @@
 
 IOP_BIN  = ps2host.irx
+IOP_BIN_DIR = ../../../
 IOP_OBJS = net_fsys.o net_fio.o ps2host.o imports.o
 
 IOP_INCS += -I../include
