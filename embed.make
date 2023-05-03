@@ -44,7 +44,7 @@ endif
 
 # ----- #
 
-oldlibs/libcdvd/lib/cdvd.irx: oldlibs/libcdvd
+iop/oldlibs/libcdvd/lib/cdvd.irx: iop/oldlibs/libcdvd
 	$(MAKE) -C $<
 
 $(EE_ASM_DIR)cdvd_irx.s: oldlibs/libcdvd/lib/cdvd.irx | $(EE_ASM_DIR)
@@ -82,7 +82,7 @@ $(EE_ASM_DIR)ps2host_irx.s: ps2host/ps2host.irx | $(EE_ASM_DIR)
 	$(BIN2S) $< $@ ps2host_irx
 endif
 
-oldlibs/ps2ftpd/bin/ps2ftpd.irx: oldlibs/ps2ftpd
+iop/oldlibs/ps2ftpd/bin/ps2ftpd.irx: iop/oldlibs/ps2ftpd
 	$(MAKE) -C $<
 
 $(EE_ASM_DIR)ps2atad_irx.s: $(PS2SDK)/iop/irx/ps2atad.irx | $(EE_ASM_DIR)
@@ -102,25 +102,25 @@ $(EE_ASM_DIR)dvrfile_irx.s: iop/dvrfile.irx | $(EE_ASM_DIR)
 	$(BIN2S) $< $@ dvrfile_irx
 endif
 
-hdl_info/hdl_info.irx: hdl_info
+iop/hdl_info/hdl_info.irx: iop/hdl_info
 	$(MAKE) -C $<
 
 $(EE_ASM_DIR)hdl_info_irx.s: hdl_info/hdl_info.irx | $(EE_ASM_DIR)
 	$(BIN2S) $< $@ hdl_info_irx
 
-ps2host/ps2host.irx: ps2host
+iop/ps2host/ps2host.irx: iop/ps2host
 	$(MAKE) -C $<
 
-ds34usb/ee/libds34usb.a: ds34usb/ee
+iop/ds34usb/ee/libds34usb.a: iop/ds34usb/ee
 	$(MAKE) -C $<
 
-ds34usb/iop/ds34usb.irx: ds34usb/iop
+iop/ds34usb/iop/ds34usb.irx: iop/ds34usb/iop
 	$(MAKE) -C $<
 
-ds34bt/ee/libds34bt.a: ds34bt/ee
+iop/ds34bt/ee/libds34bt.a: iop/ds34bt/ee
 	$(MAKE) -C $<
 
-ds34bt/iop/ds34bt.irx: ds34bt/iop
+iop/ds34bt/iop/ds34bt.irx: iop/ds34bt/iop
 	$(MAKE) -C $<
 
 $(EE_ASM_DIR)ds34usb.s: ds34usb/iop/ds34usb.irx | $(EE_ASM_DIR)
@@ -143,10 +143,10 @@ $(EE_ASM_DIR)smbman_irx.s: $(PS2SDK)/iop/irx/smbman.irx | $(EE_ASM_DIR)
 	$(BIN2S) $< $@ smbman_irx
 endif
 
-vmc_fs/vmc_fs.irx: vmc_fs
+iop/vmc_fs/vmc_fs.irx: iop/vmc_fs
 	$(MAKE) -C $<
 
-$(EE_ASM_DIR)vmc_fs_irx.s: vmc_fs/vmc_fs.irx | $(EE_ASM_DIR)
+$(EE_ASM_DIR)vmc_fs_irx.s: iop/vmc_fs/vmc_fs.irx | $(EE_ASM_DIR)
 	$(BIN2S) $< $@ vmc_fs_irx
 
 loader/loader.elf: loader
@@ -164,8 +164,8 @@ $(EE_ASM_DIR)sior_irx.s: $(PS2SDK)/iop/irx/sior.irx | $(EE_ASM_DIR)
 $(EE_ASM_DIR)tty2sior_irx.s: iop/tty2sior.irx | $(EE_ASM_DIR)
 	$(BIN2S) $< $@ tty2sior_irx
 
-AllowDVDV/AllowDVDV.irx: AllowDVDV
+iop/AllowDVDV/AllowDVDV.irx: iop/AllowDVDV
 	$(MAKE) -C $<
 
-$(EE_ASM_DIR)allowdvdv_irx.s: AllowDVDV/AllowDVDV.irx
+$(EE_ASM_DIR)allowdvdv_irx.s: iop/AllowDVDV/AllowDVDV.irx
 	$(BIN2S) $< $@ allowdvdv_irx
