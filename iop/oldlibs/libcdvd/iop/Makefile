@@ -1,4 +1,4 @@
-IOP_BIN = ../lib/cdvd.irx
+IOP_BIN = ../../../cdvd.irx
 
 IOP_OBJS = cdvd_iop.o imports.o
 

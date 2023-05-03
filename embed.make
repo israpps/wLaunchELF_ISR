@@ -47,7 +47,7 @@ endif
 iop/oldlibs/libcdvd/lib/cdvd.irx: iop/oldlibs/libcdvd
 	$(MAKE) -C $<
 
-$(EE_ASM_DIR)cdvd_irx.s: oldlibs/libcdvd/lib/cdvd.irx | $(EE_ASM_DIR)
+$(EE_ASM_DIR)cdvd_irx.s: iop/oldlibs/libcdvd/lib/cdvd.irx | $(EE_ASM_DIR)
 	$(BIN2S) $< $@ cdvd_irx
 
 $(EE_ASM_DIR)poweroff_irx.s: $(PS2SDK)/iop/irx/poweroff.irx | $(EE_ASM_DIR)
@@ -72,13 +72,13 @@ $(EE_ASM_DIR)udptty.s: $(PS2SDK)/iop/irx/udptty.irx | $(EE_ASM_DIR)
 $(EE_ASM_DIR)ps2smap_irx.s: $(PS2DEV)/ps2eth/smap/ps2smap.irx | $(EE_ASM_DIR)
 	$(BIN2S) $< $@ ps2smap_irx
 
-$(EE_ASM_DIR)ps2ftpd_irx.s: oldlibs/ps2ftpd/bin/ps2ftpd.irx | $(EE_ASM_DIR)
+$(EE_ASM_DIR)ps2ftpd_irx.s: iop/oldlibs/ps2ftpd/bin/ps2ftpd.irx | $(EE_ASM_DIR)
 	$(BIN2S) $< $@ ps2ftpd_irx
 
 $(EE_ASM_DIR)ps2netfs_irx.s: $(PS2SDK)/iop/irx/ps2netfs.irx | $(EE_ASM_DIR)
 	$(BIN2S) $< $@ ps2netfs_irx
 
-$(EE_ASM_DIR)ps2host_irx.s: ps2host/ps2host.irx | $(EE_ASM_DIR)
+$(EE_ASM_DIR)ps2host_irx.s: iop/ps2host.irx | $(EE_ASM_DIR)
 	$(BIN2S) $< $@ ps2host_irx
 endif
 
@@ -105,7 +105,7 @@ endif
 iop/hdl_info/hdl_info.irx: iop/hdl_info
 	$(MAKE) -C $<
 
-$(EE_ASM_DIR)hdl_info_irx.s: hdl_info/hdl_info.irx | $(EE_ASM_DIR)
+$(EE_ASM_DIR)hdl_info_irx.s: iop/hdl_info.irx | $(EE_ASM_DIR)
 	$(BIN2S) $< $@ hdl_info_irx
 
 iop/ps2host/ps2host.irx: iop/ps2host
@@ -123,7 +123,7 @@ iop/ds34bt/ee/libds34bt.a: iop/ds34bt/ee
 iop/ds34bt/iop/ds34bt.irx: iop/ds34bt/iop
 	$(MAKE) -C $<
 
-$(EE_ASM_DIR)ds34usb.s: ds34usb/iop/ds34usb.irx | $(EE_ASM_DIR)
+$(EE_ASM_DIR)ds34usb.s: iop/ds34usb.irx | $(EE_ASM_DIR)
 	$(BIN2S) $< $@ ds34usb_irx
 
 $(EE_OBJS_DIR)libds34usb.a: ds34usb/ee/libds34usb.a
@@ -132,7 +132,7 @@ $(EE_OBJS_DIR)libds34usb.a: ds34usb/ee/libds34usb.a
 $(EE_OBJS_DIR)libds34bt.a: ds34bt/ee/libds34bt.a
 	cp $< $@
 
-$(EE_ASM_DIR)ds34bt.s: ds34bt/iop/ds34bt.irx | $(EE_ASM_DIR)
+$(EE_ASM_DIR)ds34bt.s: iop/ds34bt.irx | $(EE_ASM_DIR)
 	$(BIN2S) $< $@ ds34bt_irx
 
 $(EE_ASM_DIR)padman.s: $(PS2SDK)/iop/irx/padman.irx | $(EE_ASM_DIR)
@@ -146,7 +146,7 @@ endif
 iop/vmc_fs/vmc_fs.irx: iop/vmc_fs
 	$(MAKE) -C $<
 
-$(EE_ASM_DIR)vmc_fs_irx.s: iop/vmc_fs/vmc_fs.irx | $(EE_ASM_DIR)
+$(EE_ASM_DIR)vmc_fs_irx.s: iop/vmc_fs.irx | $(EE_ASM_DIR)
 	$(BIN2S) $< $@ vmc_fs_irx
 
 loader/loader.elf: loader
@@ -167,5 +167,5 @@ $(EE_ASM_DIR)tty2sior_irx.s: iop/tty2sior.irx | $(EE_ASM_DIR)
 iop/AllowDVDV/AllowDVDV.irx: iop/AllowDVDV
 	$(MAKE) -C $<
 
-$(EE_ASM_DIR)allowdvdv_irx.s: iop/AllowDVDV/AllowDVDV.irx
+$(EE_ASM_DIR)allowdvdv_irx.s: iop/AllowDVDV.irx
 	$(BIN2S) $< $@ allowdvdv_irx
