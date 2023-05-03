@@ -183,6 +183,7 @@ clean:
 	rm -f githash.h $(EE_BIN) $(EE_BIN_PKD)
 	rm -rf $(EE_OBJS_DIR)
 	rm -rf $(EE_ASM_DIR)
+	rm -f iop/*.irx
 
 rebuild: clean all
 
