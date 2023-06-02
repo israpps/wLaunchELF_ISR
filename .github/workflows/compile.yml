@@ -50,9 +50,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        eth: ["ETH=0", "ETH=1", "ETH=1 UDPTTY=1"]
+        eth: ["ETH=0", "ETH=1", "ETH=1 UDPTTY=1", "ETH=1 UDPTTY=0 SIO_DEBUG=1"]
         bdmstuff: ["EXFAT=0", "EXFAT=1"]
-        sior: ["SIO_DEBUG=0", "SIO_DEBUG=1"]
         iopreset: ["IOP_RESET=0", "IOP_RESET=1"]
     runs-on: ubuntu-latest
     container: ps2dev/ps2dev:v1.0
@@ -74,7 +73,7 @@ jobs:
   
     - name: Compile wLaunchELF ISO Image
       run: |
-        make rebuild isoclean iso ${{ matrix.eth }} ${{ matrix.sior }} ${{ matrix.bdmstuff }} ${{ matrix.iopreset }} PACK_ISO=YES ${{ github.event.inputs.make_args }}
+        make rebuild isoclean iso ${{ matrix.eth }} ${{ matrix.bdmstuff }} ${{ matrix.iopreset }} PACK_ISO=YES ${{ github.event.inputs.make_args }}
 
     - name: Upload variants artifact ELF
       uses: actions/upload-artifact@v3
