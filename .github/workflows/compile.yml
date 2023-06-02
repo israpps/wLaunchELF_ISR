@@ -60,7 +60,7 @@ jobs:
   
     - name: Install dependencies
       run: |
-        apk add make git zip
+        apk add make git zip cdrkit
   
     - uses: actions/checkout@v3
     - run: |

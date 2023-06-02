@@ -176,8 +176,8 @@ ISO_BIN_ELF ?= ISRA_000.00
 SYSTEMCNF_VERSION ?= 1.00
 SYSTEMCNF_VMODE ?= PAL
 ISO_BIN_DUMMYSIZE ?= 64
-iso: $(ISO_BIN_DIR) $(ISO_BIN_DIR)system.cnf BOOT2.ELF
-	cp BOOT2.ELF $(ISO_BIN_DIR)$(ISO_BIN_ELF)
+iso: $(ISO_BIN_DIR) $(ISO_BIN_DIR)system.cnf $(EE_BIN_PKD)
+	cp $(EE_BIN_PKD) $(ISO_BIN_DIR)$(ISO_BIN_ELF)
 	echo "Extra Build features: $(BIN_NAME)" > "$(ISO_BIN_DIR)BUILD_OPT.TXT"
 	dd if=/dev/zero  of="$(ISO_BIN_DIR)DUMMY.BIN"  bs=1M  count=$(ISO_BIN_DUMMYSIZE)
 	mkisofs -o "$(ISO_BIN)" "$(ISO_BIN_DIR)"
