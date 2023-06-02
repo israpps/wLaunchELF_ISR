@@ -169,3 +169,33 @@ iop/AllowDVDV.irx: iop/AllowDVDV
 
 $(EE_ASM_DIR)allowdvdv_irx.s: iop/AllowDVDV.irx
 	$(BIN2S) $< $@ allowdvdv_irx
+
+ISO_BIN_DIR ?= iso/
+ISO_BIN ?= wLE_ISR$(BIN_NAME).iso
+ISO_BIN_ELF ?= ISRA_000.00
+SYSTEMCNF_VERSION ?= 1.00
+SYSTEMCNF_VMODE ?= PAL
+ISO_BIN_DUMMYSIZE ?= 64
+iso: $(ISO_BIN_DIR) $(ISO_BIN_DIR)system.cnf BOOT2.ELF
+	cp BOOT2.ELF $(ISO_BIN_DIR)$(ISO_BIN_ELF)
+	echo "Extra Build features: $(BIN_NAME)" > "$(ISO_BIN_DIR)BUILD_OPT.TXT"
+	dd if=/dev/zero  of="$(ISO_BIN_DIR)DUMMY.BIN"  bs=1M  count=$(ISO_BIN_DUMMYSIZE)
+	mkisofs -o "$(ISO_BIN)" "$(ISO_BIN_DIR)"
+	$(info ISO generation finished.)
+ifeq ($(PACK_ISO), YES)
+	$(info ISO will be compressed)
+	zip -q -j -9 wLE_ISR_ISO$(BIN_NAME).zip $(ISO_BIN)
+endif
+
+isoclean:
+	rm -rf $(ISO_BIN_DIR)
+
+$(ISO_BIN_DIR):
+	mkdir $@
+
+$(ISO_BIN_DIR)system.cnf: $(ISO_BIN_DIR)
+	$(info - generating 'system.cnf' ...)
+	echo "BOOT2 = cdrom0:\$(ISO_BIN_ELF);1" >"$@"
+	echo VER = $(SYSTEMCNF_VERSION)>>"$@"
+	echo VMODE = $(SYSTEMCNF_VMODE)>>"$@"
+

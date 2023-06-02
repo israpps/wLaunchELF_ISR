@@ -17,9 +17,9 @@ TTY2SIOR ?= 0
 # ----------------------------- #
 .SILENT:
 
-BIN_NAME = BOOT$(HAS_EXFAT)$(HAS_DS34)$(HAS_ETH)$(HAS_SMB)$(HAS_DVRP)$(HAS_XFROM)$(HAS_MX4SIO)$(HAS_EESIO)$(HAS_UDPTTY)$(HAS_TTY2SIOR)$(HAS_IOP_RESET)
-EE_BIN = UNC-$(BIN_NAME).ELF
-EE_BIN_PKD = $(BIN_NAME).ELF
+BIN_NAME = $(HAS_EXFAT)$(HAS_DS34)$(HAS_ETH)$(HAS_SMB)$(HAS_DVRP)$(HAS_XFROM)$(HAS_MX4SIO)$(HAS_EESIO)$(HAS_UDPTTY)$(HAS_TTY2SIOR)$(HAS_IOP_RESET)
+EE_BIN = UNC-BOOT$(BIN_NAME).ELF
+EE_BIN_PKD = BOOT$(BIN_NAME).ELF
 EE_OBJS = main.o config.o elf.o draw.o loader_elf.o filer.o \
 	poweroff_irx.o iomanx_irx.o filexio_irx.o ps2atad_irx.o ps2dev9_irx.o \
 	ps2hdd_irx.o ps2fs_irx.o usbd_irx.o mcman_irx.o mcserv_irx.o \
@@ -143,7 +143,7 @@ EE_ASM_DIR = asm/
 EE_SRC_DIR = src/
 EE_OBJS := $(EE_OBJS:%=$(EE_OBJS_DIR)%) # remap all EE_OBJ to obj subdir
 
-.PHONY: all run reset clean rebuild
+.PHONY: all run reset clean rebuild isoclean iso
 
 all: githash.h $(EE_BIN_PKD)
 
@@ -186,6 +186,13 @@ clean:
 	rm -f iop/*.irx
 
 rebuild: clean all
+
+info:
+	$(info -------- wLaunchELF 4.43x_isr --------)
+	$(info EE_BIN = $(EE_BIN))
+	$(info EE_BIN_PKD = $(EE_BIN_PKD))
+	$(info EE_OBJS = $(EE_OBJS))
+	$(info TMANIP = $(TMANIP))
 
 #special recipe for compiling and dumping obj to subfolder
 $(EE_OBJS_DIR)%.o: $(EE_SRC_DIR)%.c | $(EE_OBJS_DIR)

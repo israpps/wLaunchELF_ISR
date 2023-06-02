@@ -14,3 +14,6 @@ obj/*
 githash.h
 !iop/__precompiled/*
 iop/vmc_fs.irx
+iso/
+*.iso
+*.zip

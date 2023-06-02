@@ -2,6 +2,9 @@ name: Automated-Build
 
 on:
   workflow_dispatch:
+    inputs:
+      make_args:
+        description: pass extra make argumments to control features not explicitly handled by CI
   push:
   repository_dispatch:
     types: [run_build]
@@ -14,16 +17,13 @@ jobs:
         eth: ["ETH=0", "ETH=1"]
         bdmstuff: ["EXFAT=0", "EXFAT=1", "EXFAT=1 MX4SIO=1"]
         ds34: ["DS34=0", "DS34=1"]
-#        xfrom: ["XFROM=0", "XFROM=1"]
-#        sior: ["SIO_DEBUG=0", "SIO_DEBUG=1"]
-#        udptty: ["UDPTTY=0", "UDPTTY=1"]
     runs-on: ubuntu-latest
     container: ps2dev/ps2dev:v1.0
     steps:
 
     - name: Install dependencies
       run: |
-        apk add build-base git zip
+        apk add make git zip
 
     - uses: actions/checkout@v3
     - run: |
@@ -35,9 +35,9 @@ jobs:
         git clone https://github.com/ps2dev/ps2eth.git
         cd ps2eth && make clean all install
 
-    - name: Compile wLaunchELF without network
+    - name: Compile wLaunchELF
       run: |
-        make rebuild ${{ matrix.eth }} ${{ matrix.sior }} ${{ matrix.bdmstuff }} ${{ matrix.ds34 }} ${{ matrix.xfrom }}
+        make rebuild ${{ matrix.eth }} ${{ matrix.sior }} ${{ matrix.bdmstuff }} ${{ matrix.ds34 }} ${{ matrix.xfrom }} ${{ github.event.inputs.make_args }}
 
     - name: Upload variants artifact ELF
       uses: actions/upload-artifact@v3
@@ -45,14 +45,50 @@ jobs:
         name: WLE
         path: |
             BOOT*.ELF
+#######################################################
+  build_iso:
+    strategy:
+      fail-fast: false
+      matrix:
+        eth: ["ETH=0", "ETH=1", "ETH=1 UDPTTY=1"]
+        bdmstuff: ["EXFAT=0", "EXFAT=1"]
+        sior: ["SIO_DEBUG=0", "SIO_DEBUG=1"]
+        iopreset: ["IOP_RESET=0", "IOP_RESET=1"]
+    runs-on: ubuntu-latest
+    container: ps2dev/ps2dev:v1.0
+    steps:
+  
+    - name: Install dependencies
+      run: |
+        apk add make git zip
+  
+    - uses: actions/checkout@v3
+    - run: |
+        git config --global --add safe.directory "$GITHUB_WORKSPACE"
+        git fetch --prune --unshallow
+  
+    - name: Install ps2eth
+      run: |
+        git clone https://github.com/ps2dev/ps2eth.git
+        cd ps2eth && make clean all install
+  
+    - name: Compile wLaunchELF ISO Image
+      run: |
+        make rebuild isoclean iso ${{ matrix.eth }} ${{ matrix.sior }} ${{ matrix.bdmstuff }} ${{ matrix.iopreset }} PACK_ISO=YES ${{ github.event.inputs.make_args }}
+
+    - name: Upload variants artifact ELF
+      uses: actions/upload-artifact@v3
+      with:
+        name: WLE_ISO
+        path: |
+          wLE_ISR_ISO*.zip
     
 ####################################################### 
   release:
     if: github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
-    needs: build
+    needs: [build, build_iso]
     steps:
-
 
     - uses: actions/checkout@v3
     - run: |
@@ -86,6 +122,16 @@ jobs:
         title: "Translations"
         files: |
                Lang/*.LNG
+
+    - name: Create release
+      if: github.ref == 'refs/heads/master'
+      uses: marvinpinto/action-automatic-releases@latest
+      with:
+        repo_token: "${{ secrets.GITHUB_TOKEN }}"
+        automatic_release_tag: "iso"
+        title: "wLaunchELF ISO Images"
+        files: |
+          WLE_ISO/*.zip
 
   trigger-auto-update:
     if: github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main'
