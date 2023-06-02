@@ -47,6 +47,7 @@ jobs:
             BOOT*.ELF
 #######################################################
   build_iso:
+    if: github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main'
     strategy:
       fail-fast: false
       matrix:
