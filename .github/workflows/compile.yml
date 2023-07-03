@@ -46,14 +46,14 @@ jobs:
         path: |
             BOOT*.ELF
 #######################################################
-  build_iso:
-    if: github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main'
+  build_fdvd:
+    if: github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main' || github.ref == 'refs/heads/fdvd'
     strategy:
       fail-fast: false
       matrix:
         eth: ["ETH=0", "ETH=1", "ETH=1 UDPTTY=1", "ETH=1 UDPTTY=0 SIO_DEBUG=1"]
-        bdmstuff: ["EXFAT=0", "EXFAT=1"]
-        iopreset: ["IOP_RESET=0", "IOP_RESET=1"]
+        bdmstuff: ["EXFAT=0", "EXFAT=1", "EXFAT=1 MX4SIO=1"]
+        #iopreset: ["IOP_RESET=0", "IOP_RESET=1"]
     runs-on: ubuntu-latest
     container: ps2dev/ps2dev:v1.0
     steps:
@@ -72,22 +72,22 @@ jobs:
         git clone https://github.com/ps2dev/ps2eth.git
         cd ps2eth && make clean all install
   
-    - name: Compile wLaunchELF ISO Image
+    - name: Compile wLaunchELF FreeDVDBoot
       run: |
-        make rebuild isoclean iso ${{ matrix.eth }} ${{ matrix.bdmstuff }} ${{ matrix.iopreset }} PACK_ISO=YES ${{ github.event.inputs.make_args }}
+        make clean all FDVD=1 ${{ matrix.eth }} ${{ matrix.bdmstuff }} ${{ matrix.iopreset }} ${{ github.event.inputs.make_args }}
 
     - name: Upload variants artifact ELF
       uses: actions/upload-artifact@v3
       with:
-        name: WLE_ISO
+        name: WLE_FDVD
         path: |
-          wLE_ISR_ISO*.zip
+          BOOT*.ELF
     
 ####################################################### 
   release:
     if: github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
-    needs: [build, build_iso]
+    needs: [build, build_fdvd]
     steps:
 
     - uses: actions/checkout@v3
@@ -128,10 +128,10 @@ jobs:
       uses: marvinpinto/action-automatic-releases@latest
       with:
         repo_token: "${{ secrets.GITHUB_TOKEN }}"
-        automatic_release_tag: "iso"
-        title: "wLaunchELF ISO Images"
+        automatic_release_tag: "freedvdboot"
+        title: "wLaunchELF compilations for FreeDVDBoot"
         files: |
-          WLE_ISO/*.zip
+          WLE_FDVD/*.ELF
 
   trigger-auto-update:
     if: github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main'
