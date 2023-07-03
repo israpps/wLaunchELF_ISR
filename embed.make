@@ -9,7 +9,12 @@ else # if we have mx4sio use newer IRX to avoid deadlocks when opening common me
   MCSERV_SOURCE = iop/__precompiled/mcserv.irx
   SIO2MAN_SOURCE = iop/__precompiled/sio2man.irx
 endif
-
+ifeq ($(FDVD),0)
+  CDVD_IRX_PATH = iop/cdvd.irx
+else
+  $(info using latest cdfs driver)
+  CDVD_IRX_PATH = iop/__precompiled/cdfs.irx
+endif
 #---{ MC }---#
 $(EE_ASM_DIR)mcman_irx.s: $(MCMAN_SOURCE) | $(EE_ASM_DIR)
 	$(BIN2S) $< $@ mcman_irx
@@ -47,7 +52,7 @@ endif
 iop/cdvd.irx: iop/oldlibs/libcdvd
 	$(MAKE) -C $<
 
-$(EE_ASM_DIR)cdvd_irx.s: iop/cdvd.irx | $(EE_ASM_DIR)
+$(EE_ASM_DIR)cdvd_irx.s: $(CDVD_IRX_PATH) | $(EE_ASM_DIR)
 	$(BIN2S) $< $@ cdvd_irx
 
 $(EE_ASM_DIR)poweroff_irx.s: $(PS2SDK)/iop/irx/poweroff.irx | $(EE_ASM_DIR)

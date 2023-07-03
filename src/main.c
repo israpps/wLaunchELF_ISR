@@ -432,6 +432,13 @@ static void Show_build_info(void)
 #else
 " MX4SIO=0"
 #endif
+
+#ifdef FDVD
+" FDVD=1"
+#else
+" FDVD=0"
+#endif
+
 , COLOR_TEXT);
 #if defined(UDPTTY) || defined(SIO_DEBUG) || defined(TTY2SIOR) || defined(NO_IOP_RESET)
 

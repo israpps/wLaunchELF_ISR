@@ -14,10 +14,11 @@ UDPTTY ?= 0
 MX4SIO ?= 0
 SIO2MAN ?= 0
 TTY2SIOR ?= 0
+FDVD ?= 0
 # ----------------------------- #
 .SILENT:
 
-BIN_NAME = $(HAS_EXFAT)$(HAS_DS34)$(HAS_ETH)$(HAS_SMB)$(HAS_DVRP)$(HAS_XFROM)$(HAS_MX4SIO)$(HAS_EESIO)$(HAS_UDPTTY)$(HAS_TTY2SIOR)$(HAS_IOP_RESET)
+BIN_NAME = $(HAS_FDVD)$(HAS_EXFAT)$(HAS_DS34)$(HAS_ETH)$(HAS_SMB)$(HAS_DVRP)$(HAS_XFROM)$(HAS_MX4SIO)$(HAS_EESIO)$(HAS_UDPTTY)$(HAS_TTY2SIOR)$(HAS_IOP_RESET)
 EE_BIN = UNC-BOOT$(BIN_NAME).ELF
 EE_BIN_PKD = BOOT$(BIN_NAME).ELF
 EE_OBJS = main.o config.o elf.o draw.o loader_elf.o filer.o \
@@ -35,6 +36,11 @@ EE_LIBS = -lgskit -ldmakit -ljpeg -lmc -lhdd -lcdvdfs -lkbd -lmf \
 EE_CFLAGS := -mgpopt -G10240 -G0 -DNEWLIB_PORT_AWARE -D_EE
 
 BIN2S = @bin2s
+
+ifeq ($(FDVD),1)
+    HAS_FDVD = -FDVD
+    EE_CFLAGS += -DFDVD
+endif
 
 ifeq ($(SMB),1)
     EE_OBJS += smbman.o
@@ -189,10 +195,13 @@ rebuild: clean all
 
 info:
 	$(info -------- wLaunchELF 4.43x_isr --------)
-	$(info EE_BIN = $(EE_BIN))
+	$(info EE_BIN     = $(EE_BIN))
 	$(info EE_BIN_PKD = $(EE_BIN_PKD))
-	$(info EE_OBJS = $(EE_OBJS))
-	$(info TMANIP = $(TMANIP))
+	$(info TMANIP     = $(TMANIP))
+	$(info EXFAT      = $(EXFAT))
+	$(info MX4SIO     = $(MX4SIO))
+	$(info ETH        = $(ETH))
+	$(info IOP_RESET  = $(IOP_RESET))
 
 #special recipe for compiling and dumping obj to subfolder
 $(EE_OBJS_DIR)%.o: $(EE_SRC_DIR)%.c | $(EE_OBJS_DIR)
