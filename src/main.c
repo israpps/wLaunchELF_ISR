@@ -24,6 +24,10 @@ IMPORT_BIN2C(ps2ftpd_irx);
 IMPORT_BIN2C(smbman_irx);
 #endif
 
+#ifdef UDPBD
+IMPORT_BIN2C(smap_udpbd_irx);
+#endif
+
 #ifdef UDPTTY
 IMPORT_BIN2C(udptty_irx);
 #endif
@@ -2680,6 +2684,12 @@ int main(int argc, char *argv[])
 	getIpConfig();
 	DPRINTF("Loading USB modules\n");
 	loadUsbModules();
+
+#ifdef UDPBD
+	int ID, ret;
+    ID = SifExecModuleBuffer(smap_udpbd_irx, size_smap_udpbd_irx, 0, NULL, &ret);
+	DPRINTF(" [UDPBD] ID=%d, ret=%d\n", ID, ret);
+#endif
 
 	WaitTime = Timer();
 	DPRINTF("setup pad\n");

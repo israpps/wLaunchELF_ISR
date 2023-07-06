@@ -14,10 +14,11 @@ UDPTTY ?= 0
 MX4SIO ?= 0
 SIO2MAN ?= 0
 TTY2SIOR ?= 0
+UDPBD ?= 0
 # ----------------------------- #
 .SILENT:
 
-BIN_NAME = $(HAS_EXFAT)$(HAS_DS34)$(HAS_ETH)$(HAS_SMB)$(HAS_DVRP)$(HAS_XFROM)$(HAS_MX4SIO)$(HAS_EESIO)$(HAS_UDPTTY)$(HAS_TTY2SIOR)$(HAS_IOP_RESET)
+BIN_NAME = $(HAS_EXFAT)$(HAS_DS34)$(HAS_ETH)$(HAS_SMB)$(HAS_DVRP)$(HAS_XFROM)$(HAS_MX4SIO)$(HAS_EESIO)$(HAS_UDPTTY)$(HAS_TTY2SIOR)$(HAS_IOP_RESET)$(HAS_UDPBD)
 EE_BIN = UNC-BOOT$(BIN_NAME).ELF
 EE_BIN_PKD = BOOT$(BIN_NAME).ELF
 EE_OBJS = main.o config.o elf.o draw.o loader_elf.o filer.o \
@@ -70,6 +71,15 @@ ifeq ($(MX4SIO),1)
         HAS_MX4SIO = -MX4SIO
         SIO2MAN = 1
     endif
+endif
+
+ifeq ($(UDPBD), 1)
+    $(info UDPBD enabled, disabling any other network feature)
+    EE_OBJS += smap_udpbd.o
+    HAS_UDPBD = -UDPBD
+    EE_CFLAGS += -DUDPBD
+    ETH = 0 # UDPBD cant coexist with common network crap
+    SMB = 0
 endif
 
 ifeq ($(SIO2MAN),1)
