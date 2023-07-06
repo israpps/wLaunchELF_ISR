@@ -8,8 +8,7 @@ BIN2S = $(PS2SDK)/bin/bin2s
 BIN2O = $(PS2SDK)/bin/bin2o
 IOP_SRC_DIR = src/
 IOP_OBJS_DIR = obj/
-IOP_INC_DIR = $(IOP_SRC_DIR)include
-
+IOP_CFLAGS = -I$(IOP_SRC_DIR)include
 ifeq ($(HAS_BDM), 0)
   IOP_CFLAGS += -DNO_BDM
 endif
@@ -25,6 +24,9 @@ clean:
 
 rebuild: clean all
 
+vpath %.c $(IOP_SRC_DIR)
+vpath %.lst $(IOP_SRC_DIR)
+vpath %.tab $(IOP_SRC_DIR)
 
 include $(PS2SDK)/Defs.make
 include $(IOP_BIN_DIR)Rules.make
