@@ -400,9 +400,13 @@ static void Show_build_info(void)
 " SMB:0"
 #endif
 #ifdef ETH
-" ETH:1"
+	" ETH:1"
 #else
-" ETH:0"
+	#ifdef UDPBD
+		" ETH:UDPBD"
+	#else
+		" ETH:0"
+	#endif
 #endif	
 , COLOR_TEXT);
 			PrintPos(-1, hpos, 
