@@ -74,10 +74,6 @@ char mountedDVRPParty[MOUNT_LIMIT][MAX_NAME];
 int latestDVRPMount = -1;
 #endif
 
-#ifdef MX4SIO
-int mx4sio_idx = -1; // To keep track of wich mass#:/ device represents MX4SIO
-#endif
-
 int file_show = 1;  //dlanor: 0==name_only, 1==name+size+time, 2==title+size+time
 int file_sort = 1;  //dlanor: 0==none, 1==name, 2==title, 3==mtime
 int size_valid = 0;
@@ -1299,10 +1295,6 @@ void scan_USB_mass(void)
 	    || (USB_mass_scanned && ((Timer() - USB_mass_scan_time) < 5000)))
 		return;
 
-#ifdef MX4SIO
-	mx4sio_idx = -1; //assume none is mx4sio // this MUST ALWAYS be after the USB_mass_scan_time check
-#endif
-
 	for (i = 0; i < USB_mass_max_drives; i++) {
 		mass_path[4] = '0' + i;
 		if (fileXioGetStat(mass_path, &chk_stat) < 0) {
@@ -1316,10 +1308,9 @@ void scan_USB_mass(void)
     	    fileXioDclose(dd);
 			for (x = BD_USB; x < BD_AMMOUNT; x++)
 			{
-				if (!strncmp(DEVID, block_device_id[x], 3))
+				if (!strcmp(DEVID, block_device_id[x]))
 				{
 					Block_device_ix[i] = x;
-					mx4sio_idx = i;
 					DPRINTF("%s: Found '%s' device at mass%d:\n", __func__, block_device_id[x], i);
 				}
 			}
