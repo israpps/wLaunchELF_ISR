@@ -78,6 +78,9 @@ ifeq ($(UDPBD), 1)
     EE_OBJS += smap_udpbd.o
     HAS_UDPBD = -UDPBD
     EE_CFLAGS += -DUDPBD
+ifeq ($(UDPTTY),1)
+	$(error UDPBD and UDPTTY Cannot co-exist. only use UDPBD, since has a copy of the functionality of UDPTTY)
+endif
     ETH = 0 # UDPBD cant coexist with common network crap
     SMB = 0
 endif
@@ -111,7 +114,9 @@ ifeq ($(ETH),1)
     EE_OBJS += ps2smap_irx.o ps2ftpd_irx.o ps2host_irx.o ps2netfs_irx.o ps2ip_irx.o
     EE_CFLAGS += -DETH
 else
+ifeq ($(UDPBD), 0)
     HAS_ETH = -NO_NETWORK
+endif
 endif
 
 ifeq ($(UDPTTY),1)
