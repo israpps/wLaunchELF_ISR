@@ -127,6 +127,7 @@ ifeq ($(EXFAT),1)
     EE_OBJS += bdm_irx.o bdmfs_fatfs_irx.o usbmass_bd_irx.o
     EE_CFLAGS += -DEXFAT
     HAS_EXFAT = -EXFAT
+    BDM = 1
 else
     EE_OBJS += usbhdfsd_irx.o
 endif
@@ -137,6 +138,9 @@ else
 EE_CFLAGS += -DCUSTOM_COLORS
 endif
 
+ifeq ($(BDM),1)
+    EE_CFLAGS += -DBDM
+endif
 
 EE_OBJS_DIR = obj/
 EE_ASM_DIR = asm/
