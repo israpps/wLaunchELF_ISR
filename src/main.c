@@ -2691,7 +2691,8 @@ int main(int argc, char *argv[])
 
 #ifdef UDPBD
 	int ID, ret;
-    ID = SifExecModuleBuffer(smap_udpbd_irx, size_smap_udpbd_irx, 0, NULL, &ret);
+	load_ps2dev9();
+    	ID = SifExecModuleBuffer(smap_udpbd_irx, size_smap_udpbd_irx, 0, NULL, &ret);
 	DPRINTF(" [UDPBD] ID=%d, ret=%d\n", ID, ret);
 #endif
 
