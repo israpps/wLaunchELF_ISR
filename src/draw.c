@@ -6,7 +6,7 @@
 GSGLOBAL *gsGlobal;
 GSTEXTURE TexSkin, TexPreview, TexPicture, TexThumb[MAX_ENTRY], TexIcon[2];
 int testskin, testsetskin, testjpg, testthumb;
-int SCREEN_WIDTH = 640;
+int SCREEN_WIDTH = 704;
 int SCREEN_HEIGHT = 448;
 //dlanor: values shown above are defaults for NTSC mode
 u64 BrightColor;
