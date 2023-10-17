@@ -790,7 +790,10 @@ int loadConfig(char *mainMsg, char *CNF)
 		//----------
 		//In the next group, the Misc device must be defined before its subprograms
 		//----------
-		else if (!strcmp(name, "Misc"))
+		else if (!strncmp(name, "IOP_LOAD_", 9)) {
+			len = SifLoadStartModule(value, 0, NULL, &tst); //both len & tst dont seem to be used in this point. so i think we can risk using them for this
+			DPRINTF("%s -> '%s'  ID=%d, ret=%d\n", name, value, len, tst);
+		} else if (!strcmp(name, "Misc"))
 			sprintf(setting->Misc, "%s/", value);
 		else if (!strcmp(name, "Misc_PS2Disc"))
 			sprintf(setting->Misc_PS2Disc, "%s%s", setting->Misc, value);
