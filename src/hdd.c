@@ -361,6 +361,9 @@ int MenuParty(PARTYINFO Info)
 	unmountParty(1);  //unconditionally unmount secondary mountpoint
 
 	memset(enable, TRUE, NUM_MENU);
+	if (console_is_PSX) {
+		enable[FORMAT] = FALSE;
+	}
 
 	if ((Info.Name[0] == '_') && (Info.Name[1] == '_')) {
 		enable[REMOVE] = FALSE;

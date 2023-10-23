@@ -2551,9 +2551,10 @@ int main(int argc, char *argv[])
 
 	Reset();
 	Init_Default_Language();
-	if (exists("rom0:PSXVER"))
+	if (exists("rom0:PSXVER")) {
 		console_is_PSX = 1;
-	DPRINTF("is PSX = %d\n", console_is_PSX);
+		DPRINTF("# Console is PSX-DESR\n");
+	}
 	LaunchElfDir[0] = 0;
 	boot_path[0] = 0;
 
