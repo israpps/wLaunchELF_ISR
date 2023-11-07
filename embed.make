@@ -10,6 +10,20 @@ else # if we have mx4sio use newer IRX to avoid deadlocks when opening common me
   SIO2MAN_SOURCE = iop/__precompiled/sio2man.irx
 endif
 
+ifeq ($(MODERN_HDD_IRX),0) # use ps2dev:1.0 drivers
+  $(info using ps2dev:1.0 hdd drivers)
+  DEV9_PATH = $(PS2SDK)/iop/irx/ps2dev9.irx
+  ATAD_PATH = $(PS2SDK)/iop/irx/ps2atad.irx
+  PS2HDDOSD_PATH = $(PS2SDK)/iop/irx/ps2hdd-osd.irx
+  PFS_PATH = $(PS2SDK)/iop/irx/ps2fs.irx
+else # if we have mx4sio use newer IRX to avoid deadlocks when opening common memory card
+  $(info using latest hdd drivers)
+  DEV9_PATH = iop/__precompiled/ps2dev9.irx
+  ATAD_PATH = iop/__precompiled/ps2atad.irx
+  PS2HDDOSD_PATH = iop/__precompiled/ps2hdd-osd.irx
+  PFS_PATH = iop/__precompiled/ps2fs.irx
+endif
+
 #---{ MC }---#
 $(EE_ASM_DIR)mcman_irx.s: $(MCMAN_SOURCE) | $(EE_ASM_DIR)
 	$(BIN2S) $< $@ mcman_irx
@@ -19,7 +33,6 @@ $(EE_ASM_DIR)mcserv_irx.s: $(MCSERV_SOURCE) | $(EE_ASM_DIR)
 
 $(EE_ASM_DIR)sio2man.s: $(SIO2MAN_SOURCE) | $(EE_ASM_DIR)
 	$(BIN2S) $< $@ sio2man_irx
-
 	
 $(EE_ASM_DIR)mx4sio_bd.s: iop/__precompiled/mx4sio_bd.irx | $(EE_ASM_DIR)
 	$(BIN2S) $< $@ mx4sio_bd_irx
@@ -59,8 +72,31 @@ $(EE_ASM_DIR)iomanx_irx.s: $(PS2SDK)/iop/irx/iomanX.irx | $(EE_ASM_DIR)
 $(EE_ASM_DIR)filexio_irx.s: $(PS2SDK)/iop/irx/fileXio.irx | $(EE_ASM_DIR)
 	$(BIN2S) $< $@ filexio_irx
 
-$(EE_ASM_DIR)ps2dev9_irx.s: $(PS2SDK)/iop/irx/ps2dev9.irx | $(EE_ASM_DIR)
+$(EE_ASM_DIR)ps2dev9_irx.s: $(DEV9_PATH) | $(EE_ASM_DIR)
 	$(BIN2S) $< $@ ps2dev9_irx
+
+$(EE_ASM_DIR)ps2atad_irx.s: $(ATAD_PATH) | $(EE_ASM_DIR)
+	$(BIN2S) $< $@ ps2atad_irx
+
+$(EE_ASM_DIR)ps2hdd_irx.s: $(PS2HDDOSD_PATH) | $(EE_ASM_DIR)
+	$(BIN2S) $< $@ ps2hdd_irx
+
+$(EE_ASM_DIR)ps2fs_irx.s: $(PFS_PATH) | $(EE_ASM_DIR)
+	$(BIN2S) $< $@ ps2fs_irx
+	
+ifeq ($(DVRP),1)
+$(EE_ASM_DIR)dvrdrv_irx.s:iop/__precompiled/dvrdrv.irx | $(EE_ASM_DIR)
+	$(BIN2S) $< $@ dvrdrv_irx
+
+$(EE_ASM_DIR)dvrfile_irx.s:iop/__precompiled/dvrfile.irx | $(EE_ASM_DIR)
+	$(BIN2S) $< $@ dvrfile_irx
+endif
+
+iop/hdl_info.irx: iop/hdl_info
+	$(MAKE) -C $<
+
+$(EE_ASM_DIR)hdl_info_irx.s: iop/hdl_info.irx | $(EE_ASM_DIR)
+	$(BIN2S) $< $@ hdl_info_irx
 
 ifeq ($(ETH),1)
 $(EE_ASM_DIR)ps2ip_irx.s: $(PS2SDK)/iop/irx/ps2ip.irx | $(EE_ASM_DIR)
@@ -84,29 +120,6 @@ endif
 
 iop/ps2ftpd.irx: iop/oldlibs/ps2ftpd
 	$(MAKE) -C $<
-
-$(EE_ASM_DIR)ps2atad_irx.s: $(PS2SDK)/iop/irx/ps2atad.irx | $(EE_ASM_DIR)
-	$(BIN2S) $< $@ ps2atad_irx
-
-$(EE_ASM_DIR)ps2hdd_irx.s: $(PS2SDK)/iop/irx/ps2hdd-osd.irx | $(EE_ASM_DIR)
-	$(BIN2S) $< $@ ps2hdd_irx
-
-$(EE_ASM_DIR)ps2fs_irx.s: $(PS2SDK)/iop/irx/ps2fs.irx | $(EE_ASM_DIR)
-	$(BIN2S) $< $@ ps2fs_irx
-	
-ifeq ($(DVRP),1)
-$(EE_ASM_DIR)dvrdrv_irx.s:iop/__precompiled/dvrdrv.irx | $(EE_ASM_DIR)
-	$(BIN2S) $< $@ dvrdrv_irx
-
-$(EE_ASM_DIR)dvrfile_irx.s:iop/__precompiled/dvrfile.irx | $(EE_ASM_DIR)
-	$(BIN2S) $< $@ dvrfile_irx
-endif
-
-iop/hdl_info.irx: iop/hdl_info
-	$(MAKE) -C $<
-
-$(EE_ASM_DIR)hdl_info_irx.s: iop/hdl_info.irx | $(EE_ASM_DIR)
-	$(BIN2S) $< $@ hdl_info_irx
 
 iop/ps2host.irx: iop/ps2host
 	$(MAKE) -C $<

@@ -15,6 +15,7 @@ MX4SIO ?= 0
 SIO2MAN ?= 0
 TTY2SIOR ?= 0
 DEBUG ?= 0
+MODERN_HDD_IRX ?= 0
 # ----------------------------- #
 .SILENT:
 
@@ -65,6 +66,7 @@ ifeq ($(DVRP),1)
     EE_OBJS += dvrdrv_irx.o dvrfile_irx.o
     EE_CFLAGS += -DDVRP
     HAS_DVRP = -DVRP
+    MODERN_HDD_IRX = 1
 endif
 
 ifeq ($(MX4SIO),1)
