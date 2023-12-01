@@ -712,16 +712,17 @@ int ExpandParty(PARTYINFO Info, int size)
 //--------------------------------------------------------------
 int FormatHdd(void)
 {
-	int ret = 0;
-
-	drawMsg(LNG(Formating_HDD));
-
-	ret = hddFormat();
-
-	if (ret == 0) {
-		drawMsg(LNG(HDD_Formated));
+	int ret = 1;
+	if (console_is_PSX && hddFormated == 1 && hddSize < 40960) {// if console is PSX, HDD is formatted, and recognized size is less than 40gb...
+		drawMsg(LNG(Psx_fmt_Forbid));
 	} else {
-		drawMsg(LNG(HDD_Format_Failed));
+		drawMsg(LNG(Formating_HDD));
+		ret = hddFormat();
+		if (ret == 0) {
+			drawMsg(LNG(HDD_Formated));
+		} else {
+			drawMsg(LNG(HDD_Format_Failed));
+		}
 	}
 
 	WaitTime = Timer();
