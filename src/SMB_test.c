@@ -2,7 +2,7 @@
 //File name:   SMB_test.c
 //---------------------------------------------------------------------------
 
-smbServerList_t smbServerList[SERVERLIST_MAX];  //List of active servers
+smbServer_t smbServer;  //List of active servers
 
 int smbServerListCount = 0;  //Count of valid server entries in ServerList
 int smbCurrentServer = -1;   //Index of server for current traffic (-1 if none)
@@ -17,39 +17,39 @@ int smbLogon_Server(int Index)
 
 	load_smbman();
 
-	if (smbServerList[Index].Server_Logon_f == 1) {
+	if (smbServer.Server_Logon_f == 1) {
 		DPRINTF("smbLogon_Server: Request for duplicate logon noted.\n");
 		return -1;
 	}
 
-	if (smbServerList[Index].Username[0] == 0)  //if Username invalid
-		strcpy(smbServerList[Index].Username, "GUEST");
+	if (smbServer.Username[0] == 0)  //if Username invalid
+		strcpy(smbServer.Username, "GUEST");
 
-	if ((smbServerList[Index].PasswordType > 0)  //if hashing wanted
-	    && (smbServerList[Index].PassHash_f == 0)) {
-		ret = fileXioDevctl("smb:", SMB_DEVCTL_GETPASSWORDHASHES, (void *)&smbServerList[Index].Password, sizeof(smbServerList[Index].Password), (void *)&smbServerList[Index].PassHash, sizeof(smbServerList[Index].PassHash));
+	if ((smbServer.PasswordType > 0)  //if hashing wanted
+	    && (smbServer.PassHash_f == 0)) {
+		ret = fileXioDevctl("smb:", SMB_DEVCTL_GETPASSWORDHASHES, (void *)&smbServer.Password, sizeof(smbServer.Password), (void *)&smbServer.PassHash, sizeof(smbServer.PassHash));
 		if (ret) {
 			DPRINTF("smbLogon_Server: PassHash error %d\n", ret);
 			return -1;
 		}
-		smbServerList[Index].PassHash_f = 1;  //PassHash is now valid for future use
+		smbServer.PassHash_f = 1;  //PassHash is now valid for future use
 	}
 
-	strcpy(logon.serverIP, smbServerList[Index].Server_IP);
-	logon.serverPort = smbServerList[Index].Server_Port;
-	strcpy(logon.User, smbServerList[Index].Username);
-	if (smbServerList[Index].PasswordType > 0)  //if hashing wanted
-		memcpy((void *)logon.Password, (void *)smbServerList[Index].PassHash, sizeof(smbServerList[Index].PassHash));
+	strcpy(logon.serverIP, smbServer.Server_IP);
+	logon.serverPort = smbServer.Server_Port;
+	strcpy(logon.User, smbServer.Username);
+	if (smbServer.PasswordType > 0)  //if hashing wanted
+		memcpy((void *)logon.Password, (void *)smbServer.PassHash, sizeof(smbServer.PassHash));
 	else
-		strcpy(logon.Password, smbServerList[Index].Password);
-	logon.PasswordType = smbServerList[Index].PasswordType;
+		strcpy(logon.Password, smbServer.Password);
+	logon.PasswordType = smbServer.PasswordType;
 
 	ret = fileXioDevctl("smb:", SMB_DEVCTL_LOGON, (void *)&logon, sizeof(logon), NULL, 0);
 	if (ret) {
 		DPRINTF("smbLogon_Server: Logon Error %d\n", ret);
 		return -1;
 	}
-	smbServerList[Index].Server_Logon_f = 1;
+	smbServer.Server_Logon_f = 1;
 	DPRINTF("smbLogon_Server: Logon succeeded!\n");
 	return 0;  //Here basic Logon has been achieved
 }
@@ -71,32 +71,27 @@ size_t storeSMBCNF(char *cnf_buf)
 {
 	size_t CNF_size, size_step;
 	int i;
-
-	for (CNF_size = 0, i = 0; i < smbServerListCount; i++) {  //loop for each SMB server in the list
-		sprintf(cnf_buf + CNF_size,
-		        "smbIndex = %d\r\n"
-		        "smbServer_IP = %s\r\n"
-		        "smbServer_Port = %d\r\n"
-		        "smbUsername = %s\r\n"
-		        "smbPassword = %s\r\n"
-		        "smbPasswordType = %d\r\n"
-		        "smbClient_ID = %s\r\n"
-		        "smbServer_ID = %s\r\n"
-		        "smbServer_FBID = %s\r\n"
-		        "%n",  // %n causes NO output, but only a measurement
-		        i,     //smbIndex
-		        smbServerList[i].Server_IP,
-		        smbServerList[i].Server_Port,
-		        smbServerList[i].Username,
-		        smbServerList[i].Password,
-		        smbServerList[i].PasswordType,
-		        smbServerList[i].Client_ID,
-		        smbServerList[i].Server_ID,
-		        smbServerList[i].Server_FBID,
-		        &size_step  // This measures the size of sprintf data
-		        );
-		CNF_size += size_step;
-	}
+	sprintf(cnf_buf + CNF_size,
+	        "smbServer_IP = %s\r\n"
+	        "smbServer_Port = %d\r\n"
+	        "smbUsername = %s\r\n"
+	        "smbPassword = %s\r\n"
+	        "smbPasswordType = %d\r\n"
+	        "smbClient_ID = %s\r\n"
+	        "smbServer_ID = %s\r\n"
+	        "smbServer_FBID = %s\r\n"
+	        "%n",  // %n causes NO output, but only a measurement
+	        smbServer.Server_IP,
+	        smbServer.Server_Port,
+	        smbServer.Username,
+	        smbServer.Password,
+	        smbServer.PasswordType,
+	        smbServer.Client_ID,
+	        smbServer.Server_ID,
+	        smbServer.Server_FBID,
+	        &size_step  // This measures the size of sprintf data
+	        );
+	CNF_size += size_step;
 	return CNF_size;
 }
 //------------------------------
@@ -131,35 +126,22 @@ int saveSMBCNF(char *CNFpath)
 //------------------------------
 int scanSMBCNF(unsigned char *name, unsigned char *value)
 {
-	int test;
-
-	if (!strcmp(name, "smbIndex")) {
-		test = atoi(value);
-		if ((test >= 0) && (test < SERVERLIST_MAX)) {
-			smbCurrentServer = test;
-			memset((void *)&smbServerList[test], 0, sizeof(smbServerList_t));
-			if (test + 1 > smbServerListCount)
-				smbServerListCount = test + 1;
-		} else {
-			DPRINTF("scanSMBCNF: Invalid smbIndex in CNF == %d\n", test);
-			return -1;
-		}
-	} else if (!strcmp(name, "smbServer_IP"))
-		strcpy(smbServerList[smbCurrentServer].Server_IP, value);
+	if (!strcmp(name, "smbServer_IP"))
+		strcpy(smbServer.Server_IP, value);
 	else if (!strcmp(name, "smbServer_Port"))
-		smbServerList[smbCurrentServer].Server_Port = atoi(value);
+		smbServer.Server_Port = atoi(value);
 	else if (!strcmp(name, "smbUsername"))
-		strcpy(smbServerList[smbCurrentServer].Username, value);
+		strcpy(smbServer.Username, value);
 	else if (!strcmp(name, "smbPassword"))
-		strcpy(smbServerList[smbCurrentServer].Password, value);
+		strcpy(smbServer.Password, value);
 	else if (!strcmp(name, "smbPasswordType"))
-		smbServerList[smbCurrentServer].PasswordType = atoi(value);
+		smbServer.PasswordType = atoi(value);
 	else if (!strcmp(name, "smbClient_ID"))
-		strcpy(smbServerList[smbCurrentServer].Client_ID, value);
+		strcpy(smbServer.Client_ID, value);
 	else if (!strcmp(name, "smbServer_ID"))
-		strcpy(smbServerList[smbCurrentServer].Server_ID, value);
+		strcpy(smbServer.Server_ID, value);
 	else if (!strcmp(name, "smbServer_FBID"))
-		strcpy(smbServerList[smbCurrentServer].Server_FBID, value);
+		strcpy(smbServer.Server_FBID, value);
 	else
 		return 0;  //when no SMB variable
 	return 1;      //when SMB variable found

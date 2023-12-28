@@ -994,7 +994,7 @@ static void ShowDebugInfo(void)
 			} else if (new_pad & PAD_SQUARE) {
 				smbLogon_Server(smbCurrentServer);
 			} else if (new_pad & PAD_TRIANGLE) {
-				smbServerList[smbCurrentServer].Server_Logon_f = 0;
+				smbServer.Server_Logon_f = 0;
 			} else
 #endif
 			{
@@ -1032,24 +1032,23 @@ static void ShowDebugInfo(void)
 			PrintRow(-1, TextRow);
 #else
 			row = PrintRow(-1, TextRow);
-			int si = smbCurrentServer;
 			sprintf(TextRow, "Server Index = %d of %d", si, smbServerListCount);
 			PrintRow(row + 1, TextRow);
-			sprintf(TextRow, "Server_IP = %s", smbServerList[si].Server_IP);
+			sprintf(TextRow, "Server_IP = %s", smbServer.Server_IP);
 			PrintRow(-1, TextRow);
-			sprintf(TextRow, "Server_Port = %d", smbServerList[si].Server_Port);
+			sprintf(TextRow, "Server_Port = %d", smbServer.Server_Port);
 			PrintRow(-1, TextRow);
-			sprintf(TextRow, "Username = %s", smbServerList[si].Username);
+			sprintf(TextRow, "Username = %s", smbServer.Username);
 			PrintRow(-1, TextRow);
-			sprintf(TextRow, "Password = %s", smbServerList[si].Password);
+			sprintf(TextRow, "Password = %s", smbServer.Password);
 			PrintRow(-1, TextRow);
-			sprintf(TextRow, "PasswordType = %d", smbServerList[si].PasswordType);
+			sprintf(TextRow, "PasswordType = %d", smbServer.PasswordType);
 			PrintRow(-1, TextRow);
-			sprintf(TextRow, "PassHash_f = %d", smbServerList[si].PassHash_f);
+			sprintf(TextRow, "PassHash_f = %d", smbServer.PassHash_f);
 			PrintRow(-1, TextRow);
-			sprintf(TextRow, "Server_Logon_f = %d", smbServerList[si].Server_Logon_f);
+			sprintf(TextRow, "Server_Logon_f = %d", smbServer.Server_Logon_f);
 			PrintRow(-1, TextRow);
-			sprintf(TextRow, "Server_FBID = %s", smbServerList[si].Server_FBID);
+			sprintf(TextRow, "Server_FBID = %s", smbServer.Server_FBID);
 			PrintRow(-1, TextRow);
 			sprintf(TextRow, "\xFF"
 			                 "0 Index++  \xFF"
