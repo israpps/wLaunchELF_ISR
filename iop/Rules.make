@@ -25,6 +25,8 @@ DEBUG ?= 0
 ifneq ($(DEBUG), 0)
   $(info -- $(IOP_BIN): compiling with debug level $(DEBUG))
   IOP_CFLAGS += -DDEBUG=$(DEBUG)
+else
+.SILENT:
 endif
 
 IOP_INCS := $(IOP_INCS) -I$(PS2SDK)/iop/include -I$(PS2SDK)/common/include -Iinclude
@@ -40,23 +42,29 @@ BIN2O = $(PS2SDK)/bin/bin2o
 # Externally defined variables: IOP_BIN, IOP_OBJS, IOP_LIB
 
 %.o : %.c
-	$(IOP_CC) $(IOP_CFLAGS) -c $< -o $@
+	@echo IOPCC $@
+	@$(IOP_CC) $(IOP_CFLAGS) -c $< -o $@
 
 %.o : %.S
-	$(IOP_CC) $(IOP_CFLAGS) $(IOP_INCS) -c $< -o $@
+	@echo IOPCC $@
+	@$(IOP_CC) $(IOP_CFLAGS) $(IOP_INCS) -c $< -o $@
 
 %.o : %.s
-	$(IOP_AS) $(IOP_ASFLAGS) $< -o $@
+	@echo IOPAS $@
+	@$(IOP_AS) $(IOP_ASFLAGS) $< -o $@
 
 #Rules for the PS2SDK-styled projects (objects in objs/, binary in bin/)
 $(IOP_OBJS_DIR)%.o : $(IOP_SRC_DIR)%.c
-	$(IOP_CC) $(IOP_CFLAGS) -c $< -o $@
+	@echo IOPCC $@
+	@$(IOP_CC) $(IOP_CFLAGS) -c $< -o $@
 
 $(IOP_OBJS_DIR)%.o : $(IOP_SRC_DIR)%.S
-	$(IOP_CC) $(IOP_CFLAGS) $(IOP_INCS) -c $< -o $@
+	@echo IOPCC $@
+	@$(IOP_CC) $(IOP_CFLAGS) $(IOP_INCS) -c $< -o $@
 
 $(IOP_OBJS_DIR)%.o : $(IOP_SRC_DIR)%.s
-	$(IOP_AS) $(IOP_ASFLAGS) $< -o $@
+	@echo IOPAS $@
+	@$(IOP_AS) $(IOP_ASFLAGS) $< -o $@
 
 # A rule to build imports.lst.
 $(IOP_OBJS_DIR)%.o : $(IOP_SRC_DIR)%.lst
