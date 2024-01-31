@@ -30,11 +30,6 @@ jobs:
         git config --global --add safe.directory "$GITHUB_WORKSPACE"
         git fetch --prune --unshallow
 
-    - name: Install ps2eth
-      run: |
-        git clone https://github.com/ps2dev/ps2eth.git
-        cd ps2eth && make clean all install
-
     - name: Compile wLaunchELF
       run: |
         make rebuild ${{ matrix.eth }} ${{ matrix.sior }} ${{ matrix.bdmstuff }} ${{ matrix.ds34 }} ${{ matrix.xfrom }} ${{ github.event.inputs.make_args }}
