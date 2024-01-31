@@ -68,17 +68,19 @@ $(IOP_OBJS_DIR)%.o : $(IOP_SRC_DIR)%.s
 
 # A rule to build imports.lst.
 $(IOP_OBJS_DIR)%.o : $(IOP_SRC_DIR)%.lst
-	$(ECHO) "#include \"irx_imports.h\"" > $(IOP_OBJS_DIR)build-imports.c
-	cat $< >> $(IOP_OBJS_DIR)build-imports.c
-	$(IOP_CC) $(IOP_CFLAGS) -I$(IOP_SRC_DIR) -c $(IOP_OBJS_DIR)build-imports.c -o $@
-	-rm -f $(IOP_OBJS_DIR)build-imports.c
+	@echo IMPORT LIST
+	@$(ECHO) "#include \"irx_imports.h\"" > $(IOP_OBJS_DIR)build-imports.c
+	@cat $< >> $(IOP_OBJS_DIR)build-imports.c
+	@$(IOP_CC) $(IOP_CFLAGS) -I$(IOP_SRC_DIR) -c $(IOP_OBJS_DIR)build-imports.c -o $@
+	@-rm -f $(IOP_OBJS_DIR)build-imports.c
 
 # A rule to build exports.tab.
 $(IOP_OBJS_DIR)%.o : $(IOP_SRC_DIR)%.tab
-	$(ECHO) "#include \"irx.h\"" > $(IOP_OBJS_DIR)build-exports.c
-	cat $< >> $(IOP_OBJS_DIR)build-exports.c
-	$(IOP_CC) $(IOP_CFLAGS) -I$(IOP_SRC_DIR) -c $(IOP_OBJS_DIR)build-exports.c -o $@
-	-rm -f $(IOP_OBJS_DIR)build-exports.c
+	@echo EXPORT TAB
+	@$(ECHO) "#include \"irx.h\"" > $(IOP_OBJS_DIR)build-exports.c
+	@cat $< >> $(IOP_OBJS_DIR)build-exports.c
+	@$(IOP_CC) $(IOP_CFLAGS) -I$(IOP_SRC_DIR) -c $(IOP_OBJS_DIR)build-exports.c -o $@
+	@-rm -f $(IOP_OBJS_DIR)build-exports.c
 
 $(IOP_OBJS_DIR):
 	$(MKDIR) -p $(IOP_OBJS_DIR)
@@ -91,17 +93,19 @@ $(IOP_LIB_DIR):
 
 # A rule to build imports.lst.
 %.o : %.lst
-	$(ECHO) "#include \"irx_imports.h\"" > build-imports.c
-	cat $< >> build-imports.c
-	$(IOP_CC) $(IOP_CFLAGS) -I. -c build-imports.c -o $@
-	-rm -f build-imports.c
+	@echo IMPORT LIST
+	@$(ECHO) "#include \"irx_imports.h\"" > build-imports.c
+	@cat $< >> build-imports.c
+	@$(IOP_CC) $(IOP_CFLAGS) -I. -c build-imports.c -o $@
+	@-rm -f build-imports.c
 
 # A rule to build exports.tab.
 %.o : %.tab
-	$(ECHO) "#include \"irx.h\"" > build-exports.c
-	cat $< >> build-exports.c
-	$(IOP_CC) $(IOP_CFLAGS) -I. -c build-exports.c -o $@
-	-rm -f build-exports.c
+	@echo EXPORT TAB
+	@$(ECHO) "#include \"irx.h\"" > build-exports.c
+	@cat $< >> build-exports.c
+	@$(IOP_CC) $(IOP_CFLAGS) -I. -c build-exports.c -o $@
+	@-rm -f build-exports.c
 
 $(IOP_BIN): $(IOP_OBJS)
 	$(IOP_CC) $(IOP_CFLAGS) -o $@ $(IOP_OBJS) $(IOP_LDFLAGS) $(IOP_LIBS)
