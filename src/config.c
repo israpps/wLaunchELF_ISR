@@ -412,7 +412,6 @@ void loadSkinBrowser(void)
 //endfunc loadSkinBrowser
 //---------------------------------------------------------------------------
 // Save LAUNCHELF.CNF (or LAUNCHELFx.CNF with multiple pages)
-// sincro: ADD save USBD_FILE string
 // polo: ADD save SKIN_FILE string
 // suloku: ADD save MAIN_SKIN string //dlanor: changed to GUI_SKIN_FILE
 //---------------------------------------------------------------------------
@@ -490,7 +489,6 @@ void saveConfig(char *mainMsg, char *CNF)
 	        "Menu_Hide_Paths = %d\r\n"
 	        "Menu_Pages = %d\r\n"
 	        "GUI_Swap_Keys = %d\r\n"
-	        "USBD_FILE = %s\r\n"
 	        "NET_HOSTwrite = %d\r\n"
 	        "Menu_Title = %s\r\n"
 	        "Init_Delay = %d\r\n"
@@ -500,7 +498,6 @@ void saveConfig(char *mainMsg, char *CNF)
 	        "Menu_Show_Titles = %d\r\n"
 	        "PathPad_Lock = %d\r\n"
 	        "CNF_Path = %s\r\n"
-	        "USBMASS_FILE = %s\r\n"
 	        "LANG_FILE = %s\r\n"
 	        "FONT_FILE = %s\r\n"
 	        "JpgView_Timer = %d\r\n"
@@ -515,7 +512,6 @@ void saveConfig(char *mainMsg, char *CNF)
 	        setting->Hide_Paths,       //Menu_Hide_Paths
 	        setting->numCNF,           //Menu_Pages
 	        setting->swapKeys,         //GUI_Swap_Keys
-	        setting->usbd_file,        //USBD_FILE
 	        setting->HOSTwrite,        //NET_HOST_write
 	        setting->Menu_Title,       //Menu_Title
 	        setting->Init_Delay,       //Init_Delay
@@ -525,7 +521,6 @@ void saveConfig(char *mainMsg, char *CNF)
 	        setting->Show_Titles,      //Menu_Show_Titles
 	        setting->PathPad_Lock,     //PathPad_Lock
 	        setting->CNF_Path,         //CNF_Path
-	        setting->usbmass_file,     //USBMASS_FILE
 	        setting->lang_file,        //LANG_FILE
 	        setting->font_file,        //FONT_FILE
 	        setting->JpgView_Timer,    //JpgView_Timer
@@ -661,8 +656,6 @@ void initConfig(void)
 	setting->LK_Flag[SETTING_LK_CIRCLE] = 1;
 	strcpy(setting->LK_Path[SETTING_LK_TRIANGLE], setting->Misc_About_uLE);
 	setting->LK_Flag[SETTING_LK_TRIANGLE] = 1;
-	setting->usbd_file[0] = '\0';
-	setting->usbmass_file[0] = '\0';
 	setting->usbkbd_file[0] = '\0';
 	setting->kbdmap_file[0] = '\0';
 	setting->skin[0] = '\0';
@@ -707,7 +700,6 @@ void initConfig(void)
 //endfunc initConfig
 //---------------------------------------------------------------------------
 // Load LAUNCHELF.CNF (or LAUNCHELFx.CNF with multiple pages)
-// sincro: ADD load USBD_FILE string
 // polo: ADD load SKIN_FILE string
 // suloku: ADD load MAIN_SKIN string //dlanor: changed to GUI_SKIN_FILE
 // dlanor: added error flag return value 0==OK, -1==failure
@@ -846,8 +838,6 @@ int loadConfig(char *mainMsg, char *CNF)
 			setting->numCNF = atoi(value);
 		else if (!strcmp(name, "GUI_Swap_Keys"))
 			setting->swapKeys = atoi(value);
-		else if (!strcmp(name, "USBD_FILE"))
-			strcpy(setting->usbd_file, value);
 		else if (!strcmp(name, "NET_HOSTwrite"))
 			setting->HOSTwrite = atoi(value);
 		else if (!strcmp(name, "Menu_Title")) {
@@ -867,8 +857,6 @@ int loadConfig(char *mainMsg, char *CNF)
 			setting->PathPad_Lock = atoi(value);
 		else if (!strcmp(name, "CNF_Path"))
 			strcpy(setting->CNF_Path, value);
-		else if (!strcmp(name, "USBMASS_FILE"))
-			strcpy(setting->usbmass_file, value);
 		else if (!strcmp(name, "LANG_FILE"))
 			strcpy(setting->lang_file, value);
 		else if (!strcmp(name, "FONT_FILE"))
@@ -1591,14 +1579,12 @@ enum CONFIG_STARTUP {
 	CONFIG_STARTUP_FIRST = 1,
 	CONFIG_STARTUP_CNF_COUNT = CONFIG_STARTUP_FIRST,
 	CONFIG_STARTUP_SELECT_BTN,
-	CONFIG_STARTUP_USBD,
 	CONFIG_STARTUP_INIT_DELAY,
 	CONFIG_STARTUP_TIMEOUT,
 	CONFIG_STARTUP_KEYBOARD,
 	CONFIG_STARTUP_USBKBD,
 	CONFIG_STARTUP_KBDMAP,
 	CONFIG_STARTUP_CNF,
-	CONFIG_STARTUP_USBHDFSD,
 	CONFIG_STARTUP_LANG,
 	CONFIG_STARTUP_FONT,
 	CONFIG_STARTUP_ESR,
@@ -1651,8 +1637,6 @@ static void Config_Startup(void)
 				event |= 2;  //event |= valid pad command
 				if (s == CONFIG_STARTUP_CNF_COUNT && setting->numCNF > 1)
 					setting->numCNF--;
-				else if (s == CONFIG_STARTUP_USBD)
-					setting->usbd_file[0] = '\0';
 				else if (s == CONFIG_STARTUP_INIT_DELAY && setting->Init_Delay > 0)
 					setting->Init_Delay--;
 				else if (s == CONFIG_STARTUP_TIMEOUT && setting->timeout > 0)
@@ -1663,8 +1647,6 @@ static void Config_Startup(void)
 					setting->kbdmap_file[0] = '\0';
 				else if (s == CONFIG_STARTUP_CNF)
 					setting->CNF_Path[0] = '\0';
-				else if (s == CONFIG_STARTUP_USBHDFSD)
-					setting->usbmass_file[0] = '\0';
 				else if (s == CONFIG_STARTUP_LANG) {
 					setting->lang_file[0] = '\0';
 					Load_External_Language();
@@ -1684,8 +1666,6 @@ static void Config_Startup(void)
 					setting->numCNF++;
 				else if (s == CONFIG_STARTUP_SELECT_BTN)
 					setting->swapKeys = !setting->swapKeys;
-				else if (s == CONFIG_STARTUP_USBD)
-					getFilePath(setting->usbd_file, USBD_IRX_CNF);
 				else if (s == CONFIG_STARTUP_INIT_DELAY)
 					setting->Init_Delay++;
 				else if (s == CONFIG_STARTUP_TIMEOUT)
@@ -1698,13 +1678,10 @@ static void Config_Startup(void)
 					getFilePath(setting->kbdmap_file, KBDMAP_FILE_CNF);
 				else if (s == CONFIG_STARTUP_CNF) {
 					char *tmp;
-
 					getFilePath(setting->CNF_Path, CNF_PATH_CNF);
 					if ((tmp = strrchr(setting->CNF_Path, '/')))
 						tmp[1] = '\0';
-				} else if (s == CONFIG_STARTUP_USBHDFSD)
-					getFilePath(setting->usbmass_file, USBMASS_IRX_CNF);
-				else if (s == CONFIG_STARTUP_LANG) {
+				} else if (s == CONFIG_STARTUP_LANG) {
 					getFilePath(setting->lang_file, LANG_CNF);
 					Load_External_Language();
 				} else if (s == CONFIG_STARTUP_FONT) {
@@ -1764,13 +1741,6 @@ static void Config_Startup(void)
 			printXY(c, x, y, setting->color[COLOR_TEXT], TRUE, 0);
 			y += FONT_HEIGHT;
 
-			if (strlen(setting->usbd_file) == 0)
-				sprintf(c, "  %s: %s", LNG(USBD_IRX), LNG(DEFAULT));
-			else
-				sprintf(c, "  %s: %s", LNG(USBD_IRX), setting->usbd_file);
-			printXY(c, x, y, setting->color[COLOR_TEXT], TRUE, 0);
-			y += FONT_HEIGHT;
-
 			sprintf(c, "  %s: %d", LNG(Initial_Delay), setting->Init_Delay);
 			printXY(c, x, y, setting->color[COLOR_TEXT], TRUE, 0);
 			y += FONT_HEIGHT;
@@ -1804,13 +1774,6 @@ static void Config_Startup(void)
 				sprintf(c, "  %s: %s", LNG(CNF_Path_override), LNG(NONE));
 			else
 				sprintf(c, "  %s: %s", LNG(CNF_Path_override), setting->CNF_Path);
-			printXY(c, x, y, setting->color[COLOR_TEXT], TRUE, 0);
-			y += FONT_HEIGHT;
-
-			if (strlen(setting->usbmass_file) == 0)
-				sprintf(c, "  %s: %s", LNG(USB_Mass_IRX), LNG(DEFAULT));
-			else
-				sprintf(c, "  %s: %s", LNG(USB_Mass_IRX), setting->usbmass_file);
 			printXY(c, x, y, setting->color[COLOR_TEXT], TRUE, 0);
 			y += FONT_HEIGHT;
 
@@ -1875,8 +1838,8 @@ static void Config_Startup(void)
 					                 "0:%s \xFF"
 					                 "1:%s",
 					              LNG(Add), LNG(Subtract));
-			} else if ((s == CONFIG_STARTUP_USBD) || (s == CONFIG_STARTUP_USBKBD) || (s == CONFIG_STARTUP_KBDMAP) || (s == CONFIG_STARTUP_CNF) || (s == CONFIG_STARTUP_USBHDFSD)
-			           //usbd_file||usbkbd_file||kbdmap_file||CNF_Path||usbmass_file
+			} else if ((s == CONFIG_STARTUP_USBKBD) || (s == CONFIG_STARTUP_KBDMAP) || (s == CONFIG_STARTUP_CNF)
+			           //usbkbd_file||kbdmap_file||CNF_Path
 			           //Language||Fontfile||ESR_elf||OSDSYS_kelf
 			           || (s == CONFIG_STARTUP_LANG) || (s == CONFIG_STARTUP_FONT) || (s == CONFIG_STARTUP_ESR) || (s == CONFIG_STARTUP_OSDSYS)) {
 				if (swapKeys)

@@ -30,11 +30,6 @@ jobs:
         git config --global --add safe.directory "$GITHUB_WORKSPACE"
         git fetch --prune --unshallow
 
-    - name: Install ps2eth
-      run: |
-        git clone https://github.com/ps2dev/ps2eth.git
-        cd ps2eth && make clean all install
-
     - name: Compile wLaunchELF
       run: |
         make rebuild ${{ matrix.eth }} ${{ matrix.sior }} ${{ matrix.bdmstuff }} ${{ matrix.ds34 }} ${{ matrix.xfrom }} ${{ github.event.inputs.make_args }}
@@ -45,49 +40,12 @@ jobs:
         name: WLE
         path: |
             BOOT*.ELF
-#######################################################
-  build_iso:
-    if: github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main'
-    strategy:
-      fail-fast: false
-      matrix:
-        eth: ["ETH=0", "ETH=1", "ETH=1 UDPTTY=1", "ETH=1 UDPTTY=0 SIO_DEBUG=1"]
-        bdmstuff: ["EXFAT=0", "EXFAT=1"]
-        iopreset: ["IOP_RESET=0", "IOP_RESET=1"]
-    runs-on: ubuntu-latest
-    container: ps2dev/ps2dev:v1.0
-    steps:
-  
-    - name: Install dependencies
-      run: |
-        apk add make git zip cdrkit
-  
-    - uses: actions/checkout@v3
-    - run: |
-        git config --global --add safe.directory "$GITHUB_WORKSPACE"
-        git fetch --prune --unshallow
-  
-    - name: Install ps2eth
-      run: |
-        git clone https://github.com/ps2dev/ps2eth.git
-        cd ps2eth && make clean all install
-  
-    - name: Compile wLaunchELF ISO Image
-      run: |
-        make rebuild isoclean iso ${{ matrix.eth }} ${{ matrix.bdmstuff }} ${{ matrix.iopreset }} PACK_ISO=YES ${{ github.event.inputs.make_args }}
 
-    - name: Upload variants artifact ELF
-      uses: actions/upload-artifact@v3
-      with:
-        name: WLE_ISO
-        path: |
-          wLE_ISR_ISO*.zip
-    
 ####################################################### 
   release:
     if: github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
-    needs: [build, build_iso]
+    needs: [build]
     steps:
 
     - uses: actions/checkout@v3
@@ -122,16 +80,6 @@ jobs:
         title: "Translations"
         files: |
                Lang/*.LNG
-
-    - name: Create release
-      if: github.ref == 'refs/heads/master'
-      uses: marvinpinto/action-automatic-releases@latest
-      with:
-        repo_token: "${{ secrets.GITHUB_TOKEN }}"
-        automatic_release_tag: "iso"
-        title: "wLaunchELF ISO Images"
-        files: |
-          WLE_ISO/*.zip
 
   trigger-auto-update:
     if: github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main'

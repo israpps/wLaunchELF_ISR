@@ -1378,7 +1378,7 @@ static int loadExternalModule(char *modPath, void *defBase, int defSize)
 static void loadUsbDModule(void)
 {
 	DPRINTF(" [USBD]:\n");
-	if ((!have_usbd) && (loadExternalModule(setting->usbd_file, &usbd_irx, size_usbd_irx)))
+	if ((!have_usbd) && (loadExternalModule("USBD.IRX", &usbd_irx, size_usbd_irx)))
 		have_usbd = 1;
 }
 //------------------------------
@@ -1404,7 +1404,7 @@ static void loadUsbModules(void)
     int ret, ID;
 
     loadUsbDModule();
-    if (have_usbd && !have_usb_mass && (USB_mass_loaded = loadExternalModule(setting->usbmass_file, NULL, 0))) {
+    if (have_usbd && !have_usb_mass && (USB_mass_loaded = loadExternalModule("", NULL, 0))) {
         delay(3);
         have_usb_mass = 1;
     } else if (have_usbd && !have_usb_mass) {
@@ -1433,7 +1433,7 @@ static void loadUsbModules(void)
 #else
 {
 	loadUsbDModule();
-	if (have_usbd && !have_usb_mass && (USB_mass_loaded = loadExternalModule(setting->usbmass_file, &usb_mass_irx, size_usb_mass_irx))) {
+	if (have_usbd && !have_usb_mass && (USB_mass_loaded = loadExternalModule("", &usb_mass_irx, size_usb_mass_irx))) {
 		delay(3);
 		have_usb_mass = 1;
 	}
@@ -2559,11 +2559,15 @@ int main(int argc, char *argv[])
 
 	Reset();
 	Init_Default_Language();
-	if (exists("rom0:PSXVER"))
+	if (exists("rom0:PSXVER")) {
 		console_is_PSX = 1;
-	DPRINTF("is PSX = %d\n", console_is_PSX);
+		DPRINTF("# Console is PSX-DESR\n");
+	}
 	LaunchElfDir[0] = 0;
 	boot_path[0] = 0;
+
+	DPRINTF("Loading USB modules\n");
+	loadUsbModules();
 
 	if ((argc > 0) && argv[0]) {
 		strcpy(LaunchElfDir, argv[0]);  //Default LaunchElfDir to the boot path.
@@ -2662,17 +2666,6 @@ int main(int argc, char *argv[])
 		initHOST();
 	}
 #endif
-	//Last chance to look at bootup screen, so allow braking here
-	/*
-	if(readpad() && (new_pad && PAD_UP))
-	{ scr_printf("________ Boot paused. Press 'Circle' to continue.\n");
-		while(1)
-		{	if(new_pad & PAD_CIRCLE)
-				break;
-			while(!readpad());
-		}
-	}
-*/
 	DPRINTF("setupGS()\n");
 	setupGS();
 	gsKit_clear(gsGlobal, GS_SETREG_RGBAQ(0x00, 0x00, 0x00, 0x00, 0x00));
@@ -2686,8 +2679,6 @@ int main(int argc, char *argv[])
 	//It's time to load and init drivers
 	DPRINTF("Getting IPCONFIG\n");
 	getIpConfig();
-	DPRINTF("Loading USB modules\n");
-	loadUsbModules();
 
 #ifdef UDPBD
 	int ID, ret;

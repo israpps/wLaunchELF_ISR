@@ -234,9 +234,9 @@ static int fsysIoctl(iop_file_t *file, unsigned long request, void *data)
 	int remote_fd = ((struct filedesc_info *)file)->own_fd;
 	int ret;
 	dbgprintf("fsysioctl..\n");
-	dbgprintf("  fd: %x\n"
+	/*dbgprintf("  fd: %x\n"
 	          "  rq: %x\n"
-	          "  dp: %x\n\n", );
+	          "  dp: %x\n\n", );*/
 
 	remove_flag = 0;
 

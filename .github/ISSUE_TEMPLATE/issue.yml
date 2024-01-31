@@ -1,0 +1,55 @@
+name: Issue report
+description: Report an issue on wLaunchELF 4.43x_isr
+title: "[ISSUE]: "
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ### __Disclaimer:__
+        Issue reports must be from wLaunchELF 4.43x_isr. issues with 4.43x_isr_hdd are expected [here](https://github.com/israpps/wLaunchELF_ISR_HDD/issues)
+        Issue reports for consoles with installed and enabled modchip are considered as incomplete reports (we won't ignore you, but confirmation that the issue can be reproduced on a virgin console will be appreciated).
+        ## Before posting the issue confirm that you meet the below requirements.
+
+  - type: checkboxes
+    id: terms
+    attributes:
+      label: Checks
+      description: "Check before posting"
+      options:
+        - label: I have checked existing [__Issue reports__](https://github.com/israpps/wLaunchELF_ISR/issues) for duplicates and found none
+        - label: I downloaded wLaunchELF from this repository or the [official download link](https://israpps.github.io/20210113_wLaunchELF_isr/)
+
+  - type: markdown
+    attributes:
+      value: |
+        ### Configuration
+        > (please complete the following information):
+
+  - type: input
+    id: console
+    attributes:
+      label: Console model
+      description: you can see it on the console sticker or inside OSDSYS (press triangle on main menú)
+      placeholder: SCPH-????? / DTL-H????? / DESR-????? / COH-H?????
+    validations:
+      required: true
+
+  - type: input
+    id: oplver
+    attributes:
+      label: "wLaunchELF commit code"
+      description: "you can see it on (Filebrowser > MISC > Debug Info)"
+      placeholder: "eg: commit 0a70367"
+    validations:
+      required: true
+
+  - type: textarea
+    id: explanation
+    attributes:
+      label: Describe the issue
+      description: A clear and concise description of what the issue is.
+      placeholder: My issue is...
+    validations:
+      required: true
+

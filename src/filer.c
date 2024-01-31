@@ -963,6 +963,7 @@ int genRmdir(char *path)
 //--------------------------------------------------------------
 int genRemove(char *path)
 {
+	DPRINTF("%s: '%s'\n", __FUNCTION__, path);
 	int ret;
 
 	genLimObjName(path, 0);
@@ -976,6 +977,7 @@ int genRemove(char *path)
 //--------------------------------------------------------------
 int genOpen(char *path, int mode)
 {
+	DPRINTF("%s: '%s' @ %d\n", __FUNCTION__, path, mode);
 	genLimObjName(path, 0);
 	return fileXioOpen(path, mode, fileMode);
 }
@@ -984,6 +986,7 @@ int genOpen(char *path, int mode)
 //--------------------------------------------------------------
 int genDopen(char *path)
 {
+	DPRINTF("%s: '%s'\n", __FUNCTION__, path);
 	int fd;
 
 	if (!strncmp(path, "pfs", 3) || !strncmp(path, "vmc", 3)) {
