@@ -82,7 +82,7 @@ endif
 ifeq ($(UDPBD), 1)
     ifneq ($(EXFAT),1)
         $(error UDPBD Requested on build without BDM)
-    else
+    endif
     $(info UDPBD enabled, disabling any other network feature)
     EE_OBJS += smap_udpbd.o
     HAS_UDPBD = -UDPBD
