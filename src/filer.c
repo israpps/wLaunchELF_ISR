@@ -74,10 +74,6 @@ char mountedDVRPParty[MOUNT_LIMIT][MAX_NAME];
 int latestDVRPMount = -1;
 #endif
 
-#ifdef MX4SIO
-int mx4sio_idx = -1; // To keep track of wich mass#:/ device represents MX4SIO
-#endif
-
 int file_show = 1;  //dlanor: 0==name_only, 1==name+size+time, 2==title+size+time
 int file_sort = 1;  //dlanor: 0==none, 1==name, 2==title, 3==mtime
 int size_valid = 0;
@@ -170,7 +166,13 @@ typedef struct
 int PSU_content;  //Used to count PSU content headers for the main header
 
 //USB_mass definitions for multiple drive usage
-char USB_mass_ix[10] = {'0', 0, 0, 0, 0, 0, 0, 0, 0, 0};
+const static char* block_device_id[] = {
+	"usb",
+	"sdc",
+	"sd",
+	"udp",
+}
+char Block_device_ix[10] = {'0', 0, 0, 0, 0, 0, 0, 0, 0, 0};
 int USB_mass_max_drives = USB_MASS_MAX_DRIVES;
 u64 USB_mass_scan_time = 0;
 int USB_mass_scanned = 0;  //0==Not_found_OR_No_Multi 1==found_Multi_mass_once
@@ -1289,36 +1291,35 @@ void scan_USB_mass(void)
 #ifdef MX4SIO
 	static char DEVID[5];
 #endif
-	int i, dd;
+	int i, x, dd;
 	iox_stat_t chk_stat;
 	char mass_path[8] = "mass0:/";
 	if ((USB_mass_max_drives < 2)  //No need for dynamic lists with only one drive
 	    || (USB_mass_scanned && ((Timer() - USB_mass_scan_time) < 5000)))
 		return;
 
-#ifdef MX4SIO
-	mx4sio_idx = -1; //assume none is mx4sio // this MUST ALWAYS be after the USB_mass_scan_time check
-#endif
-
 	for (i = 0; i < USB_mass_max_drives; i++) {
 		mass_path[4] = '0' + i;
 		if (fileXioGetStat(mass_path, &chk_stat) < 0) {
-			USB_mass_ix[i] = 0;
+			Block_device_ix[i] = BD_UNK;
 			continue;
 		}
-#ifdef MX4SIO
+#if defined(MX4SIO) || defined(ILINK) || defined(UDPBD)
     	if ((dd = fileXioDopen(mass_path)) >= 0) {
     	    int *intptr_ctl = (int *)DEVID;
     	    *intptr_ctl = fileXioIoctl(dd, USBMASS_IOCTL_GET_DRIVERNAME, "");
     	    fileXioDclose(dd);
-		if (!strncmp(DEVID, "sdc", 3))
-		{
-			mx4sio_idx = i;
-			DPRINTF("%s: Found MX4SIO device at mass%d:/\n", __func__, i);
-		}
+			for (x = BD_USB; x < BD_AMMOUNT; x++)
+			{
+				if (!strcmp(DEVID, block_device_id[x]))
+				{
+					Block_device_ix[i] = x;
+					DPRINTF("%s: Found '%s' device at mass%d:\n", __func__, block_device_id[x], i);
+				}
+			}
     	}
 #endif
-		USB_mass_ix[i] = '0' + i;
+		Block_device_ix[i] = BD_USB; //not recognizable but accesible? assume USB. so no renaming happens and acess is still granted
 		USB_mass_scanned = 1;
 		USB_mass_scan_time = Timer();
 	}  //ends for loop
@@ -3506,14 +3507,14 @@ int setFileList(const char *path, const char *ext, FILEINFO *files, int cnfmode)
 		files[nfiles++].stats.AttrFile = sceMcFileAttrSubdir;
 		if ((cnfmode != USBD_IRX_CNF) && (cnfmode != USBKBD_IRX_CNF) && (cnfmode != USBMASS_IRX_CNF)) {
 			//The condition above blocks selecting USB drivers from USB devices
-			if (USB_mass_ix[0] || !USB_mass_scanned) {
+			if (Block_device_ix[0] || !USB_mass_scanned) {
 				strcpy(files[nfiles].name, "mass:");
 				files[nfiles++].stats.AttrFile = sceMcFileAttrSubdir;
 			}
 			for (i = 1; i < 10; i++) {
-				if (USB_mass_ix[i]) {
+				if (Block_device_ix[i]) {
 					strcpy(files[nfiles].name, "mass0:");
-					files[nfiles].name[4] = USB_mass_ix[i];
+					files[nfiles].name[4] = Block_device_ix[i];
 					files[nfiles++].stats.AttrFile = sceMcFileAttrSubdir;
 				}
 			}
@@ -4345,17 +4346,37 @@ int getFilePath(char *out, int cnfmode)
 				else if ((file_show == 2) && files[top + i].title[0] != 0) {
 					mcTitle = files[top + i].title;
 				} else {  //Show normal file/folder names
-#ifdef MX4SIO
+#ifdef BDM
 					if (path[0] == 0) { // we are on root. apply the unique "alias" here
-						if ((!strncmp(files[top + i].name, "mass", 4)) //
-						&& (files[top + i].name[4] == ('0' + mx4sio_idx) || (mx4sio_idx == 0 && files[top + i].name[4] == ':')) //index corresponds to mx4sio index, also assume that if device path index 4 is equal to ':' then it is index 0
-						)
-							strcpy(tmp, "mx4sio:");
-						else 
-							strcpy(tmp, files[top + i].name);
-				} else {
+						if (!strncmp(files[top + i].name, "mass", 4))
+						{
+							int T = (isdigit(files[top + i].name[4])) ? (files[top + i].name[4] - '0') : 0;
+							switch (T)
+							{
+#ifdef ILINK
+								case BD_ILK:
+									strcpy(tmp, "iLink:");
+									break;
+#endif
+#ifdef MX4SIO
+								case BD_MX4:
+									strcpy(tmp, "mx4sio:");
+									break;
+#endif
+#ifdef UDPBD
+								case BD_UDP:
+									strcpy(tmp, "udpbd:");
+									break;
+#endif
+								case BD_USB:
+								default:
+									strcpy(tmp, files[top + i].name);
+									break;
+							}
+						}
+					} else {
 					strcpy(tmp, files[top + i].name);
-				}
+					}
 #else
 				strcpy(tmp, files[top + i].name);
 #endif

@@ -464,9 +464,18 @@ extern int Check_ESR_Disc(void);
 
 //USB_mass definitions for multiple drive usage
 
+typedef enum BLOCK_DEVICES {
+	BD_UNK = 0, // placeholder for inacessible mass index (aka: nothing connected)
+	BD_USB,
+	BD_MX4,
+	BD_ILK,
+	BD_UDP,
+
+	BD_AMMOUNT
+}
 #define USB_MASS_MAX_DRIVES 10
 
-extern char USB_mass_ix[10];
+extern char Block_device_ix[10];
 extern int USB_mass_max_drives;
 extern u64 USB_mass_scan_time;
 extern int USB_mass_scanned;
