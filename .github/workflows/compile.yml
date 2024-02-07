@@ -17,6 +17,7 @@ jobs:
         eth: ["ETH=0", "ETH=1"]
         bdmstuff: ["EXFAT=0", "EXFAT=1", "EXFAT=1 MX4SIO=1"]
         ds34: ["DS34=0", "DS34=1"]
+        coh: ["COH=0", "COH=1"]
     runs-on: ubuntu-latest
     container: ps2dev/ps2dev:v1.0
     steps:
@@ -29,6 +30,14 @@ jobs:
     - run: |
         git config --global --add safe.directory "$GITHUB_WORKSPACE"
         git fetch --prune --unshallow
+
+    - name: get romimg dependency
+      if: matrix.coh == 'COH=1'
+      run: |
+        wget https://github.com/israpps/ROMIMG/releases/download/Latest/ROMIMG-linux-x86.7z -O ROMIMG.7z
+        mkdir tools
+        7z e ROMIMG.7z -otools/ * -r
+        rm -f ROMIMG.7z
 
     - name: Compile wLaunchELF
       run: |
