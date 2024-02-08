@@ -41,7 +41,7 @@ jobs:
       run: |
         wget https://github.com/israpps/ROMIMG/releases/download/Latest/ROMIMG-linux-x86.7z -O ROMIMG.7z
         mkdir tools
-        7z e ROMIMG.7z -otools/ * -r
+        7z e ROMIMG.7z -otools/ ROMIMG -r
         rm -f ROMIMG.7z
         ls tools/
 
