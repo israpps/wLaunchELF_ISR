@@ -43,6 +43,7 @@ jobs:
         mkdir tools
         7z e ROMIMG.7z -otools/ * -r
         rm -f ROMIMG.7z
+        ls tools/
 
     - name: Compile wLaunchELF
       run: |
