@@ -46,7 +46,7 @@ jobs:
 
     - name: Compile wLaunchELF
       run: |
-        make rebuild ${{ matrix.eth }} ${{ matrix.sior }} ${{ matrix.bdmstuff }} ${{ matrix.ds34 }} ${{ matrix.xfrom }} ${{ github.event.inputs.make_args }}
+        make rebuild ${{ matrix.coh }} ${{ matrix.eth }} ${{ matrix.sior }} ${{ matrix.bdmstuff }} ${{ matrix.ds34 }} ${{ matrix.xfrom }} ${{ github.event.inputs.make_args }}
 
     - name: Upload variants artifact ELF
       uses: actions/upload-artifact@v3
