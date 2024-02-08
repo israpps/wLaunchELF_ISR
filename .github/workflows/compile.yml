@@ -25,6 +25,11 @@ jobs:
     - name: Install dependencies
       run: |
         apk add make git zip
+  
+    - name: Install 7zip
+      if: matrix.coh == 'COH=1'
+      run: |
+        apk add p7zip
 
     - uses: actions/checkout@v3
     - run: |
