@@ -167,8 +167,8 @@ ifeq ($(IOP_RESET),0)
 endif
 
 $(EE_ASM_DIR)ioprp.s:
-	cp $(PS2SDK)/iop/irx/fileio.irx tools/FILEIO
-	cp $(PS2SDK)/iop/irx/ioman.irx tools/IOMAN
+	cp iop/__precompiled/fileio.irx tools/FILEIO
+	cp iop/__precompiled/ioman.irx tools/IOMAN
 	tools/ROMIMG -c IOPRP.IMG IOMAN FILEIO
 	$(BIN2S) IOPRP.IMG $@ ioprp_img
 	rm -f tools/IOMAN tools/FILEIO IOPRP.IMG
