@@ -43,6 +43,7 @@ jobs:
         mkdir tools
         cd tools
         7z e ../ROMIMG.7z ROMIMG
+        chmod +x ./ROMIMG
         rm -f ../ROMIMG.7z
         ls
 
