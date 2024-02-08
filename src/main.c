@@ -12,6 +12,10 @@
     extern int size_##_n
 
 //IRX for togleable features
+#ifdef SUPPORT_SYSTEM_2X6
+#include <iopcontrol_special.h>
+IMPORT_BIN2C(ioprp_img);
+#endif
 #ifdef ETH
 IMPORT_BIN2C(ps2ip_irx);
 IMPORT_BIN2C(ps2smap_irx);
@@ -2381,10 +2385,12 @@ static void Reset()
 {
 #ifndef NO_IOP_RESET
 	SifInitRpc(0);
-	while (!SifIopReset("", 0)) {
-	};
-	while (!SifIopSync()) {
-	};
+#ifdef SUPPORT_SYSTEM_2X6
+	while (!SifIopRebootBuffer(ioprp_img, size_ioprp_img)) {};
+#else
+	while (!SifIopReset("", 0)) {};
+#endif
+	while (!SifIopSync()) {};
 	SifInitRpc(0);
 #endif
 	SifLoadFileInit();
