@@ -202,7 +202,7 @@ void pad_psu_header(psu_header *psu)
 /// if it is, prompts the user to confirm the operation before proceeding.
 /// returns 0 if user wants to proceed. returns nonzero if user does not want to proceed or the file is not a boot file
 int dongleguard(char *filepath) {
-    if (!strcmp(filepath, "mc0:boot.bin") {
+    if (!strcmp(filepath, "mc0:boot.bin")) {
     	if (ynDialog("you're about to delete/rename/move the security dongle boot file\ndont do this if you don't know what it is\n\nContinue?") > 0) {
     	  return 2;
     	} else {return 0;}
