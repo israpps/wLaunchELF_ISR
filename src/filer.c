@@ -204,9 +204,9 @@ void pad_psu_header(psu_header *psu)
 int dongleguard(char *filepath) {
     if (!strcmp(filepath, "mc0:boot.bin")) {
     	if (ynDialog("you're about to delete/rename/move the security dongle boot file\ndont do this if you don't know what it is\n\nContinue?") > 0) {
-    	  return 2;
-    	} else {return 0;}
-    } else {return 1;} /*not a dongle boot file*/}
+    	  return 0; // is a dongle bootfile, and we want to delete 
+    	} else {return 2; /*is a dongle bootfile and we dont want to delete*/}
+    } else {return 1; /*not a dongle boot file*/}
 }
 #endif
 //--------------------------------------------------------------
