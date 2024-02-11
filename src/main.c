@@ -2424,7 +2424,7 @@ int i, d;
 	fileXioSetRWBufferSize(128 * 1024);
 	DPRINTF("Initializing mc rpc\n");
 #ifdef SUPPORT_SYSTEM_2X6
-	if (exist("rom0:DAEMON")) {
+	if (exists("rom0:DAEMON")) {
 		DPRINTF("found 'rom0:DAEMON', initializing XMC RPC server instead of MC\n");
 		mcInit(MC_TYPE_XMC);
 	} else {
