@@ -25,27 +25,11 @@ jobs:
     - name: Install dependencies
       run: |
         apk add make git zip
-  
-    - name: Install 7zip
-      if: matrix.coh == 'COH=1'
-      run: |
-        apk add p7zip
 
     - uses: actions/checkout@v3
     - run: |
         git config --global --add safe.directory "$GITHUB_WORKSPACE"
         git fetch --prune --unshallow
-
-    - name: get romimg dependency
-      if: matrix.coh == 'COH=1'
-      run: |
-        wget https://github.com/israpps/ROMIMG/releases/download/Latest/ROMIMG-linux-x86.7z -O ROMIMG.7z
-        mkdir tools
-        cd tools
-        7z e ../ROMIMG.7z ROMIMG
-        chmod +x ./ROMIMG
-        rm -f ../ROMIMG.7z
-        ls -R
 
     - name: Compile wLaunchELF
       run: |
