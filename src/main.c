@@ -2423,10 +2423,20 @@ int i, d;
 	//Increase the FILEIO R/W buffer size to reduce overhead.
 	fileXioSetRWBufferSize(128 * 1024);
 	DPRINTF("Initializing mc rpc\n");
+#ifdef SUPPORT_SYSTEM_2X6
+	if (exist("rom0:DAEMON")) {
+		DPRINTF("found 'rom0:DAEMON', initializing XMC RPC server instead of MC\n");
+		mcInit(MC_TYPE_XMC);
+	} else {
+		DPRINTF("'rom0:DAEMON' not found. initializing MC RPC\n");
+		mcInit(MC_TYPE_MC);
+	}
+#else
 #ifdef HOMEBREW_SIO2MAN
 	mcInit(MC_TYPE_XMC);
 #else
 	mcInit(MC_TYPE_MC);
+#endif
 #endif
 	DPRINTF("RESET FINISHED\n");
 	//	setupPad();
