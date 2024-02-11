@@ -195,6 +195,16 @@ void pad_psu_header(psu_header *psu)
 {
 	memset((void *)psu, 0xFF, sizeof(psu_header));
 }
+// functions below are all related to noob-helper checks on COH models
+#ifdef SUPPORT_SYSTEM_2X6
+int dongleguard(char *filepath) {
+    if (!strcmp(filepath, "mc0:boot.bin") {
+    	if (ynDialog("you're about to delete/rename/move the security dongle boot file\ndont do this uf you don't know what it is\n\nContinue?") > 0) {
+    	  return 0;
+    	} else {return 2;}
+    } else {return 1; /*not a dongle boot file*/}
+}
+#endif
 //--------------------------------------------------------------
 // getHddParty below takes as input the string path and the struct file
 // and uses these to calculate the output strings party and dir. If the
@@ -2172,6 +2182,10 @@ int delete (const char *path, const FILEINFO *file)
 	}
 	sprintf(dir, "%s%s", path, file->name);
 	genLimObjName(dir, 0);
+#ifdef SUPPORT_SYSTEM_2X6
+        if (dongleguard(dir) != 0)
+	        return 0;
+#endif
 #ifdef ETH
 	if (!strncmp(dir, "host:/", 6))
 		makeHostPath(dir + 5, dir + 6);
@@ -2250,6 +2264,10 @@ int Rename(const char *path, const FILEINFO *file, const char *name)
 	} else if (!strncmp(path, "mc", 2)) {
 		sprintf(oldPath, "%s%s", path, file->name);
 		sprintf(newPath, "%s%s", path, name);
+#ifdef SUPPORT_SYSTEM_2X6
+                if (dongleguard(oldPath) != 0)
+	                return 0;
+#endif
 		if ((test = fileXioDopen(newPath)) >= 0) {  //Does folder of same name exist ?
 			fileXioDclose(test);
 			ret = -EEXIST;
