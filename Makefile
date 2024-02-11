@@ -51,6 +51,7 @@ endif
 
 ifeq ($(COH), 1)
     EE_OBJS += ioprp.o
+    EE_LIBS += -liopreboot
     HAS_COH = -COH
     EE_CFLAGS = -DSUPPORT_SYSTEM_2X6
 endif
@@ -166,12 +167,8 @@ ifeq ($(IOP_RESET),0)
 	@echo "-------------{COMPILATION PERFORMED WITHOUT IOP RESET}-------------"
 endif
 
-$(EE_ASM_DIR)ioprp.s:
-	cp iop/__precompiled/fileio.irx tools/FILEIO
-	cp iop/__precompiled/ioman.irx tools/IOMAN
-	tools/ROMIMG -c IOPRP.IMG IOMAN FILEIO
-	$(BIN2S) IOPRP.IMG $@ ioprp_img
-	rm -f tools/IOMAN tools/FILEIO IOPRP.IMG
+$(EE_ASM_DIR)ioprp.s: iop/__precompiled/IOPRP_FILEIO.IMG
+	$(BIN2S) $< $@ ioprp_img
 
 $(EE_OBJS_DIR):
 	mkdir $@
