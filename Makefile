@@ -42,6 +42,7 @@ EE_LIBS = -lgskit -ldmakit -ljpeg -lmc -lhdd -lcdvdfs -lkbd -lmf \
 EE_CFLAGS := -mgpopt -G10240 -G0 -DNEWLIB_PORT_AWARE -D_EE
 
 BIN2S = @bin2s
+LIBPAD = 1#1 is libpad, 2 is OSD libpad
 
 ifeq ($(SMB),1)
     EE_OBJS += smbman.o
@@ -52,6 +53,7 @@ endif
 ifeq ($(COH), 1)
     EE_OBJS += ioprp.o
     EE_LIBS += -liopreboot
+    LIBPAD = 2
     HAS_COH = -COH
     EE_CFLAGS = -DSUPPORT_SYSTEM_2X6
 endif
@@ -89,6 +91,12 @@ endif
 ifeq ($(SIO2MAN),1)
     EE_OBJS += sio2man.o padman.o
     EE_CFLAGS += -DHOMEBREW_SIO2MAN
+    LIBPAD = 2
+else
+    LIBPAD = 1
+endif
+
+ifeq ($(LIBPAD),2)
     EE_LIBS += -lpadx
 else
     EE_LIBS += -lpad
