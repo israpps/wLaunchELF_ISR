@@ -15,10 +15,11 @@ MX4SIO ?= 0
 SIO2MAN ?= 0
 TTY2SIOR ?= 0
 DEBUG ?= 0
+UDPBD ?= 0
 # ----------------------------- #
 .SILENT:
 
-BIN_NAME = $(HAS_EXFAT)$(HAS_DS34)$(HAS_ETH)$(HAS_SMB)$(HAS_DVRP)$(HAS_XFROM)$(HAS_MX4SIO)$(HAS_EESIO)$(HAS_UDPTTY)$(HAS_TTY2SIOR)$(HAS_IOP_RESET)
+BIN_NAME = $(HAS_EXFAT)$(HAS_DS34)$(HAS_ETH)$(HAS_SMB)$(HAS_DVRP)$(HAS_XFROM)$(HAS_MX4SIO)$(HAS_EESIO)$(HAS_UDPTTY)$(HAS_TTY2SIOR)$(HAS_IOP_RESET)$(HAS_UDPBD)
 ifeq ($(DEBUG), 0)
   EE_BIN = UNC-BOOT$(BIN_NAME).ELF
   EE_BIN_PKD = BOOT$(BIN_NAME).ELF
@@ -78,6 +79,21 @@ ifeq ($(MX4SIO),1)
     endif
 endif
 
+ifeq ($(UDPBD), 1)
+    ifneq ($(EXFAT),1)
+        $(error UDPBD Requested on build without BDM)
+    endif
+    $(info UDPBD enabled, disabling any other network feature)
+    EE_OBJS += smap_udpbd.o
+    HAS_UDPBD = -UDPBD
+    EE_CFLAGS += -DUDPBD -DCOMMON_PRINTF
+ifeq ($(UDPTTY),1)
+	$(error UDPBD and UDPTTY Cannot co-exist. only use UDPBD, since it can do the same thing too)
+endif
+    ETH = 0 # UDPBD cant coexist with common network crap
+    SMB = 0
+endif
+
 ifeq ($(SIO2MAN),1)
     EE_OBJS += sio2man.o padman.o
     EE_CFLAGS += -DHOMEBREW_SIO2MAN
@@ -107,7 +123,7 @@ ifeq ($(ETH),1)
     EE_OBJS += ps2smap_irx.o ps2ftpd_irx.o ps2host_irx.o ps2netfs_irx.o ps2ip_irx.o
     EE_CFLAGS += -DETH
 else
-    HAS_ETH = -NO_NETWORK
+
 endif
 
 ifeq ($(UDPTTY),1)

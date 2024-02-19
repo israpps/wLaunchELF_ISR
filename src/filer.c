@@ -950,6 +950,7 @@ int genFixPath(const char *inp_path, char *gen_path)
 //--------------------------------------------------------------
 int genRmdir(char *path)
 {
+	DPRINTF("RMDIR: '%s'\n", path);
 	int ret;
 
 	genLimObjName(path, 0);
@@ -963,7 +964,7 @@ int genRmdir(char *path)
 //--------------------------------------------------------------
 int genRemove(char *path)
 {
-	DPRINTF("%s: '%s'\n", __FUNCTION__, path);
+	DPRINTF("REMOVE: '%s'\n", path);
 	int ret;
 
 	genLimObjName(path, 0);
@@ -977,7 +978,7 @@ int genRemove(char *path)
 //--------------------------------------------------------------
 int genOpen(char *path, int mode)
 {
-	DPRINTF("%s: '%s' @ %d\n", __FUNCTION__, path, mode);
+	DPRINTF("OPEN: '%s' mode:%d\n", path, mode);
 	genLimObjName(path, 0);
 	return fileXioOpen(path, mode, fileMode);
 }
@@ -986,7 +987,7 @@ int genOpen(char *path, int mode)
 //--------------------------------------------------------------
 int genDopen(char *path)
 {
-	DPRINTF("%s: '%s'\n", __FUNCTION__, path);
+	DPRINTF("DOPEN: '%s'\n", path);
 	int fd;
 
 	if (!strncmp(path, "pfs", 3) || !strncmp(path, "vmc", 3)) {
@@ -1007,6 +1008,7 @@ int genDopen(char *path)
 //--------------------------------------------------------------
 int genLseek(int fd, int where, int how)
 {
+	DPRINTF("SEEK: fd:%d, where:%d, how:%d\n", fd, where, how);
 	return fileXioLseek(fd, where, how);
 }
 //------------------------------
@@ -1014,6 +1016,7 @@ int genLseek(int fd, int where, int how)
 //--------------------------------------------------------------
 int genRead(int fd, void *buf, int size)
 {
+	DPRINTF("READ: fd:%d, buf_ptr:0x%p, size:%d\n", fd, buf, size);
 	return fileXioRead(fd, buf, size);
 }
 //------------------------------
@@ -1021,6 +1024,7 @@ int genRead(int fd, void *buf, int size)
 //--------------------------------------------------------------
 int genWrite(int fd, void *buf, int size)
 {
+	DPRINTF("WRITE: fd:%d, buf_ptr:0x%p, size:%d\n", fd, buf, size);
 	return fileXioWrite(fd, buf, size);
 }
 //------------------------------
@@ -1028,6 +1032,7 @@ int genWrite(int fd, void *buf, int size)
 //--------------------------------------------------------------
 int genClose(int fd)
 {
+	DPRINTF("CLOSE: fd:%d\n", fd);
 	return fileXioClose(fd);
 }
 //------------------------------
@@ -1035,6 +1040,7 @@ int genClose(int fd)
 //--------------------------------------------------------------
 int genDclose(int fd)
 {
+	DPRINTF("DCLOSE: fd:%d\n", fd);
 	return fileXioDclose(fd);
 }
 //------------------------------

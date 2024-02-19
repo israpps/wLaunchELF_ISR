@@ -151,6 +151,9 @@ iop/vmc_fs.irx: iop/vmc_fs
 $(EE_ASM_DIR)vmc_fs_irx.s: iop/vmc_fs.irx | $(EE_ASM_DIR)
 	$(BIN2S) $< $@ vmc_fs_irx
 
+$(EE_ASM_DIR)smap_udpbd.s: iop/__precompiled/smap_udpbd.irx | $(EE_ASM_DIR)
+	$(BIN2S) $< $@ smap_udpbd_irx
+
 loader/loader.elf: loader
 	$(MAKE) -C $<
 

@@ -24,6 +24,10 @@ IMPORT_BIN2C(ps2ftpd_irx);
 IMPORT_BIN2C(smbman_irx);
 #endif
 
+#ifdef UDPBD
+IMPORT_BIN2C(smap_udpbd_irx);
+#endif
+
 #ifdef UDPTTY
 IMPORT_BIN2C(udptty_irx);
 #endif
@@ -396,9 +400,13 @@ static void Show_build_info(void)
 " SMB:0"
 #endif
 #ifdef ETH
-" ETH:1"
+	" ETH:1"
 #else
-" ETH:0"
+	#ifdef UDPBD
+		" ETH:UDPBD"
+	#else
+		" ETH:0"
+	#endif
 #endif	
 , COLOR_TEXT);
 			PrintPos(-1, hpos, 
@@ -2671,6 +2679,13 @@ int main(int argc, char *argv[])
 	//It's time to load and init drivers
 	DPRINTF("Getting IPCONFIG\n");
 	getIpConfig();
+
+#ifdef UDPBD
+	int ID, ret;
+	load_ps2dev9();
+    	ID = SifExecModuleBuffer(smap_udpbd_irx, size_smap_udpbd_irx, 0, NULL, &ret);
+	DPRINTF(" [UDPBD] ID=%d, ret=%d\n", ID, ret);
+#endif
 
 	WaitTime = Timer();
 	DPRINTF("setup pad\n");
