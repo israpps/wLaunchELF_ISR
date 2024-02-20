@@ -132,11 +132,7 @@ char netConfig[IPCONF_MAX_LEN + 64];  //Adjust size as needed
 //State of module collections
 static u8 have_HDD_modules = 0;
 //State of Uncheckable Modules (invalid header)
-#ifdef SUPPORT_SYSTEM_2X6 // dont load cdvd irx on coh, its RPC hangs?
-static u8 have_cdvd = 1;
-#else
 static u8 have_cdvd = 0;
-#endif
 static u8 have_usbd = 0;
 #ifdef DS34
 static u8 have_ds34 = 0;
@@ -1283,10 +1279,12 @@ static void getExternalFilePath(const char *argPath, char *filePath)
 		mountDVRPParty(party);
 
 #endif
+#ifndef SUPPORT_SYSTEM_2X6
 	} else if (!strncmp(argPath, "cdfs", 4)) {
 		strcpy(filePath, argPath);
 		CDVD_FlushCache();
 		CDVD_DiskReady(0);
+#endif
 	} else {
 		genFixPath(argPath, filePath);
 	}
@@ -2355,11 +2353,13 @@ Recurse_for_ESR:  //Recurse here for PS2Disc command with ESR disc
 		}
 		Show_build_info();
 		return;
+#ifndef SUPPORT_SYSTEM_2X6
 	} else if (!strncmp(path, "cdfs", 4)) {
 		CDVD_FlushCache();
 		CDVD_DiskReady(0);
 		party[0] = 0;
 		goto CheckELF_path;
+#endif
 	} else if (!strncmp(path, "rom", 3)) {
 		party[0] = 0;
 	CheckELF_path:
@@ -2421,7 +2421,9 @@ int i, d;
     DPRINTF(" [UDPTTY]: id=%d, ret=%d\n", i, d);
 #endif
 	loadBasicModules();
+#ifndef SUPPORT_SYSTEM_2X6
 	loadCdModules();
+#endif
 	DPRINTF("Initializing fileXio RPC\n");
 	fileXioInit();
 	//Increase the FILEIO R/W buffer size to reduce overhead.
