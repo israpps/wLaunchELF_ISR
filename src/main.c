@@ -2418,11 +2418,11 @@ int i, d;
 #endif
 	loadBasicModules();
 	loadCdModules();
-
+	DPRINTF("Initializing fileXio RPC\n");
 	fileXioInit();
 	//Increase the FILEIO R/W buffer size to reduce overhead.
 	fileXioSetRWBufferSize(128 * 1024);
-	DPRINTF("Initializing mc rpc\n");
+	DPRINTF("Initializing MCMAN RPC\n");
 #ifdef SUPPORT_SYSTEM_2X6
 	if (exists("rom0:DAEMON")) {
 		DPRINTF("found 'rom0:DAEMON', initializing XMC RPC server instead of MC\n");
@@ -2500,6 +2500,7 @@ static void InitializeBootExecPath()
 	RONVER[4] = '\0';
 	ROMVersion = strtoul(RONVER, NULL, 16);
 	//Handle special cases, before osdmain.elf was supported.
+#ifndef SUPPORT_SYSTEM_2X6
 	switch (ROMVER_data[4]) {
 		case 'E':
 			if (!strncmp(ROMVER_data, "0120", 4))
@@ -2530,7 +2531,9 @@ static void InitializeBootExecPath()
 		sprintf(default_OSDSYS_path2, "/Incompatible Unit (0x%03x)", (ROMVersion)&~0x0F);
 	else
 		sprintf(default_OSDSYS_path2, "mc:/B%cEXEC-SYSTEM/%s", rough_region, file);
-
+#else
+	strcpy(default_OSDSYS_path, "mc0:boot.bin");
+#endif
 }
 //------------------------------
 //endfunc InitializeBootExecPath
