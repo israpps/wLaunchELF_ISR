@@ -17,7 +17,7 @@ jobs:
         eth: ["ETH=0", "ETH=1"]
         bdmstuff: ["EXFAT=0", "EXFAT=1", "EXFAT=1 MX4SIO=1"]
         ds34: ["DS34=0", "DS34=1"]
-        coh: ["COH=0", "COH=1"]
+        coh: ["COH=0", "COH=1 SIO_DEBUG=1"]
     runs-on: ubuntu-latest
     container: ps2dev/ps2dev:v1.0
     steps:
