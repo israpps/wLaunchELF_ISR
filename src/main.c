@@ -132,7 +132,11 @@ char netConfig[IPCONF_MAX_LEN + 64];  //Adjust size as needed
 //State of module collections
 static u8 have_HDD_modules = 0;
 //State of Uncheckable Modules (invalid header)
+#ifdef SUPPORT_SYSTEM_2X6 // dont load cdvd irx on coh, its RPC hangs?
+static u8 have_cdvd = 1;
+#else
 static u8 have_cdvd = 0;
+#endif
 static u8 have_usbd = 0;
 #ifdef DS34
 static u8 have_ds34 = 0;
