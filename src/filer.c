@@ -200,13 +200,14 @@ void pad_psu_header(psu_header *psu)
 ///dongleguard
 /// checks if the file about to be touched is a security dongle boot file.
 /// if it is, prompts the user to confirm the operation before proceeding.
-/// returns 0 if user wants to proceed. returns nonzero if user does not want to proceed or the file is not a boot file
+/// returns 1 if user wants to proceed. returns 0 if user does not want to proceed or the file is not a boot file
 int dongleguard(char *filepath) {
-    if (!strcmp(filepath, "mc0:boot.bin")) {
-    	if (ynDialog("you're about to delete/rename/move the security dongle boot file\ndont do this if you don't know what it is\n\nContinue?") > 0) {
-    	  return 0; // is a dongle bootfile, and we want to delete 
-    	} else {return 2; /*is a dongle bootfile and we dont want to delete*/}
-    } else {return 1; /*not a dongle boot file*/}
+	DPRINTF("%s(%s)\n", __FUNCTION__, filepath);
+    if (!strcmp(filepath, "mc0:/boot.bin")) {
+		return (ynDialog("you're about to remove/modify the security dongle boot file\n"
+			"dont do this if you don't know what it is\n\nContinue?")>0);
+    }
+	return -1;
 }
 #endif
 //--------------------------------------------------------------
@@ -524,6 +525,7 @@ int ynDialog(const char *message)
 	drawScr();
 	drawSprite(setting->color[COLOR_BACKGR], dx, dy, dx + dw + 1, (dy + dh) + 1);
 	drawScr();
+	DPRINTF("%s:%d\n", __func__, ret);
 	return ret;
 }
 //------------------------------
@@ -2163,7 +2165,7 @@ void make_title_cfg(const char *path, const FILEINFO *file, char **_msg0)
 //------------------------------
 //endfunc make_title_cfg
 //--------------------------------------------------------------
-int delete (const char *path, const FILEINFO *file)
+int delete(const char *path, const FILEINFO *file)
 {
 	FILEINFO files[MAX_ENTRY];
 	char party[MAX_NAME], dir[MAX_PATH], hdddir[MAX_PATH];
@@ -2187,7 +2189,7 @@ int delete (const char *path, const FILEINFO *file)
 	sprintf(dir, "%s%s", path, file->name);
 	genLimObjName(dir, 0);
 #ifdef SUPPORT_SYSTEM_2X6
-        if (dongleguard(dir) != 0)
+        if (!dongleguard(dir))
 	        return 0;
 #endif
 #ifdef ETH
@@ -2198,7 +2200,7 @@ int delete (const char *path, const FILEINFO *file)
 		strcat(dir, "/");
 		nfiles = getDir(dir, files);
 		for (i = 0; i < nfiles; i++) {
-			ret = delete (dir, &files[i]);  //recursively delete contents of folder
+			ret = delete(dir, &files[i]);  //recursively delete contents of folder
 			if (ret < 0)
 				return -1;
 		}
@@ -2269,8 +2271,8 @@ int Rename(const char *path, const FILEINFO *file, const char *name)
 		sprintf(oldPath, "%s%s", path, file->name);
 		sprintf(newPath, "%s%s", path, name);
 #ifdef SUPPORT_SYSTEM_2X6
-                if (dongleguard(oldPath) != 0)
-	                return 0;
+        if (!dongleguard(oldPath)>0)
+	        return 0;
 #endif
 		if ((test = fileXioDopen(newPath)) >= 0) {  //Does folder of same name exist ?
 			fileXioDclose(test);
@@ -2464,6 +2466,11 @@ restart_copy:  //restart point for PM_PSU_RESTORE to reprocess modified argument
 	} else
 		sprintf(out, "%s%s", outPath, newfile.name);
 
+#ifdef SUPPORT_SYSTEM_2X6
+    if (!dongleguard(out)>0)
+	    return 0;
+#endif
+
 	if (!strcmp(in, out))
 		return 0;  //if in and out are identical our work is done.
 
@@ -2585,7 +2592,7 @@ restart_copy:  //restart point for PM_PSU_RESTORE to reprocess modified argument
 				if (ynDialog(progress) < 0)
 					return -1;
 				if ((PasteMode == PM_MC_BACKUP) || (PasteMode == PM_MC_RESTORE) || (PasteMode == PM_PSU_RESTORE)) {
-					ret = delete (outPath, &newfile);  //Attempt recursive delete
+					ret = delete(outPath, &newfile);  //Attempt recursive delete
 					if (ret < 0)
 						return -1;
 					if (newdir(outPath, newfile.name) < 0)
@@ -4054,7 +4061,7 @@ int getFilePath(char *out, int cnfmode)
 								sprintf(tmp1, " %s", LNG(deleting));
 								strcat(tmp, tmp1);
 								drawMsg(tmp);
-								ret = delete (path, &files[browser_sel]);
+								ret = delete(path, &files[browser_sel]);
 							} else {
 								for (i = 0; i < browser_nfiles; i++) {
 									if (marks[i]) {
@@ -4066,7 +4073,7 @@ int getFilePath(char *out, int cnfmode)
 										sprintf(tmp1, " %s", LNG(deleting));
 										strcat(tmp, tmp1);
 										drawMsg(tmp);
-										ret = delete (path, &files[i]);
+										ret = delete(path, &files[i]);
 										if (ret < 0)
 											break;
 									}
@@ -4701,7 +4708,7 @@ void subfunc_Paste(char *mess, char *path)
 		if (ret < 0)
 			break;
 		if (browser_cut) {
-			ret = delete (clipPath, &clipFiles[i]);
+			ret = delete(clipPath, &clipFiles[i]);
 			if (ret < 0)
 				break;
 		}
