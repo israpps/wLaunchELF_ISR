@@ -1178,8 +1178,13 @@ static void loadCdModules(void)
 	int ret, id;
 
 	if (!have_cdvd) {
+#ifdef SUPPORT_SYSTEM_2X6
+    	id = SifLoadStartModule("rom0:CDVDFSV", 0, NULL, &ret);
+    	DPRINTF(" [rom0:CDVDFSV]: ID=%d, ret=%d\n", id, ret);
+#else
 		id = SifExecModuleBuffer(cdvd_irx, size_cdvd_irx, 0, NULL, &ret);
 		DPRINTF(" [CDVD]: id=%d, ret=%d\n", id, ret);
+#endif
 		sceCdInit(SCECdINoD);  // SCECdINoD init without check for a disc. Reduces risk of a lockup if the drive is in a erroneous state.
 		CDVD_Init();
 		have_cdvd = 1;
@@ -1279,12 +1284,10 @@ static void getExternalFilePath(const char *argPath, char *filePath)
 		mountDVRPParty(party);
 
 #endif
-#ifndef SUPPORT_SYSTEM_2X6
 	} else if (!strncmp(argPath, "cdfs", 4)) {
 		strcpy(filePath, argPath);
 		CDVD_FlushCache();
 		CDVD_DiskReady(0);
-#endif
 	} else {
 		genFixPath(argPath, filePath);
 	}
@@ -2353,13 +2356,11 @@ Recurse_for_ESR:  //Recurse here for PS2Disc command with ESR disc
 		}
 		Show_build_info();
 		return;
-#ifndef SUPPORT_SYSTEM_2X6
 	} else if (!strncmp(path, "cdfs", 4)) {
 		CDVD_FlushCache();
 		CDVD_DiskReady(0);
 		party[0] = 0;
 		goto CheckELF_path;
-#endif
 	} else if (!strncmp(path, "rom", 3)) {
 		party[0] = 0;
 	CheckELF_path:
@@ -2421,9 +2422,7 @@ int i, d;
     DPRINTF(" [UDPTTY]: id=%d, ret=%d\n", i, d);
 #endif
 	loadBasicModules();
-#ifndef SUPPORT_SYSTEM_2X6
 	loadCdModules();
-#endif
 	DPRINTF("Initializing fileXio RPC\n");
 	fileXioInit();
 	//Increase the FILEIO R/W buffer size to reduce overhead.
