@@ -51,7 +51,7 @@ ifeq ($(SMB),1)
 endif
 
 ifeq ($(COH), 1)
-  SIO2MAN = 1
+  SIO2MAN = 0
   EE_OBJS += ioprp.o
   EE_LIBS += -liopreboot
   LIBPAD = 2

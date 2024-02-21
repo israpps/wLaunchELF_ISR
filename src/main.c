@@ -2444,11 +2444,13 @@ int i, d;
 	fileXioSetRWBufferSize(128 * 1024);
 	DPRINTF("Initializing MCMAN RPC\n");
 #ifdef HOMEBREW_SIO2MAN
+	DPRINTF("mcInit(MC_TYPE_XMC)..");
 	mcInit(MC_TYPE_XMC);
 #else
+	DPRINTF("mcInit(MC_TYPE_MC)..");
 	mcInit(MC_TYPE_MC);
 #endif
-	DPRINTF("RESET FINISHED\n");
+	DPRINTF(".done!\n");
 	//setupPad();
 }
 //------------------------------
