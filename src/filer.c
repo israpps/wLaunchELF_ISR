@@ -3524,8 +3524,10 @@ int setFileList(const char *path, const char *ext, FILEINFO *files, int cnfmode)
 			files[nfiles++].stats.AttrFile = sceMcFileAttrSubdir;
 		}
 #endif
+#ifndef SUPPORT_SYSTEM_2X6
 		strcpy(files[nfiles].name, "cdfs:");
 		files[nfiles++].stats.AttrFile = sceMcFileAttrSubdir;
+#endif
 		if ((cnfmode != USBD_IRX_CNF) && (cnfmode != USBKBD_IRX_CNF) && (cnfmode != USBMASS_IRX_CNF)) {
 			//The condition above blocks selecting USB drivers from USB devices
 			if (USB_mass_ix[0] || !USB_mass_scanned) {
