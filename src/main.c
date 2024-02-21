@@ -1999,6 +1999,14 @@ static void CleanUp(void)
 //------------------------------
 int IsSupportedFileType(char *path)
 {
+#ifdef SUPPORT_SYSTEM_2X6
+    if(strchr(path, ':') != NULL) {
+        if ((genCmpFileExt(path, "TXT") || genCmpFileExt(path, "CHT") || genCmpFileExt(path, "CFG") || genCmpFileExt(path, "INI")  || genCmpFileExt(path, "CNF") ) || (genCmpFileExt(path, "JPG") || genCmpFileExt(path, "JPEG"))) return 1;
+        else if(genCmpFileExt(path, "IRX")) return 0;
+        else return(checkELFheader(path) >= 0);
+    } else //No ':', hence no device name in path, which means it is a special action (e.g. MISC/*).
+        return 1;
+#else
 	if (strchr(path, ':') != NULL) {
 		if (genCmpFileExt(path, "ELF")) {
 			return (checkELFheader(path) >= 0);
@@ -2008,6 +2016,7 @@ int IsSupportedFileType(char *path)
 			return 0;
 	} else  //No ':', hence no device name in path, which means it is a special action (e.g. MISC/*).
 		return 1;
+#endif
 }
 //------------------------------
 //endfunc IsSupportedFileType
