@@ -2429,23 +2429,13 @@ int i, d;
 	//Increase the FILEIO R/W buffer size to reduce overhead.
 	fileXioSetRWBufferSize(128 * 1024);
 	DPRINTF("Initializing MCMAN RPC\n");
-#ifdef SUPPORT_SYSTEM_2X6
-	if (exists("rom0:DAEMON")) {
-		DPRINTF("found 'rom0:DAEMON', initializing XMC RPC server instead of MC\n");
-		mcInit(MC_TYPE_XMC);
-	} else {
-		DPRINTF("'rom0:DAEMON' not found. initializing MC RPC\n");
-		mcInit(MC_TYPE_MC);
-	}
-#else
 #ifdef HOMEBREW_SIO2MAN
 	mcInit(MC_TYPE_XMC);
 #else
 	mcInit(MC_TYPE_MC);
 #endif
-#endif
 	DPRINTF("RESET FINISHED\n");
-	//	setupPad();
+	//setupPad();
 }
 //------------------------------
 //endfunc Reset
@@ -2562,6 +2552,7 @@ enum BOOT_DEVICE {
 
 int main(int argc, char *argv[])
 {
+	DPRINTF("wLaunchELF ISR compiled %s %s\n", __DATE__, __TIME__);
 	char *p;
 	int event, post_event = 0;
 	char RunPath[MAX_PATH];
@@ -2697,8 +2688,8 @@ int main(int argc, char *argv[])
 	DPRINTF("Getting IPCONFIG\n");
 	getIpConfig();
 
-	WaitTime = Timer();
-	DPRINTF("setup pad\n");
+	//WaitTime = Timer();
+	DPRINTF("setupPad()\n");
 	setupPad();  //Comment out this line when using early setupPad above
 	DPRINTF("Starting keyboard\n");
 	startKbd();
@@ -2732,8 +2723,9 @@ int main(int argc, char *argv[])
 	DPRINTF("starting main menu event loop\n");
 	//----- Start of main menu event loop -----
 	while (1) {
-		int DiscType_ix;
 
+		int DiscType_ix;
+#ifndef SUPPORT_SYSTEM_2X6
 		//Background event section
 		uLE_cdStop();              //Test disc state and if needed stop disc (updates cdmode)
 		if (cdmode == old_cdmode)  //if disc detection did not change state
@@ -2784,7 +2776,7 @@ int main(int argc, char *argv[])
 			if ((timeout / 1000) != (prev_timeout / 1000))
 				event |= 8;  //event |= visible timeout change
 		}
-
+#endif
 		//Display section
 		if (event || post_event) {  //NB: We need to update two frame buffers per event
 			if (!(setting->GUI_skin[0]))
