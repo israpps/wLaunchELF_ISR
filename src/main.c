@@ -2734,10 +2734,25 @@ int main(int argc, char *argv[])
 	else
 		sprintf(mainMsg, "%s", LNG(Loaded_Config));
 
+#ifdef SUPPORT_SYSTEM_2X6
+#define ACJV_PATHCNT 5
+	int id, ret;
+	const char* ACJVPATHS[ACJV_PATHCNT] = {"ACJVLOAD.IRX", "mc0:/ACJVLOAD.IRX", "mc1:/ACJVLOAD.IRX", "mass0:/ACJVLOAD.IRX", "mass1:/ACJVLOAD.IRX"};
+	for (i=0;i<ACJV_PATHCNT;i++) {
+		id = SifLoadStartModule(ACJVPATHS[i], 0, NULL, &ret);
+		DPRINTF(" [%s]: ID=%d, ret=%d\n", ACJVPATHS[i], id, ret);
+		if (id>0&&ret!=1) {
+			i = -1;
+			break;
+		}
+	}
+	sprintf(mainMsg + strlen(mainMsg), (i == -1) ? " ACJVLOAD.IRX loaded":" ACJVLOAD.IRX not found");
+	DPRINTF(mainMsg);
+#endif
+	
 	//Here nearly everything is ready for the main menu event loop
 	//But before we start that, we need to validate CNF_Path
 	Validate_CNF_Path();
-
 	RunPath[0] = 0;  //Nothing to run yet
 	cdmode = -1;     //flag unchecked cdmode state
 	event = 1;       //event = initial entry
