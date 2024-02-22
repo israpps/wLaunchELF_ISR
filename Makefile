@@ -115,6 +115,7 @@ ifeq ($(CDVDFSV),1)
   EE_OBJS += cdvd_irx.o
 else
   EE_CLFAGS += -DUSE_ROM_CDVDFSV
+  $(MAKE) -C iop/oldlibs/libcdvd lib/libcdvdfs.a
 endif
 
 ifeq ($(LIBPAD),2)
