@@ -64,6 +64,10 @@ IMPORT_BIN2C(dvrdrv_irx);
 IMPORT_BIN2C(dvrfile_irx);
 #endif
 
+#ifndef USE_ROM_CDVDFSV
+IMPORT_BIN2C(cdvd_irx);
+#endif
+
 // Mandatory IRX
 IMPORT_BIN2C(iomanx_irx);
 IMPORT_BIN2C(filexio_irx);
@@ -75,7 +79,6 @@ IMPORT_BIN2C(ps2fs_irx);
 IMPORT_BIN2C(poweroff_irx);
 IMPORT_BIN2C(loader_elf);
 IMPORT_BIN2C(iopmod_irx);
-IMPORT_BIN2C(cdvd_irx);
 IMPORT_BIN2C(ps2kbd_irx);
 IMPORT_BIN2C(hdl_info_irx);
 IMPORT_BIN2C(mcman_irx);

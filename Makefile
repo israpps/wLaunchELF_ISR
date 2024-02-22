@@ -114,7 +114,7 @@ endif
 ifeq ($(CDVDFSV),1)
   EE_OBJS += cdvd_irx.o
 else
-  EE_CLFAGS += -DUSE_ROM_CDVDFSV
+  EE_CFLAGS += -DUSE_ROM_CDVDFSV
 endif
 
 ifeq ($(LIBPAD),2)
