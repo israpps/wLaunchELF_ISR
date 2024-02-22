@@ -4278,8 +4278,15 @@ int getFilePath(char *out, int cnfmode)
 			browser_nfiles = setFileList(path, ext, files, cnfmode);
 			if (!cnfmode) {  //Calculate free space (unless configuring)
 				if (!strncmp(path, "mc", 2)) {
-					mcGetInfo(path[2] - '0', 0, &mctype_PSx, &mcfreeSpace, NULL);
+					int mcformatted=MC_UNFORMATTED;
+					mcGetInfo(path[2] - '0', 0, &mctype_PSx, &mcfreeSpace, &mcformatted);
 					mcSync(0, NULL, &ret);
+#ifdef SUPPORT_SYSTEM_2X6
+					if (path[2] == '0') {
+						sprintf(msg0, "Security dongle status: card:%d format:%d ret:%d", mctype_PSx, mcformatted, ret);
+						browser_pushed = FALSE;
+					}
+#endif
 					freeSpace = mcfreeSpace * ((mctype_PSx == 1) ? 8192 : 1024);
 					vfreeSpace = TRUE;
 				} else if (!strncmp(path, "vmc", 3)) {
