@@ -108,7 +108,7 @@ endif
 ifeq ($(MCMAN),1)
   EE_OBJS += mcman_irx.o mcserv_irx.o
 else
-  EE_CLFAGS += -DUSE_ROM_MCMAN
+  EE_CFLAGS += -DUSE_ROM_MCMAN
 endif
 
 ifeq ($(CDVDFSV),1)
