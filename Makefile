@@ -237,9 +237,9 @@ info:
 	$(info -------- wLaunchELF 4.43x_isr --------)
 	$(info EE_BIN = $(EE_BIN))
 	$(info EE_BIN_PKD = $(EE_BIN_PKD))
-	$(info EE_OBJS = $(EE_OBJS))
 	$(info TMANIP=$(TMANIP), SIO_DEBUG=$(SIO_DEBUG), DS34=$(DS34), ETH=$(ETH))
 	$(info EXFAT=$(EXFAT), XFROM=$(XFROM), UDPTTY=$(UDPTTY), MX4SIO=$(MX4SIO) COH=$(COH))
+	$(info SIO2MAN=$(SIO2MAN), MCMAN=$(MCMAN))
 	$(info IOP_RESET=$(IOP_RESET))
 
 #special recipe for compiling and dumping obj to subfolder
@@ -255,6 +255,11 @@ $(EE_OBJS_DIR)%.o: $(EE_SRC_DIR)%.cpp | $(EE_OBJS_DIR)
 	@echo -e "\033[1m CXX - $@\033[0m"
 	$(EE_CXX) $(EE_CXXFLAGS) $(EE_INCS) -c $< -o $@
 #'\033[1m \033[0m'
+
+buildinfo: info
+	$(info EE_OBJS   $(EE_OBJS))
+	$(info EE_LIBS   $(EE_LIBS))
+	$(info EE_CFLAGS $(EE_CFLAGS))
 
 include embed.make
 include $(PS2SDK)/samples/Makefile.pref
