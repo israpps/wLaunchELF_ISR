@@ -29,7 +29,7 @@ jobs:
       run: |
         apk add make git zip
 
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - run: |
         git config --global --add safe.directory "$GITHUB_WORKSPACE"
         git fetch --prune --unshallow
@@ -39,7 +39,7 @@ jobs:
         make rebuild ${{ matrix.coh }} ${{ matrix.eth }} ${{ matrix.sior }} ${{ matrix.bdmstuff }} ${{ matrix.ds34 }} ${{ matrix.xfrom }} ${{ github.event.inputs.make_args }}
 
     - name: Upload variants artifact ELF
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: WLE
         path: |
@@ -52,13 +52,13 @@ jobs:
     needs: [build]
     steps:
 
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - run: |
         git config --global --add safe.directory "$GITHUB_WORKSPACE"
         git fetch --prune --unshallow
 
     - name: Download all artifacts
-      uses: actions/download-artifact@v3
+      uses: actions/download-artifact@v4
 
     - name: list
       run: |
