@@ -1156,18 +1156,27 @@ static void loadBasicModules(void)
 	DPRINTF("Hello from EE SIO!\n");
 #endif
 
+#ifdef USE_ROM_MCMAN
+	id = SifLoadStartModule("rom0:MCMAN", 0, NULL, &ret);
+	DPRINTF(" [rom0:MCMAN]: id=%d, ret=%d\n", id, ret);
+	id = SifLoadStartModule("rom0:MCSERV", 0, NULL, &ret);
+	DPRINTF(" [rom0:MCSERV]: id=%d, ret=%d\n", id, ret);
+#else
+ #ifdef SUPPORT_SYSTEM_2X6
+ #error WARNING: youre building arcade wLaunchELF with homebrew MCMAN/MCSERV, this way you will not be able to access the security dongle
+ #endif
 	id = SifExecModuleBuffer(mcman_irx, size_mcman_irx, 0, NULL, &ret);  //Home
 	DPRINTF(" [MCMAN]: id=%d ret=%d\n", id, ret);
-	//SifLoadModule("rom0:MCMAN", 0, NULL); //Sony
 	id = SifExecModuleBuffer(mcserv_irx, size_mcserv_irx, 0, NULL, &ret);  //Home
 	DPRINTF(" [MCSERV]: id=%d ret=%d\n", id, ret);
-	//SifLoadModule("rom0:MCSERV", 0, NULL); //Sony
+#endif
+
 #ifdef HOMEBREW_SIO2MAN
 	id = SifExecModuleBuffer(padman_irx, size_padman_irx, 0, NULL, &ret);  //Home
 	DPRINTF(" [PADMAN]: id=%d ret=%d\n", id, ret);
 #else
-	id = SifLoadModule("rom0:PADMAN", 0, NULL);
-	DPRINTF(" [rom0:PADMAN]: id=%d\n", id);
+	id = SifLoadStartModule("rom0:PADMAN", 0, NULL, &ret);
+	DPRINTF(" [rom0:PADMAN]: id=%d, ret=%d\n", id, ret);
 #endif
 }
 //------------------------------
@@ -2444,12 +2453,12 @@ int i, d;
 	fileXioSetRWBufferSize(128 * 1024);
 	DPRINTF("Initializing MCMAN RPC\n");
 #ifndef SUPPORT_SYSTEM_2X6
- #ifdef HOMEBREW_SIO2MAN
-	DPRINTF("mcInit(MC_TYPE_XMC)..");
-	mcInit(MC_TYPE_XMC);
- #else
+ #ifdef USE_ROM_MCMAN
 	DPRINTF("mcInit(MC_TYPE_MC)..");
 	mcInit(MC_TYPE_MC);
+ #else
+	DPRINTF("mcInit(MC_TYPE_XMC)..");
+	mcInit(MC_TYPE_XMC);
  #endif
 #else
 	DPRINTF("mcInit(MC_TYPE_XMC)..");

@@ -12,10 +12,13 @@ IOP_RESET ?= 1
 XFROM ?= 0
 UDPTTY ?= 0
 MX4SIO ?= 0
-SIO2MAN ?= 0
 TTY2SIOR ?= 0
 DEBUG ?= 0
 COH ?= 0
+
+# 0: on-board version, 1: homebrew version
+SIO2MAN ?= 0
+MCMAN ?= 1
 # ----------------------------- #
 .SILENT:
 
@@ -29,7 +32,7 @@ else
 endif
 EE_OBJS = main.o config.o elf.o draw.o loader_elf.o filer.o \
 	poweroff_irx.o iomanx_irx.o filexio_irx.o ps2atad_irx.o ps2dev9_irx.o \
-	ps2hdd_irx.o ps2fs_irx.o usbd_irx.o mcman_irx.o mcserv_irx.o \
+	ps2hdd_irx.o ps2fs_irx.o usbd_irx.o \
 	cdvd_irx.o vmc_fs_irx.o ps2kbd_irx.o \
 	hdd.o hdl_rpc.o hdl_info_irx.o editor.o timer.o jpgviewer.o icon.o lang.o \
 	font_uLE.o makeicon.o chkesr.o allowdvdv_irx.o
@@ -52,6 +55,7 @@ endif
 
 ifeq ($(COH), 1)
   SIO2MAN = 0
+  MCMAN = 0
   EE_OBJS += ioprp.o
   EE_LIBS += -liopreboot
   LIBPAD = 2
@@ -97,6 +101,12 @@ else
   ifneq ($(COH),1)
     LIBPAD = 1
   endif
+endif
+
+ifeq ($(MCMAN),1)
+  EE_OBJS += mcman_irx.o mcserv_irx.o
+else
+  EE_CLFAGS += -DUSE_ROM_MCMAN
 endif
 
 ifeq ($(LIBPAD),2)
