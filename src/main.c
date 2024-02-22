@@ -1187,7 +1187,7 @@ static void loadCdModules(void)
 	int ret, id;
 
 	if (!have_cdvd) {
-#ifdef SUPPORT_SYSTEM_2X6
+#ifdef USE_ROM_CDVDFSV //so far only recommended for arcade?
     	id = SifLoadStartModule("rom0:CDVDFSV", 0, NULL, &ret);
     	DPRINTF(" [rom0:CDVDFSV]: ID=%d, ret=%d\n", id, ret);
 #else

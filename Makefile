@@ -19,6 +19,7 @@ COH ?= 0
 # 0: on-board version, 1: homebrew version
 SIO2MAN ?= 0
 MCMAN ?= 1
+CDVDFSV ?= 1
 # ----------------------------- #
 .SILENT:
 
@@ -33,7 +34,7 @@ endif
 EE_OBJS = main.o config.o elf.o draw.o loader_elf.o filer.o \
 	poweroff_irx.o iomanx_irx.o filexio_irx.o ps2atad_irx.o ps2dev9_irx.o \
 	ps2hdd_irx.o ps2fs_irx.o usbd_irx.o \
-	cdvd_irx.o vmc_fs_irx.o ps2kbd_irx.o \
+	vmc_fs_irx.o ps2kbd_irx.o \
 	hdd.o hdl_rpc.o hdl_info_irx.o editor.o timer.o jpgviewer.o icon.o lang.o \
 	font_uLE.o makeicon.o chkesr.o allowdvdv_irx.o
 
@@ -54,6 +55,7 @@ ifeq ($(SMB),1)
 endif
 
 ifeq ($(COH), 1)
+  CDVDFSV = 0
   SIO2MAN = 0
   MCMAN = 0
   EE_OBJS += ioprp.o
@@ -107,6 +109,12 @@ ifeq ($(MCMAN),1)
   EE_OBJS += mcman_irx.o mcserv_irx.o
 else
   EE_CLFAGS += -DUSE_ROM_MCMAN
+endif
+
+ifeq ($(CDVDFSV),1)
+  EE_OBJS += cdvd_irx.o
+else
+  EE_CLFAGS += -DUSE_ROM_CDVDFSV
 endif
 
 ifeq ($(LIBPAD),2)
