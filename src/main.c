@@ -1160,8 +1160,8 @@ static void loadBasicModules(void)
 #endif
 
 #ifdef USE_ROM_MCMAN
-	id = SifLoadStartModule("rom0:MCMAN", 0, NULL, &ret);
-	DPRINTF(" [rom0:MCMAN]: id=%d, ret=%d\n", id, ret);
+	//id = SifLoadStartModule("rom0:MCMAN", 0, NULL, &ret);
+	//DPRINTF(" [rom0:MCMAN]: id=%d, ret=%d\n", id, ret);
 #ifdef SUPPORT_SYSTEM_2X6
 	id = SifLoadStartModule("rom0:MCMANO", 0, NULL, &ret);
 	DPRINTF(" [rom0:MCMANO]: id=%d, ret=%d\n", id, ret);
