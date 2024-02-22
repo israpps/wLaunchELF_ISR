@@ -62,7 +62,7 @@ ifeq ($(COH), 1)
   EE_LIBS += -liopreboot
   LIBPAD = 2
   HAS_COH = -COH
-  EE_CFLAGS = -DSUPPORT_SYSTEM_2X6
+  EE_CFLAGS += -DSUPPORT_SYSTEM_2X6
 endif
 
 ifeq ($(XFROM),1)
