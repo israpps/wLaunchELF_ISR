@@ -41,7 +41,7 @@ EE_OBJS = main.o config.o elf.o draw.o loader_elf.o filer.o \
 EE_INCS := -I$(PS2DEV)/gsKit/include -I$(PS2SDK)/ports/include -Iiop/oldlibs/libcdvd/ee -Iinclude
 
 EE_LDFLAGS := -L$(PS2DEV)/gsKit/lib -L$(PS2SDK)/ports/lib -Liop/oldlibs/libcdvd/lib -s
-EE_LIBS = -lgskit -ldmakit -ljpeg -lmc -lhdd -lcdvdfs -lkbd -lmf \
+EE_LIBS = -lgskit -ldmakit -ljpeg -lmc -lhdd -lcdvd -lkbd -lmf \
 	-lcdvd -lc -lfileXio -lpatches -lpoweroff -ldebug
 EE_CFLAGS := -mgpopt -G10240 -G0 -DNEWLIB_PORT_AWARE -D_EE
 
