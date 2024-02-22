@@ -115,7 +115,6 @@ ifeq ($(CDVDFSV),1)
   EE_OBJS += cdvd_irx.o
 else
   EE_CLFAGS += -DUSE_ROM_CDVDFSV
-  $(MAKE) -C iop/oldlibs/libcdvd lib/libcdvdfs.a
 endif
 
 ifeq ($(LIBPAD),2)
@@ -189,7 +188,7 @@ EE_OBJS := $(EE_OBJS:%=$(EE_OBJS_DIR)%) # remap all EE_OBJ to obj subdir
 
 .PHONY: all run reset clean rebuild isoclean iso
 
-all: githash.h $(EE_BIN_PKD)
+all: githash.h iop/cdvd.irx $(EE_BIN_PKD)
 
 $(EE_BIN_PKD): $(EE_BIN)
 	ps2-packer $< $@
