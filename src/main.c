@@ -2737,17 +2737,17 @@ int main(int argc, char *argv[])
 #ifdef SUPPORT_SYSTEM_2X6
 #define ACJV_PATHCNT 5
 	int id, ret;
-	const char* ACJVPATHS[ACJV_PATHCNT] = {"ACJVLOAD.IRX", "mc0:/ACJVLOAD.IRX", "mc1:/ACJVLOAD.IRX", "mass0:/ACJVLOAD.IRX", "mass1:/ACJVLOAD.IRX"};
+	const char* ACJVPATHS[ACJV_PATHCNT] = {"./ACJVLOAD.IRX", "mc0:/ACJVLOAD.IRX", "mc1:/ACJVLOAD.IRX", "mass0:/ACJVLOAD.IRX", "mass1:/ACJVLOAD.IRX"};
 	for (i=0;i<ACJV_PATHCNT;i++) {
 		id = SifLoadStartModule(ACJVPATHS[i], 0, NULL, &ret);
 		DPRINTF(" [%s]: ID=%d, ret=%d\n", ACJVPATHS[i], id, ret);
-		if (id>0&&ret!=1) {
+		if (id>0) { //like ADDDRV, we only care if module made it's way to the IOP. since it always returns NO_RESIDENT_END
 			i = -1;
 			break;
 		}
 	}
-	sprintf(mainMsg + strlen(mainMsg), (i == -1) ? " ACJVLOAD.IRX loaded":" ACJVLOAD.IRX not found");
-	DPRINTF(mainMsg);
+	sprintf(mainMsg + strlen(mainMsg), (i == -1) ? " | ACJVLOAD.IRX loaded" : " | ACJVLOAD.IRX not found");
+	DPRINTF("%s\n",mainMsg);
 #endif
 	
 	//Here nearly everything is ready for the main menu event loop
