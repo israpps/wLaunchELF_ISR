@@ -1160,12 +1160,14 @@ static void loadBasicModules(void)
 #endif
 
 #ifdef USE_ROM_MCMAN
-#ifdef SUPPORT_SYSTEM_2X6
+#ifdef SYSTEM_2X6_ACCESS_PS2_CARD
+#warning mc0 (security dongles) will not be accesible
 	id = SifLoadStartModule("rom0:MCMANO", 0, NULL, &ret);
 	DPRINTF(" [rom0:MCMANO]: id=%d, ret=%d\n", id, ret);
-#endif
+#else //SECURITY DONGLE
 	id = SifLoadStartModule("rom0:MCMAN", 0, NULL, &ret);
 	DPRINTF(" [rom0:MCMAN]: id=%d, ret=%d\n", id, ret);
+#endif
 	id = SifLoadStartModule("rom0:MCSERV", 0, NULL, &ret);
 	DPRINTF(" [rom0:MCSERV]: id=%d, ret=%d\n", id, ret);
 #else
