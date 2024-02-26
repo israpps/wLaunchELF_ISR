@@ -56,8 +56,8 @@ endif
 
 ifeq ($(COH), 1)
   CDVDFSV = 0
-  SIO2MAN = 0
-  MCMAN = 0
+  SIO2MAN = 1
+  MCMAN = 1
   EE_OBJS += ioprp.o
   EE_LIBS += -liopreboot
   LIBPAD = 2

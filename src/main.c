@@ -1171,11 +1171,12 @@ static void loadBasicModules(void)
 	id = SifLoadStartModule("rom0:MCSERV", 0, NULL, &ret);
 	DPRINTF(" [rom0:MCSERV]: id=%d, ret=%d\n", id, ret);
 #else
- #ifdef SUPPORT_SYSTEM_2X6
- #error WARNING: youre building arcade wLaunchELF with homebrew MCMAN/MCSERV, this way you will not be able to access the security dongle
- #endif
 	id = SifExecModuleBuffer(mcman_irx, size_mcman_irx, 0, NULL, &ret);  //Home
+#ifdef HOMEBREW_DONGLEMAN
+	DPRINTF(" [DONGLEMAN]: id=%d ret=%d\n", id, ret);
+#else
 	DPRINTF(" [MCMAN]: id=%d ret=%d\n", id, ret);
+#endif
 	id = SifExecModuleBuffer(mcserv_irx, size_mcserv_irx, 0, NULL, &ret);  //Home
 	DPRINTF(" [MCSERV]: id=%d ret=%d\n", id, ret);
 #endif

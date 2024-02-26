@@ -10,6 +10,11 @@ else # if we have mx4sio use newer IRX to avoid deadlocks when opening common me
   SIO2MAN_SOURCE = iop/__precompiled/sio2man.irx
 endif
 
+ifeq ($(COH),1)
+  MCMAN_SOURCE = iop/__precompiled/dongleman.irx
+  EE_CFLAGS += -DHOMEBREW_DONGLEMAN
+endif
+
 #---{ MC }---#
 $(EE_ASM_DIR)mcman_irx.s: $(MCMAN_SOURCE) | $(EE_ASM_DIR)
 	$(BIN2S) $< $@ mcman_irx
