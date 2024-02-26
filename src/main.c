@@ -1188,6 +1188,11 @@ static void loadBasicModules(void)
 	id = SifLoadStartModule("rom0:PADMAN", 0, NULL, &ret);
 	DPRINTF(" [rom0:PADMAN]: id=%d, ret=%d\n", id, ret);
 #endif
+
+#ifdef SUPPORT_SYSTEM_2X6
+	id = SifLoadStartModule("rom0:DAEMON", 0, NULL, &ret);
+	DPRINTF(" [DAEMON]: id=%d ret=%d\n", id, ret);
+#endif
 }
 //------------------------------
 //endfunc loadBasicModules
