@@ -3611,6 +3611,8 @@ int setFileList(const char *path, const char *ext, FILEINFO *files, int cnfmode)
 		files[nfiles++].stats.AttrFile = sceMcFileAttrFile;
 		strcpy(files[nfiles].name, LNG(Load_CNF));
 		files[nfiles++].stats.AttrFile = sceMcFileAttrFile;
+		strcpy(files[nfiles].name, "Load_IRX");
+		files[nfiles++].stats.AttrFile = sceMcFileAttrFile;
 		//Next 2 lines add an optional font test routine
 		strcpy(files[nfiles].name, LNG(ShowFont));
 		files[nfiles++].stats.AttrFile = sceMcFileAttrFile;
@@ -3943,6 +3945,10 @@ int getFilePath(char *out, int cnfmode)
 						browser_pushed = FALSE;
 						sprintf(msg0, "%s.", LNG(This_file_isnt_an_ELF));
 						out[0] = 0;
+					} else if ( ((cnfmode == USBD_IRX_CNF) || (cnfmode == USBKBD_IRX_CNF) || (cnfmode == USBMASS_IRX_CNF))&&(checkELFheader(out, TRUE) < 0) ) {
+						browser_pushed = FALSE;
+						sprintf(msg0, "%s.", LNG(This_file_isnt_an_IRX));
+						out[0] = 0;
 					} else {
 						strcpy(LastDir, path);
 						rv = 1;  //flag pathname selected
@@ -3964,7 +3970,7 @@ int getFilePath(char *out, int cnfmode)
 					//pushed R3 for a file (treat as uLE-related)
 					sprintf(out, "%s%s", path, files[browser_sel].name);
 					// Must to include a function for check IRX Header
-					if (((cnfmode == LK_ELF_CNF) || (cnfmode == NON_CNF)) && (checkELFheader(out) < 0)) {
+					if (((cnfmode == LK_ELF_CNF) || (cnfmode == NON_CNF)) && (checkELFheader(out, FALSE) < 0)) {
 						browser_pushed = FALSE;
 						sprintf(msg0, "%s.", LNG(This_file_isnt_an_ELF));
 						out[0] = 0;
@@ -4469,7 +4475,7 @@ int getFilePath(char *out, int cnfmode)
 						iconcolr = COLOR_GRAPH1;
 					} else {
 						iconbase = ICON_FILE;
-						if (genCmpFileExt(files[top + i].name, "ELF"))
+						if (genCmpFileExt(files[top + i].name, "ELF") || genCmpFileExt(files[top + i].name, "IRX"))
 							iconcolr = COLOR_GRAPH2;
 						else if (
 									genCmpFileExt(files[top + i].name, "TXT") || 
