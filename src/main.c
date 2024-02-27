@@ -1189,9 +1189,13 @@ static void loadBasicModules(void)
 	DPRINTF(" [rom0:PADMAN]: id=%d, ret=%d\n", id, ret);
 #endif
 
-#ifdef SUPPORT_SYSTEM_2X6
+#if defined(LOAD_DAEMON) && defined(SUPPORT_SYSTEM_2X6)
 	id = SifLoadStartModule("rom0:DAEMON", 0, NULL, &ret);
 	DPRINTF(" [DAEMON]: id=%d ret=%d\n", id, ret);
+#endif
+
+#if defined(LOAD_LED) && defined(SUPPORT_SYSTEM_2X6) && !defined(LOAD_DOGBAIT)
+	SifLoadStartModule("rom0:LED", 0, NULL, NULL); //
 #endif
 }
 //------------------------------
