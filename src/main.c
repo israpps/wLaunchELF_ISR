@@ -1868,7 +1868,7 @@ static void Set_CNF_Path(void)
 static void load_irx_manual(void)
 {
 	int id, ret;
-	char IRX_path[MAX_PATH];
+	char IRX_path[MAX_PATH] = "";
 	char *tmp;
 
 	if (getFilePath(IRX_path, USBKBD_IRX_CNF)>0)
