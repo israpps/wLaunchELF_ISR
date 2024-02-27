@@ -51,15 +51,8 @@ typedef struct
 // Modified version of loader from Independence
 //	(C) 2003 Marcus R. Brown <mrbrown@0xd6.org>
 //--------------------------------------------------------------
-/**
- * @brief checks if path corresponds to an ELF file
- * @param path path to the ELF file
- * @param is_irx if we are looking for an IRX driver or EE ELF
- * @return larger than 0 if success
-*/
-int checkELFheader(char *path, int is_irx)
+int checkELFheader(char *path)
 {
-	u16 elftype = (is_irx)? 0xFF80 : 0x2;
 	elf_header_t elf_head;
 	u8 *boot_elf = (u8 *)&elf_head;
 	elf_header_t *eh = (elf_header_t *)boot_elf;
@@ -116,7 +109,7 @@ int checkELFheader(char *path, int is_irx)
 	genRead(fd, boot_elf, sizeof(elf_header_t));
 	genClose(fd);
 
-	if ((_lw((u32)&eh->ident) != ELF_MAGIC) || eh->type != elftype)
+	if ((_lw((u32)&eh->ident) != ELF_MAGIC) || eh->type != 2)
 		goto error;
 
 	return 1;  //return 1 for successful check
