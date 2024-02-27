@@ -11,8 +11,10 @@ else # if we have mx4sio use newer IRX to avoid deadlocks when opening common me
 endif
 
 ifeq ($(COH),1)
+ifeq ($(HOMEBREW_DONGLEMAN),1)
   MCMAN_SOURCE = iop/__precompiled/dongleman.irx
   EE_CFLAGS += -DHOMEBREW_DONGLEMAN
+endif
 endif
 
 #---{ MC }---#
