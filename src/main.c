@@ -1867,21 +1867,21 @@ static void Set_CNF_Path(void)
 
 static void load_irx_manual(void)
 {
+	int id, ret;
 	char IRX_path[MAX_PATH];
 	char *tmp;
 
-	getFilePath(IRX_path, USBKBD_IRX_CNF);
-}
-static void load_irx_dlg(char* IRX_path) {
-	int id, ret;
+	if (getFilePath(IRX_path, USBKBD_IRX_CNF)>0)
+		return;
 	if (exists(IRX_path)) {
 		tmp = strrchr(IRX_path, '/');
-		if (tmp == NULL) tmp = "IRX LOAD"; else tmp++;
-		if (ynDialog("do you want to load this IRX module?") > 0) {
-			id = SifLoadStartModule(IRX_path, 0, NULL, &ret);
-			sprintf(mainMsg, "%s: id:%d, ret:%d (%s)", tmp, id, ret, (id>0 && ret != 1) ? LNG(OK) : LNG(Failed));
-			DPRINTF(mainMsg);
-		}
+		if (tmp == NULL) 
+			tmp = "IRX LOAD";
+		else
+			tmp++;
+		id = SifLoadStartModule(IRX_path, 0, NULL, &ret);
+		sprintf(mainMsg, "%s: id:%d, ret:%d (%s)", tmp, id, ret, (id>0 && ret != 1) ? LNG(OK) : LNG(Failed));
+		DPRINTF(mainMsg);
 	}
 }
 //------------------------------
@@ -2432,8 +2432,6 @@ Recurse_for_ESR:  //Recurse here for PS2Disc command with ESR disc
 	CheckELF_fullpath:
 		if ((t = checkELFheader(fullpath, FALSE)) <= 0)
 			goto ELFnotFound;
-		if ((t = checkELFheader(fullpath, TRUE)) <= 0)
-			goto IRXNotFound; else goto LoadIRX;
 	ELFchecked:
 		CleanUp();
 		RunLoaderElf(fullpath, party);
@@ -2445,11 +2443,6 @@ Recurse_for_ESR:  //Recurse here for PS2Disc command with ESR disc
 		else
 			sprintf(mainMsg, "%s: %s.", LNG(This_file_isnt_an_ELF), fullpath);
 		return;
-	IRXNotFound:
-			sprintf(mainMsg, "%s: %s.", LNG(This_file_isnt_an_IRX), fullpath);
-		return;
-	LoadIRX:
-		load_irx_dlg(fullpath);
 	}
 }
 //------------------------------

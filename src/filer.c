@@ -3945,7 +3945,7 @@ int getFilePath(char *out, int cnfmode)
 						browser_pushed = FALSE;
 						sprintf(msg0, "%s.", LNG(This_file_isnt_an_ELF));
 						out[0] = 0;
-					} else if (((cnfmode == USBD_IRX_CNF) || (cnfmode == USBKBD_IRX_CNF) || (cnfmode == USBMASS_IRX_CNF))&&(checkELFheader(out, TRUE) < 0) ) {
+					} else if ( ((cnfmode == USBD_IRX_CNF) || (cnfmode == USBKBD_IRX_CNF) || (cnfmode == USBMASS_IRX_CNF))&&(checkELFheader(out, TRUE) < 0) ) {
 						browser_pushed = FALSE;
 						sprintf(msg0, "%s.", LNG(This_file_isnt_an_IRX));
 						out[0] = 0;
