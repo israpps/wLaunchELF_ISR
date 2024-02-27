@@ -227,7 +227,7 @@ int IsSupportedFileType(char *path);
 void loadFlashModules(void);
 
 /* elf.c */
-int checkELFheader(char *filename);
+int checkELFheader(char *filename, int is_irx);
 void RunLoaderElf(char *filename, char *);
 
 /* draw.c */
