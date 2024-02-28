@@ -2030,14 +2030,16 @@ int IsSupportedFileType(char *path)
 #ifdef SUPPORT_SYSTEM_2X6
     if(strchr(path, ':') != NULL) {
         if ((genCmpFileExt(path, "TXT") || genCmpFileExt(path, "CHT") || genCmpFileExt(path, "CFG") || genCmpFileExt(path, "INI")  || genCmpFileExt(path, "CNF") ) || (genCmpFileExt(path, "JPG") || genCmpFileExt(path, "JPEG"))) return 1;
-        else if(genCmpFileExt(path, "IRX")) return 0;
-        else return(checkELFheader(path) >= 0);
+        else if((checkELFheader(path, TYPE_IRX) >= 0)) return 1;
+        else return(checkELFheader(path, TYPE_ELF) >= 0);
     } else //No ':', hence no device name in path, which means it is a special action (e.g. MISC/*).
         return 1;
 #else
 	if (strchr(path, ':') != NULL) {
 		if (genCmpFileExt(path, "ELF")) {
-			return (checkELFheader(path) >= 0);
+			return (checkELFheader(path, TYPE_ELF) >= 0);
+		} else if(genCmpFileExt(path, "IRX")) {
+			 return (checkELFheader(path, TYPE_IRX) >= 0);
 		} else if ((genCmpFileExt(path, "TXT") || genCmpFileExt(path, "CHT") || genCmpFileExt(path, "CFG") || genCmpFileExt(path, "INI")  || genCmpFileExt(path, "CNF") ) || (genCmpFileExt(path, "JPG") || genCmpFileExt(path, "JPEG"))) {
 			return 1;
 		} else
@@ -2070,7 +2072,7 @@ static void Execute(char *pathin)
 	if (!uLE_related(path, pathin))  //1==uLE_rel 0==missing, -1==other dev
 		return;
 
-Recurse_for_ESR:  //Recurse here for PS2Disc command with ESR disc
+ Recurse_for_ESR:  //Recurse here for PS2Disc command with ESR disc
 
 	pathSep = strchr(path, '/');
 
@@ -2080,7 +2082,7 @@ Recurse_for_ESR:  //Recurse here for PS2Disc command with ESR disc
 			goto CheckELF_path;
 		strcpy(fullpath, "mc0:");
 		strcat(fullpath, path + 3);
-		if (checkELFheader(fullpath) > 0)
+		if (checkELFheader(fullpath, TYPE_ELF) > 0)
 			goto ELFchecked;
 		fullpath[2] = '1';
 		goto CheckELF_fullpath;
@@ -2092,7 +2094,7 @@ Recurse_for_ESR:  //Recurse here for PS2Disc command with ESR disc
 		goto CheckELF_path;
 	} else if (!strncmp(path, "hdd0:/", 6)) {
 		loadHddModules();
-		if ((t = checkELFheader(path)) <= 0)
+		if ((t = checkELFheader(path, TYPE_ELF)) <= 0)
 			goto ELFnotFound;
 		//coming here means the ELF is fine
 		sprintf(party, "hdd0:%s", path + 6);
@@ -2100,28 +2102,28 @@ Recurse_for_ESR:  //Recurse here for PS2Disc command with ESR disc
 		sprintf(fullpath, "pfs0:%s", p);
 		*p = 0;
 		goto ELFchecked;
-#ifdef DVRP
-	} else if (!strncmp(path, "dvr_hdd0:/", 10)) {
-		loadDVRPHddModules();
-		if ((t = checkELFheader(path)) <= 0)
-			goto ELFnotFound;
-		//coming here means the ELF is fine
-		sprintf(party, "dvr_hdd0:%s", path + 10);
-		p = strchr(party, '/');
-		sprintf(fullpath, "dvr_pfs0:%s", p);
-		*p = 0;
-		goto ELFchecked;
-#endif
-#ifdef XFROM
+ #ifdef DVRP
+ 	} else if (!strncmp(path, "dvr_hdd0:/", 10)) {
+ 		loadDVRPHddModules();
+ 		if ((t = checkELFheader(path, TYPE_ELF)) <= 0)
+ 			goto ELFnotFound;
+ 		//coming here means the ELF is fine
+ 		sprintf(party, "dvr_hdd0:%s", path + 10);
+ 		p = strchr(party, '/');
+ 		sprintf(fullpath, "dvr_pfs0:%s", p);
+ 		*p = 0;
+ 		goto ELFchecked;
+ #endif
+ #ifdef XFROM
 	} else if (!strncmp(path, "xfrom:/", 7)) {
 		loadFlashModules();
-		if ((t = checkELFheader(path)) <= 0)
+		if ((t = checkELFheader(path, TYPE_ELF)) <= 0)
 			goto ELFnotFound;
 		strcpy(fullpath, path);
 		goto ELFchecked;
-#endif
+ #endif
 	} else if (!strncmp(path, "mass", 4)) {
-		if ((t = checkELFheader(path)) <= 0)
+		if ((t = checkELFheader(path, TYPE_ELF)) <= 0)
 			goto ELFnotFound;
 		//coming here means the ELF is fine
 		party[0] = 0;
@@ -2130,7 +2132,7 @@ Recurse_for_ESR:  //Recurse here for PS2Disc command with ESR disc
 		if (pathSep && (pathSep - path < 7) && pathSep[-1] == ':')
 			strcpy(fullpath + (pathSep - path), pathSep + 1);
 		goto ELFchecked;
-#ifdef ETH
+ #ifdef ETH
 	} else if (!strncmp(path, "host:", 5)) {
 		initHOST();
 		party[0] = 0;
@@ -2141,7 +2143,7 @@ Recurse_for_ESR:  //Recurse here for PS2Disc command with ESR disc
 			strcat(fullpath, path + 5);
 		makeHostPath(fullpath, fullpath);
 		goto CheckELF_fullpath;
-#endif
+ #endif
 	} else if (!stricmp(path, setting->Misc_OSDSYS)) {
 		char arg0[20], arg1[20], arg2[20], arg3[40];
 		char *args[4] = {arg0, arg1, arg2, arg3};
@@ -2305,6 +2307,8 @@ Recurse_for_ESR:  //Recurse here for PS2Disc command with ESR disc
 				}
 
 				JpgViewer(tmp);
+			} else if (genCmpFileExt(tmp, "IRX")) {
+				goto IRXcheckheader;
 			} else
 				Execute(tmp);
 		}
@@ -2316,12 +2320,12 @@ Recurse_for_ESR:  //Recurse here for PS2Disc command with ESR disc
 		//The method below was used earlier, but causes reset with new ELF loader
 		//party[0]=0;
 		//strcpy(fullpath,"rom0:OSDSYS");
-#ifdef ETH
+ #ifdef ETH
 	} else if (!stricmp(path, setting->Misc_PS2Net)) {
 		mainMsg[0] = 0;
 		loadNetModules();
 		return;
-#endif
+ #endif
 	} else if (!stricmp(path, setting->Misc_PS2PowerOff)) {
 		mainMsg[0] = 0;
 		drawMsg(LNG(Powering_Off_Console));
@@ -2395,19 +2399,21 @@ Recurse_for_ESR:  //Recurse here for PS2Disc command with ESR disc
 		}
 		Show_build_info();
 		return;
-#ifndef SUPPORT_SYSTEM_2X6
+ #ifndef SUPPORT_SYSTEM_2X6
 	} else if (!strncmp(path, "cdfs", 4)) {
 		CDVD_FlushCache();
 		CDVD_DiskReady(0);
 		party[0] = 0;
 		goto CheckELF_path;
-#endif
+ #endif
 	} else if (!strncmp(path, "rom", 3)) {
 		party[0] = 0;
 	CheckELF_path:
 		strcpy(fullpath, path);
 	CheckELF_fullpath:
-		if ((t = checkELFheader(fullpath)) <= 0)
+		if (checkELFheader(fullpath, TYPE_IRX)>0)
+			goto IRXFound;
+		if ((t = checkELFheader(fullpath, TYPE_ELF)) <= 0)
 			goto ELFnotFound;
 	ELFchecked:
 		CleanUp();
@@ -2421,6 +2427,27 @@ Recurse_for_ESR:  //Recurse here for PS2Disc command with ESR disc
 			sprintf(mainMsg, "%s: %s.", LNG(This_file_isnt_an_ELF), fullpath);
 		return;
 	}
+	return;
+	IRXcheckheader:
+		if ((t = checkELFheader(fullpath, TYPE_IRX)) <= 0) {
+			if (t == 0)
+				sprintf(mainMsg, "%s %s.", fullpath, LNG(is_Not_Found));
+			else
+				sprintf(mainMsg, "%s: %s.", LNG(This_file_isnt_an_IRX), fullpath);
+			return;
+		}
+	IRXFound:
+	p = strrchr(fullpath, '/');
+	sprintf(mainMsg, LNG(confirm_irx_exec), '\n', (p!=NULL) ? p : "");
+	if (ynDialog(mainMsg)>0) {
+		int ret, id;
+		id = SifLoadStartModule(fullpath, 0, NULL, &ret);
+		sprintf(mainMsg, "%s: id:%d, ret:%d  (%s)",
+		(p!=NULL) ? p+1 : "MODULE",
+		id, ret,
+		(id>0 && ret!=1) ? LNG(OK) : LNG(Failed));
+		DPRINTF("%s\n", mainMsg);
+	} else mainMsg[0] = 0;
 }
 //------------------------------
 //endfunc Execute

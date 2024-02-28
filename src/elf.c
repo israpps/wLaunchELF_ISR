@@ -45,14 +45,16 @@ typedef struct
 //--------------------------------------------------------------
 //End of data declarations
 //--------------------------------------------------------------
-//Start of function code
-//--------------------------------------------------------------
-// checkELFheader Tests for valid ELF file
-// Modified version of loader from Independence
-//	(C) 2003 Marcus R. Brown <mrbrown@0xd6.org>
-//--------------------------------------------------------------
-int checkELFheader(char *path)
+
+/**
+ * @brief open file and check for ELF header and ELF type
+ * @param path path
+ * @param type 0 for EE ELF, 1 for IOP IRX
+ * @return 0: unknown device, 1:check passed, -1: check failed
+*/
+int checkELFheader(char *path, int type)
 {
+	u16 MAGICS[2] = {ELF_HEADER_ID_EE, ELF_HEADER_ID_IRX};
 	elf_header_t elf_head;
 	u8 *boot_elf = (u8 *)&elf_head;
 	elf_header_t *eh = (elf_header_t *)boot_elf;
@@ -108,8 +110,8 @@ int checkELFheader(char *path)
 	genLseek(fd, 0, SEEK_SET);
 	genRead(fd, boot_elf, sizeof(elf_header_t));
 	genClose(fd);
-
-	if ((_lw((u32)&eh->ident) != ELF_MAGIC) || eh->type != 2)
+	DPRINTF("%s: ELF magic 0x%x, ELF ident 0x%x\n", __FUNCTION__, _lw((u32)&eh->ident), eh->type);
+	if ((_lw((u32)&eh->ident) != ELF_MAGIC) || eh->type != MAGICS[type])
 		goto error;
 
 	return 1;  //return 1 for successful check

@@ -3964,7 +3964,7 @@ int getFilePath(char *out, int cnfmode)
 					//pushed R3 for a file (treat as uLE-related)
 					sprintf(out, "%s%s", path, files[browser_sel].name);
 					// Must to include a function for check IRX Header
-					if (((cnfmode == LK_ELF_CNF) || (cnfmode == NON_CNF)) && (checkELFheader(out) < 0)) {
+					if (((cnfmode == LK_ELF_CNF) || (cnfmode == NON_CNF)) && (checkELFheader(out, TYPE_ELF) < 0)) {
 						browser_pushed = FALSE;
 						sprintf(msg0, "%s.", LNG(This_file_isnt_an_ELF));
 						out[0] = 0;
@@ -4469,7 +4469,7 @@ int getFilePath(char *out, int cnfmode)
 						iconcolr = COLOR_GRAPH1;
 					} else {
 						iconbase = ICON_FILE;
-						if (genCmpFileExt(files[top + i].name, "ELF"))
+						if (genCmpFileExt(files[top + i].name, "ELF") || genCmpFileExt(files[top + i].name, "IRX"))
 							iconcolr = COLOR_GRAPH2;
 						else if (
 									genCmpFileExt(files[top + i].name, "TXT") || 
