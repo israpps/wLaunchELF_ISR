@@ -55,6 +55,7 @@ typedef struct
 int checkELFheader(char *path, int type)
 {
 	u16 MAGICS[2] = {ELF_HEADER_ID_EE, ELF_HEADER_ID_IRX};
+	DPRINTF("Checking for header type %d\n", type);
 	elf_header_t elf_head;
 	u8 *boot_elf = (u8 *)&elf_head;
 	elf_header_t *eh = (elf_header_t *)boot_elf;
