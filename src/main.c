@@ -2307,8 +2307,6 @@ static void Execute(char *pathin)
 				}
 
 				JpgViewer(tmp);
-			} else if (genCmpFileExt(tmp, "IRX")) {
-				goto CheckELF_path; // because we now check for IRX header first
 			} else
 				Execute(tmp);
 		}
