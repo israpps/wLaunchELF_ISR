@@ -12,6 +12,7 @@ endif
 
 ifeq ($(COH),1)
 ifeq ($(HOMEBREW_DONGLEMAN),1)
+  $(info using DONGLEMAN)
   MCMAN_SOURCE = iop/__precompiled/dongleman.irx
   EE_CFLAGS += -DHOMEBREW_DONGLEMAN
 endif
