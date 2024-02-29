@@ -4282,12 +4282,14 @@ int getFilePath(char *out, int cnfmode)
 					mcGetInfo(path[2] - '0', 0, &mctype_PSx, &mcfreeSpace, &mcformatted);
 					mcSync(0, NULL, &ret);
 #ifdef SUPPORT_SYSTEM_2X6
-					sprintf(msg0, "%s status: type:%d format:%d ret:%d",
-						(path[2] == '0')?"Security dongle":"Memory Card",
-						mctype_PSx,
-						mcformatted,
-						ret);
-					browser_pushed = FALSE;
+					if (strlen(path)==5) {
+						sprintf(msg0, "%s status: type:%d format:%d ret:%d",
+							(path[2] == '0')?"Security dongle":"Memory Card",
+							mctype_PSx,
+							mcformatted,
+							ret);
+						browser_pushed = FALSE;
+					}
 #endif
 					freeSpace = mcfreeSpace * ((mctype_PSx == 1) ? 8192 : 1024);
 					vfreeSpace = TRUE;
