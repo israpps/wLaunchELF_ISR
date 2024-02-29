@@ -63,6 +63,7 @@ ifeq ($(COH), 1)
   LIBPAD = 2
   HAS_COH = -COH
   EE_CFLAGS += -DSUPPORT_SYSTEM_2X6
+  HOMEBREW_DONGLEMAN = 1
 endif
 
 ifeq ($(XFROM),1)
