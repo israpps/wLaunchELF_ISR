@@ -56,14 +56,15 @@ endif
 
 ifeq ($(COH), 1)
   CDVDFSV = 0
-  SIO2MAN = 1
-  MCMAN = 1
+  SIO2MAN = 0
+  MCMAN = 0
   EE_OBJS += ioprp.o
   EE_LIBS += -liopreboot
   LIBPAD = 2
   HAS_COH = -COH
   EE_CFLAGS += -DSUPPORT_SYSTEM_2X6
   HOMEBREW_DONGLEMAN = 1
+  EE_OBJS += mcman_irx.o
 endif
 
 ifeq ($(XFROM),1)
