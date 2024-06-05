@@ -213,6 +213,10 @@ extern int GUI_active;  // Skin and Main Skin switch
 extern int cdmode;      //Last detected disc type
 extern u8 console_is_PSX;
 
+#ifdef MX4SIO
+extern u8 mx4sio_driver_running;
+#endif
+
 void load_vmc_fs(void);
 #ifdef ETH
 void load_ps2host(void);
