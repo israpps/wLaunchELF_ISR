@@ -155,6 +155,11 @@ static u8 have_vmc_fs = 0;
 #ifdef XFROM
 static u8 have_Flash_modules = 0;
 #endif
+
+#ifdef MX4SIO
+static u8 mx4sio_driver_running = 0;
+#endif
+
 //State of whether DEV9 was successfully loaded or not.
 static u8 ps2dev9_loaded = 0;
 
