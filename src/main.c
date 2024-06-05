@@ -1420,6 +1420,7 @@ static void loadUsbModules(void)
 #ifdef MX4SIO
 	ID = SifExecModuleBuffer(mx4sio_bd_irx, size_mx4sio_bd_irx, 0, NULL, &ret);
 	DPRINTF(" [MX4SIO_BD] ID=%d, ret=%d\n", ID, ret);
+	mx4sio_driver_running = (ID > 0 && ret != 1);
 #endif
 }
 #else
