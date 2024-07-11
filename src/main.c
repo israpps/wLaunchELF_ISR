@@ -159,6 +159,11 @@ static u8 have_vmc_fs = 0;
 #ifdef XFROM
 static u8 have_Flash_modules = 0;
 #endif
+
+#ifdef MX4SIO
+u8 mx4sio_driver_running = 0;
+#endif
+
 //State of whether DEV9 was successfully loaded or not.
 static u8 ps2dev9_loaded = 0;
 
@@ -1423,6 +1428,7 @@ static void loadUsbModules(void)
 #ifdef MX4SIO
 	ID = SifExecModuleBuffer(mx4sio_bd_irx, size_mx4sio_bd_irx, 0, NULL, &ret);
 	DPRINTF(" [MX4SIO_BD] ID=%d, ret=%d\n", ID, ret);
+	mx4sio_driver_running = (ID > 0 && ret != 1);
 #endif
 }
 #else

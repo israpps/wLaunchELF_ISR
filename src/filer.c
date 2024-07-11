@@ -3484,8 +3484,15 @@ int setFileList(const char *path, const char *ext, FILEINFO *files, int cnfmode)
 
 		strcpy(files[nfiles].name, "mc0:");
 		files[nfiles++].stats.AttrFile = sceMcFileAttrSubdir;
+		
+#ifdef MX4SIO
+		if (!mx4sio_driver_running) {
+#endif
 		strcpy(files[nfiles].name, "mc1:");
 		files[nfiles++].stats.AttrFile = sceMcFileAttrSubdir;
+#ifdef MX4SIO
+		}
+#endif
 		strcpy(files[nfiles].name, "hdd0:");
 		files[nfiles++].stats.AttrFile = sceMcFileAttrSubdir;
 #ifdef DVRP
