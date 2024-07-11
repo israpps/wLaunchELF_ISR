@@ -10,8 +10,6 @@ else # if we have mx4sio use newer IRX to avoid deadlocks when opening common me
   SIO2MAN_SOURCE = iop/__precompiled/sio2man.irx
 endif
 
-CDVD_SOURCE = iop/__precompiled/cdfs.irx
-#iop/cdvd.irx
 
 
 #---{ MC }---#

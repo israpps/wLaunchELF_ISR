@@ -45,6 +45,7 @@
 #include <floatlib.h>
 #include <usbhdfsd-common.h>
 #include "hdl_rpc.h"
+#include "cdvd_macro.h"
 #include "iop/ds34usb/ee/libds34usb.h"
 #include "iop/ds34bt/ee/libds34bt.h"
 
