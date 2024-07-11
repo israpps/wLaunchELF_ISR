@@ -20,6 +20,10 @@ IMPORT_BIN2C(ps2netfs_irx);
 IMPORT_BIN2C(ps2ftpd_irx);
 #endif
 
+#ifdef IOPTRAP
+IMPORT_BIN2C(ioptrap_irx);
+#endif
+
 #ifdef SMB
 IMPORT_BIN2C(smbman_irx);
 #endif
@@ -1121,6 +1125,11 @@ static void load_ps2netfs(void)
 static void loadBasicModules(void)
 {
 	int ret, id;
+
+#ifdef IOPTRAP
+	id = SifExecModuleBuffer(ioptrap_irx, size_ioptrap_irx, 0, NULL, &ret);
+	DPRINTF(" [IOP TRAP]: id=%d ret=%d\n", id, ret);
+#endif
 
 	id = SifExecModuleBuffer(iomanx_irx, size_iomanx_irx, 0, NULL, &ret);
 	DPRINTF(" [IOMANX]: id=%d ret=%d\n", id, ret);
