@@ -15,6 +15,7 @@ MX4SIO ?= 0
 SIO2MAN ?= 0
 PPC_UART ?= 0
 DEBUG ?= 0
+LCDVD ?= LATEST#or LEGACY
 # ----------------------------- #
 .SILENT:
 
@@ -33,10 +34,10 @@ EE_OBJS = main.o config.o elf.o draw.o loader_elf.o filer.o \
 	hdd.o hdl_rpc.o hdl_info_irx.o editor.o timer.o jpgviewer.o icon.o lang.o \
 	font_uLE.o makeicon.o chkesr.o allowdvdv_irx.o
 
-EE_INCS := -I$(PS2DEV)/gsKit/include -I$(PS2SDK)/ports/include -Iiop/oldlibs/libcdvd/ee -Iinclude
+EE_INCS := -I$(PS2DEV)/gsKit/include -I$(PS2SDK)/ports/include -Iinclude
 
 EE_LDFLAGS := -L$(PS2DEV)/gsKit/lib -L$(PS2SDK)/ports/lib -Liop/oldlibs/libcdvd/lib -s
-EE_LIBS = -lgskit -ldmakit -ljpeg -lmc -lhdd -lcdvdfs -lkbd -lmf \
+EE_LIBS = -lgskit -ldmakit -ljpeg -lmc -lhdd -lkbd -lmf \
 	-lcdvd -lc -lfileXio -lpatches -lpoweroff -ldebug
 EE_CFLAGS := -mgpopt -G10240 -G0 -DNEWLIB_PORT_AWARE -D_EE
 
@@ -46,6 +47,17 @@ ifeq ($(SMB),1)
     EE_OBJS += smbman.o
     HAS_SMB = -SMB
     EE_CFLAGS += -DSMB
+endif
+
+ifeq ($(LCDVD),LEGACY)
+  $(info -- Building with legacy libcdvd)
+  EE_CFLAGS += -DLIBCDVD_LEGACY
+  CDVD_SOURCE = iop/cdvd.irx
+else
+  EE_INCS += -Iiop/oldlibs/libcdvd/ee
+  EE_LIBS += -lcdvdfs
+  EE_CFLAGS += -DLIBCDVD_LATEST
+  CDVD_SOURCE = iop/__precompiled/cdfs.irx
 endif
 
 ifeq ($(XFROM),1)

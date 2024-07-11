@@ -10,6 +10,8 @@ else # if we have mx4sio use newer IRX to avoid deadlocks when opening common me
   SIO2MAN_SOURCE = iop/__precompiled/sio2man.irx
 endif
 
+
+
 #---{ MC }---#
 $(EE_ASM_DIR)mcman_irx.s: $(MCMAN_SOURCE) | $(EE_ASM_DIR)
 	$(BIN2S) $< $@ mcman_irx
@@ -47,8 +49,9 @@ endif
 iop/cdvd.irx: iop/oldlibs/libcdvd
 	$(MAKE) -C $<
 
-$(EE_ASM_DIR)cdvd_irx.s: iop/cdvd.irx | $(EE_ASM_DIR)
+$(EE_ASM_DIR)cdvd_irx.s: $(CDVD_SOURCE) | $(EE_ASM_DIR)
 	$(BIN2S) $< $@ cdvd_irx
+	$(MAKE) -C iop/oldlibs/libcdvd
 
 $(EE_ASM_DIR)ioptrap_irx.s: $(PS2SDK)/iop/irx/ioptrap.irx | $(EE_ASM_DIR)
 	$(BIN2S) $< $@ ioptrap_irx
