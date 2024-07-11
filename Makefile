@@ -13,12 +13,12 @@ XFROM ?= 0
 UDPTTY ?= 0
 MX4SIO ?= 0
 SIO2MAN ?= 0
-TTY2SIOR ?= 0
+PPC_UART ?= 0
 DEBUG ?= 0
 # ----------------------------- #
 .SILENT:
 
-BIN_NAME = $(HAS_EXFAT)$(HAS_DS34)$(HAS_ETH)$(HAS_SMB)$(HAS_DVRP)$(HAS_XFROM)$(HAS_MX4SIO)$(HAS_EESIO)$(HAS_UDPTTY)$(HAS_TTY2SIOR)$(HAS_IOP_RESET)
+BIN_NAME = $(HAS_EXFAT)$(HAS_DS34)$(HAS_ETH)$(HAS_SMB)$(HAS_DVRP)$(HAS_XFROM)$(HAS_MX4SIO)$(HAS_EESIO)$(HAS_UDPTTY)$(HAS_PPCTTY)$(HAS_IOP_RESET)
 ifeq ($(DEBUG), 0)
   EE_BIN = UNC-BOOT$(BIN_NAME).ELF
   EE_BIN_PKD = BOOT$(BIN_NAME).ELF
@@ -91,11 +91,13 @@ ifeq ($(SIO_DEBUG),1)
     HAS_EESIO = -SIO_DEBUG
 endif
 
-ifeq ($(TTY2SIOR),1)
-    EE_LIBS += -lsior
-    EE_CFLAGS += -DTTY2SIOR
-    HAS_TTY2SIOR = -TTY2SIOR
-    EE_OBJS += tty2sior_irx.o
+ifeq ($(PPC_UART),1)
+    EE_CFLAGS += -DPOWERPC_UART
+    HAS_PPCTTY = -PPCTTY
+    EE_OBJS += ppctty.o
+    ifeq ($(UDPTTY),1)
+    $(error Both PPCTTY and UDPTTY enabled simultaneously)
+    endif
 endif
 
 ifeq ($(IOP_RESET),0)

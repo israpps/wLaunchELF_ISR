@@ -166,8 +166,8 @@ $(EE_ASM_DIR)ps2kbd_irx.s: $(PS2SDK)/iop/irx/ps2kbd.irx | $(EE_ASM_DIR)
 $(EE_ASM_DIR)sior_irx.s: $(PS2SDK)/iop/irx/sior.irx | $(EE_ASM_DIR)
 	$(BIN2S) $< $@ sior_irx
 
-$(EE_ASM_DIR)tty2sior_irx.s:iop/__precompiled/tty2sior.irx | $(EE_ASM_DIR)
-	$(BIN2S) $< $@ tty2sior_irx
+$(EE_ASM_DIR)ppctty_irx.s:iop/__precompiled/ppctty.irx | $(EE_ASM_DIR)
+	$(BIN2S) $< $@ ppctty_irx
 
 iop/AllowDVDV.irx: iop/AllowDVDV
 	$(MAKE) -C $<

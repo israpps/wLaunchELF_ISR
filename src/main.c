@@ -41,8 +41,8 @@ IMPORT_BIN2C(sio2man_irx);
 IMPORT_BIN2C(padman_irx);
 #endif
 
-#ifdef TTY2SIOR
-IMPORT_BIN2C(tty2sior_irx);
+#ifdef POWERPC_UART
+IMPORT_BIN2C(ppctty_irx);
 #endif
 
 IMPORT_BIN2C(usbd_irx);
@@ -437,7 +437,7 @@ static void Show_build_info(void)
 " MX4SIO=0"
 #endif
 , COLOR_TEXT);
-#if defined(UDPTTY) || defined(SIO_DEBUG) || defined(TTY2SIOR) || defined(NO_IOP_RESET)
+#if defined(UDPTTY) || defined(SIO_DEBUG) || defined(POWERPC_UART) || defined(NO_IOP_RESET)
 
 
 			PrintPos(-1, hpos, "Debug Features:", COLOR_SELECT);
@@ -459,10 +459,10 @@ static void Show_build_info(void)
 #else
 " SIO_DEBUG=0"
 #endif
-#ifdef TTY2SIOR
-" TTY2SIOR=1"
+#ifdef POWERPC_UART
+" PPC_UART=1"
 #else
-" TTY2SIOR=0"
+" PPC_UART=0"
 #endif
 , COLOR_TEXT);
 #endif
@@ -1146,18 +1146,12 @@ static void loadBasicModules(void)
 	DPRINTF(" [rom0:SIO2MAN]: id=%d\n", id);
 #endif
 
-#if defined(TTY2SIOR) || defined(SIO_DEBUG)
+#if defined(SIO_DEBUG)
 	// I call this just after SIO2MAN have been loaded
 	sio_init(38400, 0, 0, 0, 0);
 #endif
-#ifdef TTY2SIOR
-	SIOR_Init(0x20);
 
-	id = SifExecModuleBuffer(tty2sior_irx, size_tty2sior_irx, 0, NULL, &ret);
-	DPRINTF(" [TTY2SIOR]: id=%d ret=%d\n", id, ret);
-#endif
-
-#if defined(TTY2SIOR) || defined(SIO_DEBUG)
+#if defined(SIO_DEBUG)
 	DPRINTF("Hello from EE SIO!\n");
 #endif
 
@@ -1434,7 +1428,7 @@ static void loadUsbModules(void)
 #else
 {
 	loadUsbDModule();
-	if (have_usbd && !have_usb_mass && (USB_mass_loaded = loadExternalModule("", &usb_mass_irx, size_usb_mass_irx))) {
+	if (have_usbd && !have_usb_mass && (USB_mass_loaded = loadExternalModule("USBMASS.IRX", &usb_mass_irx, size_usb_mass_irx))) {
 		delay(3);
 		have_usb_mass = 1;
 	}
@@ -2413,6 +2407,13 @@ static void Reset()
 #ifdef XFROM
 	have_Flash_modules = 0;
 #endif
+
+#ifdef POWERPC_UART
+int i, d;
+    i = SifExecModuleBuffer(&ppctty_irx, size_ppctty_irx, 0, NULL, &d);
+    DPRINTF(" [PPCTTY]: id=%d, ret=%d\n", i, d);
+#endif
+
 #ifdef UDPTTY
 int i, d;
 	load_ps2ip();

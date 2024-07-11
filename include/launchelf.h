@@ -51,14 +51,14 @@
 #include <sio.h>
 #include <sior_rpc.h>
 
-#ifdef SIO_DEBUG
+#ifdef SIO_DEBUG //EE SIO will be printed separated. no need for diferentiation
 	#define DPRINTF(format, args...) \
     	sio_printf(format, ##args)
-#elif defined(TTY2SIOR) || defined(COMMON_PRINTF) || defined(UDPTTY)
+#elif defined(POWERPC_UART) || defined(COMMON_PRINTF) || defined(UDPTTY) //printf has to travel to IOP, add color escape to make up the diff
 	#define DPRINTF(format, args...) \
     	printf("\033[1;94;40m"format"\033[m", ##args)
 #else
-	#define DPRINTF(format, args...) // strip away printf from consumer builds
+	#define DPRINTF(format, args...)// strip away printf from consumer builds
 #endif
 
 #define TRUE 1
