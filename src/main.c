@@ -885,14 +885,30 @@ static void load_ps2atad(void)
 //------------------------------
 //endfunc load_ps2atad
 //---------------------------------------------------------------------------
+
 #ifdef XFROM
 static void load_pflash(void)
 {
-	int ID;
-	ID = SifLoadModule("rom0:PFLASH", 0, NULL);
-		DPRINTF(" [rom0:PFLASH]: ID=%d\n", ID);
-	ID = SifLoadModule("rom0:PXFROMMAN", 0, NULL);
-		DPRINTF(" [rom0:PXFROMMAN]: ID=%d\n", ID);
+	int ID, RET;
+#ifndef USE_HOMEBREW_XFROM_DRIVERS
+    const char* flash = "rom0:XFLASH";//in case that some day, we get a network adapter with XFROM, this will work on 50k models 
+    const char* xfromman = "rom0:XFROMMAN";
+
+    if (console_is_PSX) //change filename, since XMB modules hace 'P' prefix
+    {
+        flash = "rom0:PFLASH";
+        xfromman = "rom0:PXFROMMAN";
+    }
+	ID = SifLoadStartModule(flash, 0, NULL, &RET);
+		DPRINTF(" [%s]: ID=%d, RET=%d\n", flash, ID, RET);
+	ID = SifLoadStartModule(xfromman, 0, NULL, &RET);
+		DPRINTF(" [%s]: ID=%d, RET=%d\n", xfromman, ID, RET);
+#else
+    ID = SifExecModuleBuffer(flash_irx, size_flash_irx, 0, NULL, &RET);
+		DPRINTF(" [FLASH]: ID=%d, RET=%d\n", ID, RET);
+    ID = SifExecModuleBuffer(xfromman_irx, size_xfromman_irx, 0, NULL, &RET);
+		DPRINTF(" [XFROMMAN]: ID=%d, RET=%d\n", ID, RET);
+#endif
 }
 //------------------------------
 //endfunc load_pflash

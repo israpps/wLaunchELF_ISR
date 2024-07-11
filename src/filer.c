@@ -3496,11 +3496,8 @@ int setFileList(const char *path, const char *ext, FILEINFO *files, int cnfmode)
 		}
 #endif
 #ifdef XFROM
-		if (console_is_PSX)
-		{
-			strcpy(files[nfiles].name, "xfrom0:");
-			files[nfiles++].stats.AttrFile = sceMcFileAttrSubdir;
-		}
+		strcpy(files[nfiles].name, "xfrom0:");
+		files[nfiles++].stats.AttrFile = sceMcFileAttrSubdir;
 #endif
 		strcpy(files[nfiles].name, "cdfs:");
 		files[nfiles++].stats.AttrFile = sceMcFileAttrSubdir;
