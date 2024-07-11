@@ -143,6 +143,11 @@ else
 EE_CFLAGS += -DCUSTOM_COLORS
 endif
 
+ifeq ($(IOPTRAP),1)
+    EE_OBJS += ioptrap_irx.o
+    EE_CFLAGS += -DIOPTRAP
+endif
+
 
 EE_OBJS_DIR = obj/
 EE_ASM_DIR = asm/

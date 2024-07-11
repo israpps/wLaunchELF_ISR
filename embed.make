@@ -50,6 +50,9 @@ iop/cdvd.irx: iop/oldlibs/libcdvd
 $(EE_ASM_DIR)cdvd_irx.s: iop/cdvd.irx | $(EE_ASM_DIR)
 	$(BIN2S) $< $@ cdvd_irx
 
+$(EE_ASM_DIR)ioptrap_irx.s: $(PS2SDK)/iop/irx/ioptrap.irx | $(EE_ASM_DIR)
+	$(BIN2S) $< $@ ioptrap_irx
+
 $(EE_ASM_DIR)poweroff_irx.s: $(PS2SDK)/iop/irx/poweroff.irx | $(EE_ASM_DIR)
 	$(BIN2S) $< $@ poweroff_irx
 
