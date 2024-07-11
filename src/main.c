@@ -1184,7 +1184,7 @@ static void loadCdModules(void)
 	if (!have_cdvd) {
 		sceCdInit(SCECdINoD);  // SCECdINoD init without check for a disc. Reduces risk of a lockup if the drive is in a erroneous state.
 		id = SifExecModuleBuffer(cdvd_irx, size_cdvd_irx, 0, NULL, &ret);
-		CDVD_INIT();
+		LCDVD_INIT();
 		DPRINTF(" [CDVD]: id=%d, ret=%d\n", id, ret);
 		have_cdvd = 1;
 	}
@@ -1237,7 +1237,7 @@ int uLE_cdStop(void)
 				uLE_cdmode = (cdmode == SCECdPS2DVD) ? SCECdESRDVD_1 : SCECdESRDVD_0;
 			}
 		}
-		CDVD_STOP();
+		LCDVD_STOP();
 		sceCdSync(0);
 	}
 	return uLE_cdmode;
@@ -1286,7 +1286,7 @@ static void getExternalFilePath(const char *argPath, char *filePath)
 	} else if (!strncmp(argPath, "cdfs", 4)) {
 		strcpy(filePath, argPath);
 		// TODO: Flush CDFS cache
-		CDVD_DISKREADY(0);
+		LCDVD_DISKREADY(0);
 	} else {
 		genFixPath(argPath, filePath);
 	}
@@ -2358,7 +2358,7 @@ Recurse_for_ESR:  //Recurse here for PS2Disc command with ESR disc
 		return;
 	} else if (!strncmp(path, "cdfs", 4)) {
 		// TODO: Flush CDFS cache
-		CDVD_DISKREADY(0);
+		LCDVD_DISKREADY(0);
 		party[0] = 0;
 		goto CheckELF_path;
 	} else if (!strncmp(path, "rom", 3)) {
