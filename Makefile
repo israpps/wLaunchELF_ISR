@@ -15,6 +15,7 @@ MX4SIO ?= 0
 SIO2MAN ?= 0
 TTY2SIOR ?= 0
 DEBUG ?= 0
+LCDVD ?= LATEST#or LEGACY
 # ----------------------------- #
 .SILENT:
 
@@ -49,14 +50,14 @@ ifeq ($(SMB),1)
 endif
 
 ifeq ($(LCDVD),LEGACY)
+  $(info -- Building with legacy libcdvd)
+  EE_CFLAGS += -DLIBCDVD_LEGACY
+  CDVD_SOURCE = iop/cdvd.irx
+else
   EE_INCS += -Iiop/oldlibs/libcdvd/ee
   EE_LIBS += -lcdvdfs
   EE_CFLAGS += -DLIBCDVD_LATEST
   CDVD_SOURCE = iop/__precompiled/cdfs.irx
-else
-  $(info -- Building with legacy libcdvd)
-  EE_CFLAGS += -DLIBCDVD_LEGACY
-  CDVD_SOURCE = iop/cdvd.irx
 endif
 
 ifeq ($(XFROM),1)
