@@ -890,7 +890,7 @@ int genFixPath(const char *inp_path, char *gen_path)
 	pathSep = strchr(uLE_path, '/');
 
 	if (!strncmp(uLE_path, "cdfs", 4)) {  //if using CD or DVD disc path
-		// TODO: Flush CDFS cache
+		LCDVD_FLUSHCACHE();
 		LCDVD_DISKREADY(0);
 		//end of clause for using a CD or DVD path
 
