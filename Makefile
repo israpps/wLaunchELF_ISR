@@ -14,12 +14,13 @@ UDPTTY ?= 0
 MX4SIO ?= 0
 SIO2MAN ?= 0
 PPC_UART ?= 0
+SD2PSX ?= 0
 DEBUG ?= 0
 LCDVD ?= LATEST#or LEGACY
 # ----------------------------- #
 .SILENT:
 
-BIN_NAME = $(HAS_EXFAT)$(HAS_DS34)$(HAS_ETH)$(HAS_SMB)$(HAS_DVRP)$(HAS_XFROM)$(HAS_MX4SIO)$(HAS_EESIO)$(HAS_UDPTTY)$(HAS_PPCTTY)$(HAS_IOP_RESET)
+BIN_NAME = $(HAS_EXFAT)$(HAS_DS34)$(HAS_ETH)$(HAS_SMB)$(HAS_DVRP)$(HAS_XFROM)$(HAS_MX4SIO)$(HAS_SD2PSX)$(HAS_EESIO)$(HAS_UDPTTY)$(HAS_PPCTTY)$(HAS_IOP_RESET)
 ifeq ($(DEBUG), 0)
   EE_BIN = UNC-BOOT$(BIN_NAME).ELF
   EE_BIN_PKD = BOOT$(BIN_NAME).ELF
@@ -62,7 +63,15 @@ endif
 
 ifeq ($(XFROM),1)
     HAS_XFROM = -XFROM
+    GENERIC_READDIR = 1
     EE_CFLAGS += -DXFROM
+endif
+
+ifeq ($(SD2PSX),1)
+    HAS_SD2PSX = -SD2PSX
+    GENERIC_READDIR = 1
+    EE_CFLAGS += -DSUPPORT_SPECIAL_MEMCARDS
+    EE_OBJS += sd2psxman.o 
 endif
 
 ifeq ($(DS34),1)
@@ -96,6 +105,10 @@ ifeq ($(SIO2MAN),1)
     EE_LIBS += -lpadx
 else
     EE_LIBS += -lpad
+endif
+
+ifeq ($(GENERIC_READDIR),1)
+    EE_CFLAGS += -DGENERIC_READDIR
 endif
 
 ifeq ($(SIO_DEBUG),1)

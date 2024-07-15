@@ -20,6 +20,10 @@ IMPORT_BIN2C(ps2netfs_irx);
 IMPORT_BIN2C(ps2ftpd_irx);
 #endif
 
+#ifdef SUPPORT_SPECIAL_MEMCARDS
+IMPORT_BIN2C(sd2psxman_irx);
+#endif
+
 #ifdef IOPTRAP
 IMPORT_BIN2C(ioptrap_irx);
 #endif
@@ -129,49 +133,54 @@ char gw[16] = "192.168.0.1";
 
 char netConfig[IPCONF_MAX_LEN + 64];  //Adjust size as needed
 
+u8 GetModuleStatus(int id, int ret) {return (id > 0 && ret != 1) ? MODULE_LOADED_SUCCESS : MODULE_LOADED_FAILURE;}
+
 //State of module collections
-static u8 have_HDD_modules = 0;
+static u8 have_HDD_modules = MODULE_LOADED_PENDING;
 //State of Uncheckable Modules (invalid header)
-static u8 have_cdvd = 0;
-static u8 have_usbd = 0;
+static u8 have_cdvd = MODULE_LOADED_PENDING;
+static u8 have_usbd = MODULE_LOADED_PENDING;
 #ifdef DS34
-static u8 have_ds34 = 0;
+static u8 have_ds34 = MODULE_LOADED_PENDING;
 #endif
-static u8 have_usb_mass = 0;
+static u8 have_usb_mass = MODULE_LOADED_PENDING;
 
-static u8 have_ps2smap = 0;
-static u8 have_ps2host = 0;
-static u8 have_ps2ip = 0;
-static u8 have_NetModules = 0;
-static u8 have_ps2netfs = 0;
+static u8 have_ps2smap = MODULE_LOADED_PENDING;
+static u8 have_ps2host = MODULE_LOADED_PENDING;
+static u8 have_ps2ip = MODULE_LOADED_PENDING;
+static u8 have_NetModules = MODULE_LOADED_PENDING;
+static u8 have_ps2netfs = MODULE_LOADED_PENDING;
 
-static u8 have_ps2ftpd = 0;
-static u8 have_ps2kbd = 0;
-static u8 have_hdl_info = 0;
+static u8 have_ps2ftpd = MODULE_LOADED_PENDING;
+static u8 have_ps2kbd = MODULE_LOADED_PENDING;
+static u8 have_hdl_info = MODULE_LOADED_PENDING;
 //State of Checkable Modules (valid header)
-static u8 have_poweroff = 0;
-static u8 have_ps2dev9 = 0;
-static u8 have_ps2atad = 0;
-static u8 have_ps2hdd = 0;
-static u8 have_ps2fs = 0;
-static u8 have_smbman = 0;
-static u8 have_vmc_fs = 0;
-#ifdef XFROM
-static u8 have_Flash_modules = 0;
-#endif
+static u8 have_poweroff = MODULE_LOADED_PENDING;
+static u8 have_ps2dev9 = MODULE_LOADED_PENDING;
+static u8 have_ps2atad = MODULE_LOADED_PENDING;
+static u8 have_ps2hdd = MODULE_LOADED_PENDING;
+static u8 have_ps2fs = MODULE_LOADED_PENDING;
+static u8 have_smbman = MODULE_LOADED_PENDING;
+static u8 have_vmc_fs = MODULE_LOADED_PENDING;
 
+#ifdef XFROM
+static u8 have_Flash_modules = MODULE_LOADED_PENDING;
+#endif
+#ifdef SUPPORT_SPECIAL_MEMCARDS
+u8 have_sd2psxman = MODULE_LOADED_PENDING;
+#endif
 #ifdef MX4SIO
 u8 mx4sio_driver_running = 0;
 #endif
 
 //State of whether DEV9 was successfully loaded or not.
-static u8 ps2dev9_loaded = 0;
+static u8 ps2dev9_loaded = MODULE_LOADED_PENDING;
 
 u8 console_is_PSX = 0;
 #ifdef DVRP
 static u8 have_DVRP_HDD_modules = 0;
-static u8 have_dvrdrv = 0;
-static u8 have_dvrfile = 0;
+static u8 have_dvrdrv = MODULE_LOADED_PENDING;
+static u8 have_dvrfile = MODULE_LOADED_PENDING;
 #endif
 //State of whether the UI has been initialized.
 //Use this to determine whether code that loads a device's driver(s) can print onto the screen.
@@ -897,11 +906,12 @@ static void load_ps2atad(void)
 #ifdef XFROM
 static void load_pflash(void)
 {
-	int ID;
-	ID = SifLoadModule("rom0:PFLASH", 0, NULL);
+	int ID, RET;
+	ID = SifLoadStartModule("rom0:PFLASH", 0, NULL, &RET);
 		DPRINTF(" [rom0:PFLASH]: ID=%d\n", ID);
-	ID = SifLoadModule("rom0:PXFROMMAN", 0, NULL);
+	ID = SifLoadStartModule("rom0:PXFROMMAN", 0, NULL, &RET);
 		DPRINTF(" [rom0:PXFROMMAN]: ID=%d\n", ID);
+	have_Flash_modules = GetModuleStatus(ID, RET);
 }
 //------------------------------
 //endfunc load_pflash
@@ -1546,12 +1556,21 @@ void loadFlashModules(void)
 		load_ps2dev9();
 		setupPowerOff();
 		load_pflash();
-		have_Flash_modules = TRUE;
 	}
 }
-//------------------------------
-//endfunc loadFlashModules
-//---------------------------------------------------------------------------
+#endif
+#ifdef SUPPORT_SPECIAL_MEMCARDS
+void loadSD2PSXMAN(void)
+{
+	if (!have_sd2psxman) {
+		if (!is_early_init)  //Do not draw any text before the UI is initialized.
+			drawMsg("SD2PSXMAN.IRX");
+		int ret, ID;
+		ID = SifExecModuleBuffer(sd2psxman_irx, size_sd2psxman_irx, 0, NULL, &ret);
+		DPRINTF(" [SD2PSXMAN]: ID=%d, ret=%d\n", ID, ret);
+		have_sd2psxman = GetModuleStatus(ID, ret);
+	}
+}
 #endif
 #ifdef DVRP
 void loadDVRPHddModules(void)

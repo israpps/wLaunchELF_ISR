@@ -64,6 +64,9 @@
 
 #define TRUE 1
 #define FALSE 0
+#define MODULE_LOADED_PENDING FALSE
+#define MODULE_LOADED_SUCCESS 1
+#define MODULE_LOADED_FAILURE 2
 
 enum {                // cnfmode values for getFilePath in browsing for configurable file paths
 	NON_CNF = 0,      // Normal browser mode, not configuration mode

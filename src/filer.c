@@ -1233,20 +1233,18 @@ int readHDDDVRP(const char *path, FILEINFO *info, int max)
 //endfunc readHDDDVRP
 //--------------------------------------------------------------
 #endif
-#ifdef XFROM
-int readXFROM(const char *path, FILEINFO *info, int max)
+#ifdef GENERIC_READDIR
+int genericReadDir(const char *path, FILEINFO *info, int max)
 {
 	iox_dirent_t dirbuf;
 	char dir[MAX_PATH];
 	int i = 0, fd;
 	//volatile int j;
 
-	loadFlashModules();
-
 	strcpy(dir, path);
 	if ((fd = fileXioDopen(path)) < 0)
 	{
-		DPRINTF("ERROR: Cannot open path '%s'\n", path);
+		DPRINTF("%s: Cannot open path '%s'\n", __FUNCTION__, path);
 		return 0;
 	}
 
@@ -1265,7 +1263,7 @@ int readXFROM(const char *path, FILEINFO *info, int max)
 			info[i].stats.Reserve2 = dirbuf.stat.hisize;
 		} else
 			{
-				DPRINTF("ERROR: Skipping entry wich is neither file or folder '%s'\n", path);
+				DPRINTF("%s: Skipping entry wich is neither file or folder '%s'\n", __FUNCTION__, path);
 				continue;  //Skip entry which is neither a file nor a folder
 			}
 		strncpy((char *)info[i].stats.EntryName, info[i].name, 32);
@@ -1285,7 +1283,7 @@ int readXFROM(const char *path, FILEINFO *info, int max)
 }
 #endif
 //------------------------------
-//endfunc readXFROM
+//endfunc genericReadDir
 //--------------------------------------------------------------
 #ifndef USBMASS_IOCTL_GET_DRIVERNAME
 #define USBMASS_IOCTL_GET_DRIVERNAME 0x0003
@@ -1542,8 +1540,16 @@ int getDir(const char *path, FILEINFO *info)
 		n = readHOST(path, info, max);
 #endif
 #ifdef XFROM
-	else if (!strncmp(path, "xfrom", 5))
-		n = readXFROM(path, info, max);
+	else if (!strncmp(path, "xfrom", 5)) {
+		loadFlashModules();
+		n = genericReadDir(path, info, max);
+	}
+#endif
+#ifdef SUPPORT_SPECIAL_MEMCARDS
+	else if (!strncmp(path, "mmc", 5)) {
+		loadSD2PSXMAN();
+		n = genericReadDir(path, info, max);
+	}
 #endif
 	else if (!strncmp(path, "vmc", 3))
 		n = readVMC(path, info, max);
@@ -3497,6 +3503,14 @@ int setFileList(const char *path, const char *ext, FILEINFO *files, int cnfmode)
 		strcpy(files[nfiles].name, "mc1:");
 		files[nfiles++].stats.AttrFile = sceMcFileAttrSubdir;
 #ifdef MX4SIO
+		}
+#endif
+#ifdef SUPPORT_SPECIAL_MEMCARDS
+		if (have_sd2psxman != MODULE_LOADED_FAILURE) {
+			strcpy(files[nfiles].name, "mmc" "0:");
+			files[nfiles++].stats.AttrFile = sceMcFileAttrSubdir;
+			strcpy(files[nfiles].name, "mmc" "1:");
+			files[nfiles++].stats.AttrFile = sceMcFileAttrSubdir;
 		}
 #endif
 		strcpy(files[nfiles].name, "hdd0:");
