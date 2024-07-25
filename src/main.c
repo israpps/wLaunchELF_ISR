@@ -1285,7 +1285,7 @@ static void getExternalFilePath(const char *argPath, char *filePath)
 #endif
 	} else if (!strncmp(argPath, "cdfs", 4)) {
 		strcpy(filePath, argPath);
-		// TODO: Flush CDFS cache
+		LCDVD_FLUSHCACHE();
 		LCDVD_DISKREADY(0);
 	} else {
 		genFixPath(argPath, filePath);
@@ -2357,7 +2357,7 @@ Recurse_for_ESR:  //Recurse here for PS2Disc command with ESR disc
 		Show_build_info();
 		return;
 	} else if (!strncmp(path, "cdfs", 4)) {
-		// TODO: Flush CDFS cache
+		LCDVD_FLUSHCACHE();
 		LCDVD_DISKREADY(0);
 		party[0] = 0;
 		goto CheckELF_path;
