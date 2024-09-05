@@ -68,6 +68,10 @@ IMPORT_BIN2C(dvrfile_irx);
 IMPORT_BIN2C(cdvd_irx);
 #endif
 
+#ifdef ACUART
+IMPORT_BIN2C(acuart_tty_irx);
+#endif
+
 // Mandatory IRX
 IMPORT_BIN2C(iomanx_irx);
 IMPORT_BIN2C(filexio_irx);
@@ -440,7 +444,7 @@ static void Show_build_info(void)
 " MX4SIO=0"
 #endif
 , COLOR_TEXT);
-#if defined(UDPTTY) || defined(SIO_DEBUG) || defined(TTY2SIOR) || defined(NO_IOP_RESET)
+#if defined(UDPTTY) || defined(SIO_DEBUG) || defined(ACUART) || defined(NO_IOP_RESET)
 
 
 			PrintPos(-1, hpos, "Debug Features:", COLOR_SELECT);
@@ -462,10 +466,10 @@ static void Show_build_info(void)
 #else
 " SIO_DEBUG=0"
 #endif
-#ifdef TTY2SIOR
-" TTY2SIOR=1"
+#ifdef ACUART
+" ACUART=1"
 #else
-" TTY2SIOR=0"
+" ACUART=0"
 #endif
 , COLOR_TEXT);
 #endif
@@ -1186,11 +1190,6 @@ static void loadBasicModules(void)
 #else
 	id = SifLoadStartModule("rom0:PADMAN", 0, NULL, &ret);
 	DPRINTF(" [rom0:PADMAN]: id=%d, ret=%d\n", id, ret);
-#endif
-
-#if defined(LOAD_DAEMON) && defined(SUPPORT_SYSTEM_2X6)
-	id = SifLoadStartModule("rom0:DAEMON", 0, NULL, &ret);
-	DPRINTF(" [DAEMON]: id=%d ret=%d\n", id, ret);
 #endif
 
 #if defined(LOAD_LED) && defined(SUPPORT_SYSTEM_2X6) && !defined(LOAD_DOGBAIT)
@@ -2480,12 +2479,19 @@ static void Reset()
 #ifdef XFROM
 	have_Flash_modules = 0;
 #endif
+
 #ifdef UDPTTY
-int i, d;
+	int i, d;
 	load_ps2ip();
 	i = SifExecModuleBuffer(&udptty_irx, size_udptty_irx, 0, NULL, &d);
     DPRINTF(" [UDPTTY]: id=%d, ret=%d\n", i, d);
 #endif
+#ifdef ACUART
+	int i, d;
+	i = SifExecModuleBuffer(&acuart_tty_irx, size_acuart_tty_irx, 0, NULL, &d);
+    DPRINTF(" [ACUART]: id=%d, ret=%d\n", i, d);
+#endif
+
 	loadBasicModules();
 #ifndef SUPPORT_SYSTEM_2X6
 	loadCdModules();
@@ -2798,7 +2804,18 @@ int main(int argc, char *argv[])
 			break;
 		}
 	}
-	sprintf(mainMsg + strlen(mainMsg), (i == -1) ? " | ACJVLOAD.IRX loaded" : " | ACJVLOAD.IRX not found");
+	sprintf(mainMsg + strlen(mainMsg), (i == -1) ? " | ACJVLOAD loaded" : " | ACJVLOAD not found");
+	if (
+#ifdef LOAD_DAEMON
+	1
+#else
+		exists("mass:/watchdog.opt") || exists("mc0:/watchdog.opt") || exists("mc1:/watchdog.opt") || exists("host:/watchdog.opt")
+#endif
+		) {
+		DPRINTF("Starting watchdog\n");
+		id = SifLoadStartModule("rom0:DAEMON", 0, NULL, &ret);
+		sprintf(mainMsg + strlen(mainMsg), (id > 0 && ret != 1) ? " | watchdog running" : " | watchdog error");
+	}
 	DPRINTF("%s\n",mainMsg);
 #endif
 	

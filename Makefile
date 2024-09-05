@@ -23,7 +23,7 @@ CDVDFSV ?= 1
 # ----------------------------- #
 .SILENT:
 
-BIN_NAME = $(HAS_EXFAT)$(HAS_DS34)$(HAS_ETH)$(HAS_SMB)$(HAS_DVRP)$(HAS_XFROM)$(HAS_MX4SIO)$(HAS_COH)$(HAS_EESIO)$(HAS_UDPTTY)$(HAS_TTY2SIOR)$(HAS_IOP_RESET)
+BIN_NAME = $(HAS_EXFAT)$(HAS_DS34)$(HAS_ETH)$(HAS_SMB)$(HAS_DVRP)$(HAS_XFROM)$(HAS_MX4SIO)$(HAS_COH)$(HAS_EESIO)$(HAS_UDPTTY)$(HAS_ACUART)$(HAS_IOP_RESET)
 ifeq ($(DEBUG), 0)
   EE_BIN = UNC-BOOT$(BIN_NAME).ELF
   EE_BIN_PKD = BOOT$(BIN_NAME).ELF
@@ -65,6 +65,12 @@ ifeq ($(COH), 1)
   EE_CFLAGS += -DSUPPORT_SYSTEM_2X6
   HOMEBREW_DONGLEMAN = 1
   EE_OBJS += mcman_irx.o
+  ifeq ($(ACUART), 1)
+    $(info -- adding support for arcade UART)
+    EE_OBJS += acuart_tty_irx.o
+    EE_CFLAGS += -DACUART
+    HAS_ACUART = -ACUART
+  endif
 endif
 
 ifeq ($(XFROM),1)
