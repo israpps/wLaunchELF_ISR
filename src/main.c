@@ -1029,6 +1029,8 @@ static void ShowDebugInfo(void)
 				sprintf(TextRow, "argv[%d] == \"%s\"", i, boot_argv[i]);
 				PrintRow(-1, TextRow);
 			}
+// COH-H models blindy run `mc0:boot.bin`. we dont need to spend screen size telling user something that is always the same right?
+#ifndef SUPPORT_SYSTEM_2X6
 			sprintf(TextRow,     "Main System Update KELF == \"%s\"", (console_is_PSX) ? "BIEXEC-SYSTEM/xosdmain.elf" : (strchr(default_OSDSYS_path2,'/')+ 1));
 			PrintRow(-1, TextRow);
 			if ((ROMVersion < 0x230) && (ROMVersion > 0x130))
@@ -1036,6 +1038,7 @@ static void ShowDebugInfo(void)
 				sprintf(TextRow, "Specific System Update KELF == \"B%cEXEC-SYSTEM/osd%03x.elf\"", rough_region, (ROMVersion+10)&~0x0F);
 				PrintRow(-1, TextRow);
 			}
+#endif
 			sprintf(TextRow, "boot_path == \"%s\"", boot_path);
 			PrintRow(-1, TextRow);
 			sprintf(TextRow, "LaunchElfDir == \"%s\"", LaunchElfDir);
