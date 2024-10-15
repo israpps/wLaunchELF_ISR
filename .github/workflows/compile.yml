@@ -71,6 +71,15 @@ jobs:
         files: |
                WLE/*.ELF
 
+    - name: notify on discord
+      if: github.ref == 'refs/heads/master'
+      uses: tsickert/discord-webhook@v5.3.0
+      with:
+        webhook-url: ${{ secrets.DISCORD_FEED }}
+        content: |
+          ## wLaunchELF 4.43x_isr has been updated!
+          ### [Download Page](https://israpps.github.io/projects/wlaunchelf-isr)
+
     - name: Create release
       if: github.ref == 'refs/heads/master'
       uses: marvinpinto/action-automatic-releases@latest
