@@ -1,7 +1,7 @@
 #.SILENT:
 
 # ---{ BUILD CONFIGURATION }--- #
-SIO_DEBUG ?= 0
+MMCE ?= 0
 DS34 ?= 0
 SMB ?= 0
 TMANIP ?= 1
@@ -14,12 +14,13 @@ UDPTTY ?= 0
 MX4SIO ?= 0
 SIO2MAN ?= 0
 PPC_UART ?= 0
+SIO_DEBUG ?= 0
 DEBUG ?= 0
 LCDVD ?= LEGACY#or LATEST
 # ----------------------------- #
 .SILENT:
 
-BIN_NAME = $(HAS_EXFAT)$(HAS_DS34)$(HAS_ETH)$(HAS_SMB)$(HAS_DVRP)$(HAS_XFROM)$(HAS_MX4SIO)$(HAS_EESIO)$(HAS_UDPTTY)$(HAS_PPCTTY)$(HAS_IOP_RESET)
+BIN_NAME = $(HAS_EXFAT)$(HAS_DS34)$(HAS_ETH)$(HAS_SMB)$(HAS_DVRP)$(HAS_XFROM)$(HAS_MX4SIO)$(HAS_MMCE)$(HAS_EESIO)$(HAS_UDPTTY)$(HAS_PPCTTY)$(HAS_IOP_RESET)
 ifeq ($(DEBUG), 0)
   EE_BIN = UNC-BOOT$(BIN_NAME).ELF
   EE_BIN_PKD = BOOT$(BIN_NAME).ELF
@@ -77,6 +78,13 @@ ifeq ($(DVRP),1)
     EE_OBJS += dvrdrv_irx.o dvrfile_irx.o
     EE_CFLAGS += -DDVRP
     HAS_DVRP = -DVRP
+endif
+
+ifeq ($(MMCE),1)
+    EE_OBJS += mmceman_irx.o
+    EE_CFLAGS += -DMMCE
+    HAS_DVRP = -MMCE
+    SIO2MAN = 1
 endif
 
 ifeq ($(MX4SIO),1)

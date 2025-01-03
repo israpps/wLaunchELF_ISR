@@ -64,6 +64,10 @@ IMPORT_BIN2C(dvrdrv_irx);
 IMPORT_BIN2C(dvrfile_irx);
 #endif
 
+#ifdef MMCE
+IMPORT_BIN2C(mmceman_irx);
+#endif
+
 // Mandatory IRX
 IMPORT_BIN2C(iomanx_irx);
 IMPORT_BIN2C(filexio_irx);
@@ -440,6 +444,11 @@ static void Show_build_info(void)
 " MX4SIO=1"
 #else
 " MX4SIO=0"
+#endif
+#ifdef MMCE
+" MMCE=1"
+#else
+" MMCE=0"
 #endif
 , COLOR_TEXT);
 #if defined(UDPTTY) || defined(SIO_DEBUG) || defined(POWERPC_UART) || defined(NO_IOP_RESET)
@@ -1172,6 +1181,11 @@ static void loadBasicModules(void)
 #else
 	id = SifLoadModule("rom0:PADMAN", 0, NULL);
 	DPRINTF(" [rom0:PADMAN]: id=%d\n", id);
+#endif
+
+#ifdef MMCE
+	id = SifExecModuleBuffer(mmceman_irx, size_mmceman_irx, 0, NULL, &ret);  //Home
+	DPRINTF(" [MMCE]: id=%d ret=%d\n", id, ret);
 #endif
 }
 //------------------------------

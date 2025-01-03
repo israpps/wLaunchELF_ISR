@@ -1541,6 +1541,10 @@ int getDir(const char *path, FILEINFO *info)
 	else if (!strncmp(path, "host", 4))
 		n = readHOST(path, info, max);
 #endif
+#ifdef MMCE
+	else if (!strncmp(path, "mmce", 4))
+		n = readGENERIC(path, info, max);
+#endif
 #ifdef XFROM
 	else if (!strncmp(path, "xfrom", 5))
 		n = readXFROM(path, info, max);
@@ -3498,6 +3502,12 @@ int setFileList(const char *path, const char *ext, FILEINFO *files, int cnfmode)
 		files[nfiles++].stats.AttrFile = sceMcFileAttrSubdir;
 #ifdef MX4SIO
 		}
+#endif
+#ifdef MMCE
+		strcpy(files[nfiles].name, "mmce0:");
+		files[nfiles++].stats.AttrFile = sceMcFileAttrSubdir;
+		strcpy(files[nfiles].name, "mmce1:");
+		files[nfiles++].stats.AttrFile = sceMcFileAttrSubdir;
 #endif
 		strcpy(files[nfiles].name, "hdd0:");
 		files[nfiles++].stats.AttrFile = sceMcFileAttrSubdir;
