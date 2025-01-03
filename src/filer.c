@@ -1332,13 +1332,10 @@ void scan_USB_mass(void)
 //------------------------------
 //endfunc scan_USB_mass
 //--------------------------------------------------------------
-int readMASS(const char *path, FILEINFO *info, int max)
+int readGENERIC(const char *path, FILEINFO *info, int max)
 {
 	iox_dirent_t record;
 	int n = 0, dd = -1;
-
-	if (!USB_mass_scanned)
-		scan_USB_mass();
 
 	if ((dd = fileXioDopen(path)) < 0)
 		goto exit;  //exit if error opening directory
@@ -1372,7 +1369,7 @@ exit:
 	return n;
 }
 //------------------------------
-//endfunc readMASS
+//endfunc readGENERIC
 //--------------------------------------------------------------
 #ifdef ETH
 char *makeHostPath(char *dp, char *sp)
@@ -1533,8 +1530,11 @@ int getDir(const char *path, FILEINFO *info)
 	else if (!strncmp(path, "dvr_hdd", 7))
 		n = readHDDDVRP(path, info, max);
 #endif
-	else if (!strncmp(path, "mass", 4))
-		n = readMASS(path, info, max);
+	else if (!strncmp(path, "mass", 4)) {
+		if (!USB_mass_scanned)
+			scan_USB_mass();
+		n = readGENERIC(path, info, max);
+	}
 	else if (!strncmp(path, "cdfs", 4))
 		n = readCD(path, info, max);
 #ifdef ETH
