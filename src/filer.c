@@ -1351,8 +1351,10 @@ int readGENERIC(const char *path, FILEINFO *info, int max)
 			info[n].stats.AttrFile = MC_ATTR_norm_file;
 			info[n].stats.FileSizeByte = record.stat.size;
 			info[n].stats.Reserve2 = record.stat.hisize;
-		} else
+		} else {
+			DPRINTF("%s:UNKNOWN_FILEMODE:('%s', 0x%x, siz:%d, attr:%d)\n", record.name, record.stat.mode, record.stat.size, record.stat.attr);
 			continue;  //Skip entry which is neither a file nor a folder
+		}
 		strncpy((char *)info[n].stats.EntryName, info[n].name, 32);
 		memcpy((void *)&info[n].stats._Create, record.stat.ctime, 8);
 		memcpy((void *)&info[n].stats._Modify, record.stat.mtime, 8);
