@@ -17,6 +17,10 @@ jobs:
         eth: ["ETH=0", "ETH=1"]
         bdmstuff: ["EXFAT=0", "EXFAT=1", "EXFAT=1 MX4SIO=1"]
         ds34: ["DS34=0", "DS34=1"]
+        mmce: ["MMCE=0", "MMCE=1"]
+        exclude:
+          - bdmstuff: "EXFAT=1 MX4SIO=1"
+            mmce: "MMCE=1"
     runs-on: ubuntu-latest
     container: ps2dev/ps2dev:v1.0
     steps:
@@ -32,12 +36,12 @@ jobs:
 
     - name: Compile wLaunchELF
       run: |
-        make rebuild ${{ matrix.eth }} ${{ matrix.sior }} ${{ matrix.bdmstuff }} ${{ matrix.ds34 }} ${{ matrix.xfrom }} ${{ github.event.inputs.make_args }}
+        make rebuild ${{ matrix.eth }} ${{ matrix.mmce }} ${{ matrix.bdmstuff }} ${{ matrix.ds34 }} ${{ matrix.xfrom }} ${{ github.event.inputs.make_args }}
 
     - name: Upload variants artifact ELF
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
-        name: WLE
+        name: "WLE-${{ matrix.eth }}-${{ matrix.mmce }}-${{ matrix.bdmstuff }}-${{ matrix.ds34 }}-${{ matrix.xfrom }}"
         path: |
             BOOT*.ELF
 
@@ -48,13 +52,17 @@ jobs:
     needs: [build]
     steps:
 
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - run: |
         git config --global --add safe.directory "$GITHUB_WORKSPACE"
         git fetch --prune --unshallow
 
     - name: Download all artifacts
-      uses: actions/download-artifact@v3
+      uses: actions/download-artifact@v4
+      with:
+        path: WLE/
+        pattern: "WLE-*"
+        merge-multiple: true
 
     - name: list
       run: |
