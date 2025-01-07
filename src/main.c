@@ -375,6 +375,92 @@ static void Show_About_uLE(void)
 	   //----- End of event loop -----
 }
 
+#ifdef MMCE
+struct cardinfo_t {
+	char* product;
+	int revision;
+	int protocol;
+	int validcard;
+};
+static void Show_MMCEManager(void)
+{
+	int event = 1, post_event = 0, hpos = 16, curcard = 0, res, i;
+	char TextRow[256];
+	char* sd2psx = "SD2PSX";
+	char* mcpro = "MemCardPro2";
+	char* unk = LNG(Unknown);
+	struct cardinfo_t CardInfo[2] = {
+	    {unk, 0, 0, FALSE},
+	    {unk, 0, 0, FALSE},
+	};
+	
+	char* mmce = "mmce0:";
+	for (i = 0; i < 2; i++) {
+		mmce[4] = '0'+i;
+    	res = fileXioDevctl(mmce, 0x1 /*MMCE_CMD_PING*/, NULL, 0, NULL, 0);
+		if (res != -1) {
+        	if (((res & 0xFF00) >> 8) == 1) {
+        	    CardInfo[i].product = sd2psx;
+        	} else if (((res & 0xFF00) >> 8) == 2) {
+        	    CardInfo[i].product = mcpro;
+        	} else {
+				CardInfo[i].product = unk;
+        	}
+			CardInfo[i].revision = (res & 0xFF);
+			CardInfo[i].protocol = ((res & 0xFF0000) >> 16);
+			CardInfo[i].validcard = TRUE;
+    	} else CardInfo[i].validcard = FALSE;
+	}
+	
+	//----- Start of event loop -----
+	while (1) {
+		//Pad response section
+		waitAnyPadReady();
+		if (readpad() && new_pad) {
+			if (new_pad & PAD_CIRCLE) {
+				event |= 2;
+				if (setting->GUI_skin[0]) {
+					GUI_active = 1;
+					loadSkin(BACKGROUND_PIC, 0, 0);
+				}
+				break;
+			} else if (new_pad && PAD_CROSS) {
+				curcard ^= 1;
+			} else if (new_pad && PAD_START) {
+				//SET GAMEID
+			}
+
+		}
+
+		//Display section
+		if (event || post_event) {  //NB: We need to update two frame buffers per event
+			clrScr(setting->color[COLOR_BACKGR]);
+				PrintPos(03, 10, "Device Info:", COLOR_TEXT);
+			for (i = 0; i < 2; i++)
+			{
+				if (CardInfo[i].validcard) {
+					sprintf(TextRow, " Port0: %s", CardInfo[i].product);
+					PrintPos(-1, hpos, TextRow, curcard==i? COLOR_SELECT : COLOR_TEXT);
+					sprintf(TextRow, "Revision: %d, Protocol: %d", CardInfo[i].revision, CardInfo[i].protocol);
+					PrintPos(-1, hpos, TextRow, COLOR_TEXT);
+				} else {
+					sprintf(TextRow, " Port0: %s", "No device Found");
+					PrintPos(-1, hpos, TextRow, COLOR_TEXT);
+				}
+				PrintPos(-1, hpos, " ", COLOR_TEXT);
+				PrintPos(-1, hpos, " ", COLOR_TEXT);
+				PrintPos(-1, hpos, " ", COLOR_TEXT);
+			}
+			
+			setScrTmp("MMCE Manager", "R1/R2:card | L1/L2:channel | START:SetGameID | "FNCH_CROSS":card slot | "FNCH_CIRCLE":Back");
+		}
+		drawScr();
+		post_event = event;
+		event = 0;
+	}  //ends while
+	   //----- End of event loop -----
+}
+#endif
 static void Show_build_info(void)
 {
 	char TextRow[256];
@@ -2370,6 +2456,15 @@ Recurse_for_ESR:  //Recurse here for PS2Disc command with ESR disc
 		}
 		Show_build_info();
 		return;
+#ifdef MMCE
+	} else if (!stricmp(path, "MISC/MMCEManager")) {
+		if (setting->GUI_skin[0]) {
+			GUI_active = 0;
+			loadSkin(BACKGROUND_PIC, 0, 0);
+		}
+		Show_MMCEManager();
+		return;
+#endif
 	} else if (!strncmp(path, "cdfs", 4)) {
 		LCDVD_FLUSHCACHE();
 		LCDVD_DISKREADY(0);

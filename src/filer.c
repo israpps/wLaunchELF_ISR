@@ -3583,14 +3583,18 @@ int setFileList(const char *path, const char *ext, FILEINFO *files, int cnfmode)
 		files[nfiles++].stats.AttrFile = sceMcFileAttrFile;
 		strcpy(files[nfiles].name, LNG(PS2Disc));
 		files[nfiles++].stats.AttrFile = sceMcFileAttrFile;
-		#ifdef ETH
+#ifdef ETH
 		strcpy(files[nfiles].name, LNG(PS2Net));
 		files[nfiles++].stats.AttrFile = sceMcFileAttrFile;
-		#endif
+#endif
 		strcpy(files[nfiles].name, LNG(PS2PowerOff));
 		files[nfiles++].stats.AttrFile = sceMcFileAttrFile;
 		strcpy(files[nfiles].name, LNG(HddManager));
 		files[nfiles++].stats.AttrFile = sceMcFileAttrFile;
+#ifdef MMCE
+		strcpy(files[nfiles].name, "MMCEManager");
+		files[nfiles++].stats.AttrFile = sceMcFileAttrFile;
+#endif
 		strcpy(files[nfiles].name, LNG(TextEditor));
 		files[nfiles++].stats.AttrFile = sceMcFileAttrFile;
 		strcpy(files[nfiles].name, LNG(JpgViewer));
@@ -3605,7 +3609,6 @@ int setFileList(const char *path, const char *ext, FILEINFO *files, int cnfmode)
 		files[nfiles++].stats.AttrFile = sceMcFileAttrFile;
 		strcpy(files[nfiles].name, LNG(Load_CNF));
 		files[nfiles++].stats.AttrFile = sceMcFileAttrFile;
-		//Next 2 lines add an optional font test routine
 		strcpy(files[nfiles].name, LNG(ShowFont));
 		files[nfiles++].stats.AttrFile = sceMcFileAttrFile;
 		strcpy(files[nfiles].name, LNG(Debug_Info));
