@@ -384,7 +384,8 @@ struct cardinfo_t {
 };
 static void Show_MMCEManager(void)
 {
-	int event = 1, post_event = 0, hpos = 16, curcard = 0, res, i;
+	int event = 1, post_event = 0, curcard = 0, res, i;
+	int hpos[2] = {2, 38}; 
 	char TextRow[256];
 	char* sd2psx = "SD2PSX";
 	char* mcpro = "MemCardPro2";
@@ -424,9 +425,10 @@ static void Show_MMCEManager(void)
 					loadSkin(BACKGROUND_PIC, 0, 0);
 				}
 				break;
-			} else if (new_pad && PAD_CROSS) {
+			} else if (new_pad & PAD_CROSS) {
 				curcard ^= 1;
-			} else if (new_pad && PAD_START) {
+				event |= 2;
+			} else if (new_pad & PAD_START) {
 				//SET GAMEID
 			}
 
@@ -435,24 +437,26 @@ static void Show_MMCEManager(void)
 		//Display section
 		if (event || post_event) {  //NB: We need to update two frame buffers per event
 			clrScr(setting->color[COLOR_BACKGR]);
-				PrintPos(03, 10, "Device Info:", COLOR_TEXT);
+			drawOpSprite(setting->color[COLOR_FRAME],
+			             SCREEN_WIDTH / 2 - 21, Frame_start_y,
+			             SCREEN_WIDTH / 2 - 19, Frame_end_y);
+			//PrintPos(03, 10, "Device Info:", COLOR_TEXT);
 			for (i = 0; i < 2; i++)
 			{
+				sprintf(TextRow, "mmce%d: ", i);
+				PrintPos(01, hpos[i], TextRow, curcard==i? COLOR_SELECT : COLOR_TEXT);
 				if (CardInfo[i].validcard) {
-					sprintf(TextRow, " Port0: %s", CardInfo[i].product);
-					PrintPos(-1, hpos, TextRow, curcard==i? COLOR_SELECT : COLOR_TEXT);
-					sprintf(TextRow, "Revision: %d, Protocol: %d", CardInfo[i].revision, CardInfo[i].protocol);
-					PrintPos(-1, hpos, TextRow, COLOR_TEXT);
+					sprintf(TextRow, " Device: %s", CardInfo[i].product);
+					PrintPos(02, hpos[i], TextRow, COLOR_TEXT);
+					sprintf(TextRow, " Revision: %d, Protocol: %d", CardInfo[i].revision, CardInfo[i].protocol);
+					PrintPos(03, hpos[i], TextRow, COLOR_TEXT);
 				} else {
-					sprintf(TextRow, " Port0: %s", "No device Found");
-					PrintPos(-1, hpos, TextRow, COLOR_TEXT);
+					sprintf(TextRow, "%s", "No device Found");
+					PrintPos(02, hpos[i], TextRow, COLOR_GRAPH3);
 				}
-				PrintPos(-1, hpos, " ", COLOR_TEXT);
-				PrintPos(-1, hpos, " ", COLOR_TEXT);
-				PrintPos(-1, hpos, " ", COLOR_TEXT);
 			}
 			
-			setScrTmp("MMCE Manager", "R1/R2:card | L1/L2:channel | START:SetGameID | "FNCH_CROSS":card slot | "FNCH_CIRCLE":Back");
+			setScrTmp("MMCE Manager", "R1/R2:card  L1/L2:chan  START:SetGameID  "FNCH_CROSS":card slot  "FNCH_CIRCLE":Back");
 		}
 		drawScr();
 		post_event = event;
