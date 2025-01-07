@@ -419,6 +419,16 @@ void Load_External_Language(void);
 
 /* font_uLE.c */
 
+#define FNCH_CIRCLE   "\xFF""0"
+#define FNCH_CROSS    "\xFF""1"
+#define FNCH_SQUARE   "\xFF""2"
+#define FNCH_TRIANGLE "\xFF""3"
+#define FNCH_BOXFILLD "\xFF""4"
+#define FNCH_RIGHT 	  "\xFF"":"
+#define FNCH_LEFT  	  "\xFF""<"
+#define FNCH_UP    	  "\xFF""="
+#define FNCH_DOWN  	  "\xFF"";"
+
 extern unsigned char font_uLE[];
 enum {
 	//0x100-0x109 are 5 double width characters for D-Pad buttons, which are accessed as:
