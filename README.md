@@ -29,6 +29,7 @@ It features:
 - `EXFAT`: Support for accessing EXFAT filesystems from BDM devices (USB & MX4SIO)
 - `DS34`: Support for PlayStation 3 and PlayStation 4 controllers over USB
 - `MX4SIO`: Support for browsing the contents of SD Cards connected via [mx4sio](https://www.google.com/search?q=mx4sio)
+- `MMCE`: Support for browsing the contents of the SDCard connected to MemcardPro2 or SD2PSX and their variants (make sure firmware of device is new enough to support the protocol)
 
 
 # **original readme**
