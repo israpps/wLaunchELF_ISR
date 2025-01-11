@@ -86,19 +86,17 @@ int main(int argc, char *argv[])
 	ret = SifLoadElf(target, &elfdata);
 	if (ret == 0) {
 		args[0] = path;
-
-		if (strncmp(path, "hdd", 3) == 0 && (path[3] >= '0' && path[3] <= ':')) { /* Final IOP reset, to fill the IOP with the default modules.
+	///ISRA: reboot the IOP always, lots of apps dont have error handling on the RPC modules
+		/*if (strncmp(path, "hdd", 3) == 0 && (path[3] >= '0' && path[3] <= ':')) { /* Final IOP reset, to fill the IOP with the default modules.
                It appears that it was once a thing for the booting software to leave the IOP with the required IOP modules.
                This can be seen in OSDSYS v1.0x (no IOP reboot) and the mechanism to boot DVD player updates (OSDSYS will get LoadExecPS2 to load SIO2 modules).
                However, it changed with the introduction of the HDD unit, as the software booted may be built with a different SDK revision.
 
                Reboot the IOP, to leave it in a clean & consistent state.
-               But do not do that for boot targets on other devices, for backward-compatibility with older (homebrew) software. */
-			while (!SifIopReset("", 0)) {
-			};
-			while (!SifIopSync()) {
-			};
-		}
+               But do not do that for boot targets on other devices, for backward-compatibility with older (homebrew) software.
+		}*/
+		while (!SifIopReset("", 0));
+		while (!SifIopSync());
 
 		SifExitRpc();
 

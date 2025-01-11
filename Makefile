@@ -176,9 +176,22 @@ EE_ASM_DIR = asm/
 EE_SRC_DIR = src/
 EE_OBJS := $(EE_OBJS:%=$(EE_OBJS_DIR)%) # remap all EE_OBJ to obj subdir
 
-.PHONY: all run reset clean rebuild isoclean iso
-
 all: githash.h $(EE_BIN_PKD)
+
+info:
+	$(info available build options:)
+	$(info   EXFAT		enable BDM and EXFAT support for it)
+	$(info   ETH		include network features?)
+	$(info   DS34		include PS3/PS4 controller support)
+	$(info   MX4SIO		support for SDCard connected to memory card slot 2)
+	$(info   MMCE		support for direct SDCard access on SD2PSX or memcardpro2)
+	$(info ----------)
+	$(info   IOPTRAP		load exception handler module to IOP)
+	$(info   UDPTTY		transfer stdout to UDP broadcast)
+	$(info   PPC_UART	transfer stdout to DECKARD UART)
+	$(info   SIO_DEBUG 	transfer EE stdout to EE UART)
+
+.PHONY: all run reset clean rebuild isoclean iso
 
 $(EE_BIN_PKD): $(EE_BIN)
 	ps2-packer $< $@
@@ -220,14 +233,14 @@ clean:
 
 rebuild: clean all
 
-info:
+info2:
 	$(info -------- wLaunchELF 4.43x_isr --------)
 	$(info EE_BIN = $(EE_BIN))
 	$(info EE_BIN_PKD = $(EE_BIN_PKD))
 	$(info EE_OBJS = $(EE_OBJS))
 	$(info TMANIP=$(TMANIP), SIO_DEBUG=$(SIO_DEBUG), DS34=$(DS34), ETH=$(ETH))
 	$(info EXFAT=$(EXFAT), XFROM=$(XFROM), UDPTTY=$(UDPTTY), MX4SIO=$(MX4SIO))
-	$(info IOP_RESET=$(IOP_RESET))
+	$(info MMCE=$(MMCE), IOP_RESET=$(IOP_RESET))
 
 #special recipe for compiling and dumping obj to subfolder
 $(EE_OBJS_DIR)%.o: $(EE_SRC_DIR)%.c | $(EE_OBJS_DIR)
