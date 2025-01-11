@@ -1332,13 +1332,10 @@ void scan_USB_mass(void)
 //------------------------------
 //endfunc scan_USB_mass
 //--------------------------------------------------------------
-int readMASS(const char *path, FILEINFO *info, int max)
+int readGENERIC(const char *path, FILEINFO *info, int max)
 {
 	iox_dirent_t record;
 	int n = 0, dd = -1;
-
-	if (!USB_mass_scanned)
-		scan_USB_mass();
 
 	if ((dd = fileXioDopen(path)) < 0)
 		goto exit;  //exit if error opening directory
@@ -1354,8 +1351,10 @@ int readMASS(const char *path, FILEINFO *info, int max)
 			info[n].stats.AttrFile = MC_ATTR_norm_file;
 			info[n].stats.FileSizeByte = record.stat.size;
 			info[n].stats.Reserve2 = record.stat.hisize;
-		} else
+		} else {
+			DPRINTF("%s:UNKNOWN_FILEMODE:('%s', 0x%x, siz:%d, attr:%d)\n", record.name, record.stat.mode, record.stat.size, record.stat.attr);
 			continue;  //Skip entry which is neither a file nor a folder
+		}
 		strncpy((char *)info[n].stats.EntryName, info[n].name, 32);
 		memcpy((void *)&info[n].stats._Create, record.stat.ctime, 8);
 		memcpy((void *)&info[n].stats._Modify, record.stat.mtime, 8);
@@ -1372,7 +1371,7 @@ exit:
 	return n;
 }
 //------------------------------
-//endfunc readMASS
+//endfunc readGENERIC
 //--------------------------------------------------------------
 #ifdef ETH
 char *makeHostPath(char *dp, char *sp)
@@ -1533,13 +1532,20 @@ int getDir(const char *path, FILEINFO *info)
 	else if (!strncmp(path, "dvr_hdd", 7))
 		n = readHDDDVRP(path, info, max);
 #endif
-	else if (!strncmp(path, "mass", 4))
-		n = readMASS(path, info, max);
+	else if (!strncmp(path, "mass", 4)) {
+		if (!USB_mass_scanned)
+			scan_USB_mass();
+		n = readGENERIC(path, info, max);
+	}
 	else if (!strncmp(path, "cdfs", 4))
 		n = readCD(path, info, max);
 #ifdef ETH
 	else if (!strncmp(path, "host", 4))
 		n = readHOST(path, info, max);
+#endif
+#ifdef MMCE
+	else if (!strncmp(path, "mmce", 4))
+		n = readGENERIC(path, info, max);
 #endif
 #ifdef XFROM
 	else if (!strncmp(path, "xfrom", 5))
@@ -3498,6 +3504,12 @@ int setFileList(const char *path, const char *ext, FILEINFO *files, int cnfmode)
 		files[nfiles++].stats.AttrFile = sceMcFileAttrSubdir;
 #ifdef MX4SIO
 		}
+#endif
+#ifdef MMCE
+		strcpy(files[nfiles].name, "mmce0:");
+		files[nfiles++].stats.AttrFile = sceMcFileAttrSubdir;
+		strcpy(files[nfiles].name, "mmce1:");
+		files[nfiles++].stats.AttrFile = sceMcFileAttrSubdir;
 #endif
 		strcpy(files[nfiles].name, "hdd0:");
 		files[nfiles++].stats.AttrFile = sceMcFileAttrSubdir;

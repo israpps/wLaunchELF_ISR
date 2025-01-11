@@ -21,10 +21,12 @@ $(EE_ASM_DIR)mcserv_irx.s: $(MCSERV_SOURCE) | $(EE_ASM_DIR)
 
 $(EE_ASM_DIR)sio2man.s: $(SIO2MAN_SOURCE) | $(EE_ASM_DIR)
 	$(BIN2S) $< $@ sio2man_irx
-
 	
 $(EE_ASM_DIR)mx4sio_bd.s: iop/__precompiled/mx4sio_bd.irx | $(EE_ASM_DIR)
 	$(BIN2S) $< $@ mx4sio_bd_irx
+	
+$(EE_ASM_DIR)mmceman_irx.s: iop/__precompiled/mmceman.irx | $(EE_ASM_DIR)
+	$(BIN2S) $< $@ mmceman_irx
 #---{ USB }---#
 
 $(EE_ASM_DIR)usbd_irx.s: $(PS2SDK)/iop/irx/usbd.irx | $(EE_ASM_DIR)
@@ -169,7 +171,7 @@ $(EE_ASM_DIR)ps2kbd_irx.s: $(PS2SDK)/iop/irx/ps2kbd.irx | $(EE_ASM_DIR)
 $(EE_ASM_DIR)sior_irx.s: $(PS2SDK)/iop/irx/sior.irx | $(EE_ASM_DIR)
 	$(BIN2S) $< $@ sior_irx
 
-$(EE_ASM_DIR)ppctty_irx.s:iop/__precompiled/ppctty.irx | $(EE_ASM_DIR)
+$(EE_ASM_DIR)ppctty.s:iop/__precompiled/ppctty.irx | $(EE_ASM_DIR)
 	$(BIN2S) $< $@ ppctty_irx
 
 iop/AllowDVDV.irx: iop/AllowDVDV
