@@ -2095,10 +2095,16 @@ Recurse_for_ESR:  //Recurse here for PS2Disc command with ESR disc
 		strcpy(fullpath, path);
 		goto ELFchecked;
 #endif
+#ifdef MMCE
+	} else if (!strncmp(path, "mmce", 4)) {
+		if ((t = checkELFheader(path)) <= 0)
+			goto ELFnotFound;
+		strcpy(fullpath, path);
+		goto ELFchecked;
+#endif
 	} else if (!strncmp(path, "mass", 4)) {
 		if ((t = checkELFheader(path)) <= 0)
 			goto ELFnotFound;
-		//coming here means the ELF is fine
 		party[0] = 0;
 
 		strcpy(fullpath, path);
