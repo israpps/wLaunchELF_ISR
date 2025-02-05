@@ -105,7 +105,7 @@ $(EE_ASM_DIR)ps2ip_irx.s: $(PS2SDK)/iop/irx/ps2ip.irx | $(EE_ASM_DIR)
 $(EE_ASM_DIR)udptty.s: $(PS2SDK)/iop/irx/udptty.irx | $(EE_ASM_DIR)
 	$(BIN2S) $< $@ udptty_irx
 
-$(EE_ASM_DIR)ps2smap_irx.s: $(PS2DEV)/ps2eth/smap/ps2smap.irx | $(EE_ASM_DIR)
+$(EE_ASM_DIR)ps2smap_irx.s: iop/__precompiled/ps2smap.irx | $(EE_ASM_DIR)
 	$(BIN2S) $< $@ ps2smap_irx
 
 $(EE_ASM_DIR)ps2ftpd_irx.s: iop/ps2ftpd.irx | $(EE_ASM_DIR)

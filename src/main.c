@@ -1545,6 +1545,25 @@ void loadFlashModules(void)
 //---------------------------------------------------------------------------
 #endif
 #ifdef DVRP
+int sceCdNoticeGameStart(u8 arg1, u32 *result)
+{
+    int res;
+    u8 out[16];
+    u8 in[16];
+
+    if (result) {
+        *result = 0;
+    }
+    {
+        in[0] = arg1;
+        res   = sceCdApplySCmd(0x29u, in, 1, out, 1);
+        if (result) {
+            *result = (u8)out[0];
+        }
+    }
+    return res;
+}
+
 void loadDVRPHddModules(void)
 {
 	if (!have_DVRP_HDD_modules) {
@@ -1552,7 +1571,7 @@ void loadDVRPHddModules(void)
 			drawMsg(LNG(Loading_HDD_Modules));
 		setupPowerOff();
 		load_ps2dvr();
-		//sceCdNoticeGameStart(0, NULL); //shouldn't this be done by the bootloader?
+		sceCdNoticeGameStart(0, NULL); //shouldn't this be done by the bootloader?
 		have_DVRP_HDD_modules = TRUE;
 	}
 }
