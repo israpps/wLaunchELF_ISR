@@ -173,6 +173,9 @@ $(EE_ASM_DIR)sior_irx.s: $(PS2SDK)/iop/irx/sior.irx | $(EE_ASM_DIR)
 
 $(EE_ASM_DIR)acuart_tty_irx.s: iop/__precompiled/acuart_tty.irx | $(EE_ASM_DIR)
 	$(BIN2S) $< $@ acuart_tty_irx
+	
+$(EE_ASM_DIR)accore_irx.s: iop/__precompiled/accore.irx | $(EE_ASM_DIR)
+	$(BIN2S) $< $@ accore_irx
 
 iop/AllowDVDV.irx: iop/AllowDVDV
 	$(MAKE) -C $<

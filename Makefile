@@ -6,7 +6,7 @@ DS34 ?= 0
 SMB ?= 0
 TMANIP ?= 1
 ETH ?= 1
-EXFAT ?= 0
+EXFAT ?= 1
 DVRP ?= 0
 IOP_RESET ?= 1
 XFROM ?= 0
@@ -62,12 +62,12 @@ ifeq ($(COH), 1)
   EE_LIBS += -liopreboot
   LIBPAD = 2
   HAS_COH = -COH
-  EE_CFLAGS += -DSUPPORT_SYSTEM_2X6
+  EE_CFLAGS += -DSUPPORT_SYSTEM_2X6 -DCOMMON_PRINTF
   HOMEBREW_DONGLEMAN = 1
   EE_OBJS += mcman_irx.o
   ifeq ($(ACUART), 1)
     $(info -- adding support for arcade UART)
-    EE_OBJS += acuart_tty_irx.o
+    EE_OBJS += acuart_tty_irx.o accore_irx.o
     EE_CFLAGS += -DACUART
     HAS_ACUART = -ACUART
   endif

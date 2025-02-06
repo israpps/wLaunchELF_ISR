@@ -1,0 +1,5 @@
+# example of custom IOP Boot list. these modules are executed in order before program UI is ready
+ACCORE = mc0:accore.irx
+ACUART = mc0:acuart.irx
+ACTTY = mc0:actty.irx
+LED = rom:LED

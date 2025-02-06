@@ -70,6 +70,7 @@ IMPORT_BIN2C(cdvd_irx);
 
 #ifdef ACUART
 IMPORT_BIN2C(acuart_tty_irx);
+IMPORT_BIN2C(accore_irx);
 #endif
 
 // Mandatory IRX
@@ -2491,6 +2492,8 @@ static void Reset()
 #endif
 #ifdef ACUART
 	int i, d;
+	i = SifExecModuleBuffer(&accore_irx, size_accore_irx, 0, NULL, &d);
+    DPRINTF(" [ACCORE]: id=%d, ret=%d\n", i, d);
 	i = SifExecModuleBuffer(&acuart_tty_irx, size_acuart_tty_irx, 0, NULL, &d);
     DPRINTF(" [ACUART]: id=%d, ret=%d\n", i, d);
 #endif
@@ -2796,6 +2799,10 @@ int main(int argc, char *argv[])
 		sprintf(mainMsg, "%s", LNG(Loaded_Config));
 
 #ifdef SUPPORT_SYSTEM_2X6
+	if (ROMVER_data[4] != 'T' || ROMVER_data[5] != 'Z') {
+		drawMsg("ERR: Console is not arcade system. use regular wLaunchELF instead");
+		SleepThread();
+	}
 #define ACJV_PATHCNT 5
 	int id, ret;
 	const char* ACJVPATHS[ACJV_PATHCNT] = {"./ACJVLOAD.IRX", "mc0:/ACJVLOAD.IRX", "mc1:/ACJVLOAD.IRX", "mass0:/ACJVLOAD.IRX", "mass1:/ACJVLOAD.IRX"};
@@ -2817,9 +2824,25 @@ int main(int argc, char *argv[])
 		) {
 		DPRINTF("Starting watchdog\n");
 		id = SifLoadStartModule("rom0:DAEMON", 0, NULL, &ret);
-		sprintf(mainMsg + strlen(mainMsg), (id > 0 && ret != 1) ? " | watchdog running" : " | watchdog error");
+		sprintf(mainMsg + strlen(mainMsg), (id > 0 && ret != 1) ? " | watch OK" : " | watch NG");
 	}
 	DPRINTF("%s\n",mainMsg);
+	
+	{
+		int var_cnt;
+		char *RAM_p, *CNF_p, *name, *value;
+		if ((RAM_p = preloadCNF("mc1:IOPBOOT.CNF"))) {
+			CNF_p = RAM_p;
+			for (var_cnt = 0; get_CNF_string(&CNF_p, &name, &value); var_cnt++) {
+				id = SifLoadStartModule(value, 0, NULL, &ret);
+				printf("%s:%s %d %d\n", name, value, id, ret);
+				if (ret != 0 || id < 0) {drawMsg(value); sleep(2);}
+				// ((i & 3) != 0)
+			}
+			free(RAM_p);
+		}
+		sprintf(mainMsg + strlen(mainMsg), (RAM_p) ? " | IOPLS OK" : " | IOPLS NG");
+	}
 #endif
 	
 	//Here nearly everything is ready for the main menu event loop
