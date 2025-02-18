@@ -187,6 +187,7 @@ typedef struct
 	int Popup_Opaque;
 	int Init_Delay;
 	int usbkbd_used;
+	int reboot_iop_elf_load;
 	int Show_Titles;
 	int PathPad_Lock;
 	int JpgView_Timer;
