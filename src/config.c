@@ -1749,59 +1749,37 @@ static void Config_Startup(void)
 			printXY(c, x, y, setting->color[COLOR_TEXT], TRUE, 0);
 			y += FONT_HEIGHT;
 
-			if (setting->usbkbd_used)
-				sprintf(c, "  %s: %s", LNG(USB_Keyboard_Used), LNG(ON));
-			else
-				sprintf(c, "  %s: %s", LNG(USB_Keyboard_Used), LNG(OFF));
+			sprintf(c, "  %s: %s", LNG(USB_Keyboard_Used), (setting->usbkbd_used) ? LNG(ON): LNG(OFF));
 			printXY(c, x, y, setting->color[COLOR_TEXT], TRUE, 0);
 			y += FONT_HEIGHT;
 
-			if (strlen(setting->usbkbd_file) == 0)
-				sprintf(c, "  %s: %s", LNG(USB_Keyboard_IRX), LNG(DEFAULT));
-			else
-				sprintf(c, "  %s: %s", LNG(USB_Keyboard_IRX), setting->usbkbd_file);
+			sprintf(c, "  %s: %s", LNG(USB_Keyboard_IRX), (strlen(setting->usbkbd_file) == 0) ? LNG(DEFAULT) : setting->usbkbd_file);
 			printXY(c, x, y, setting->color[COLOR_TEXT], TRUE, 0);
 			y += FONT_HEIGHT;
 
-			if (strlen(setting->kbdmap_file) == 0)
-				sprintf(c, "  %s: %s", LNG(USB_Keyboard_Map), LNG(DEFAULT));
-			else
-				sprintf(c, "  %s: %s", LNG(USB_Keyboard_Map), setting->kbdmap_file);
+			sprintf(c, "  %s: %s", LNG(USB_Keyboard_Map), (strlen(setting->kbdmap_file) == 0)? LNG(DEFAULT) : setting->kbdmap_file);
 			printXY(c, x, y, setting->color[COLOR_TEXT], TRUE, 0);
 			y += FONT_HEIGHT;
 
-			if (strlen(setting->CNF_Path) == 0)
-				sprintf(c, "  %s: %s", LNG(CNF_Path_override), LNG(NONE));
-			else
-				sprintf(c, "  %s: %s", LNG(CNF_Path_override), setting->CNF_Path);
+			sprintf(c, "  %s: %s", LNG(CNF_Path_override), (strlen(setting->CNF_Path) == 0) ? LNG(NONE) : setting->CNF_Path);
 			printXY(c, x, y, setting->color[COLOR_TEXT], TRUE, 0);
 			y += FONT_HEIGHT;
 
-			if (strlen(setting->lang_file) == 0)
-				sprintf(c, "  %s: %s", LNG(Language_File), LNG(DEFAULT));
-			else
-				sprintf(c, "  %s: %s", LNG(Language_File), setting->lang_file);
+			sprintf(c, "  %s: %s", LNG(Language_File), (strlen(setting->lang_file) == 0)? LNG(DEFAULT) : setting->lang_file);
 			printXY(c, x, y, setting->color[COLOR_TEXT], TRUE, 0);
 			y += FONT_HEIGHT;
 
-			if (strlen(setting->font_file) == 0)
-				sprintf(c, "  %s: %s", LNG(Font_File), LNG(DEFAULT));
-			else
-				sprintf(c, "  %s: %s", LNG(Font_File), setting->font_file);
+			sprintf(c, "  %s: %s", LNG(Font_File), (strlen(setting->font_file) == 0)? LNG(DEFAULT):setting->font_file);
 			printXY(c, x, y, setting->color[COLOR_TEXT], TRUE, 0);
 			y += FONT_HEIGHT;
 
-			if (strlen(setting->LK_Path[SETTING_LK_ESR]) == 0)
-				sprintf(c, "  ESR elf: %s", LNG(DEFAULT));
-			else
-				sprintf(c, "  ESR elf: %s", setting->LK_Path[SETTING_LK_ESR]);
+			sprintf(c, "  ESR elf: %s", 
+				(strlen(setting->LK_Path[SETTING_LK_ESR]) == 0) ? LNG(DEFAULT) : setting->LK_Path[SETTING_LK_ESR]);
 			printXY(c, x, y, setting->color[COLOR_TEXT], TRUE, 0);
 			y += FONT_HEIGHT;
 
-			if (strlen(setting->LK_Path[SETTING_LK_OSDSYS]) == 0)
-				sprintf(c, "  OSDSYS kelf: %s", LNG(DEFAULT));
-			else
-				sprintf(c, "  OSDSYS kelf: %s", setting->LK_Path[SETTING_LK_OSDSYS]);
+			sprintf(c, "  OSDSYS kelf: %s", (strlen(setting->LK_Path[SETTING_LK_OSDSYS]) == 0)
+				LNG(DEFAULT) : setting->LK_Path[SETTING_LK_OSDSYS]);
 			printXY(c, x, y, setting->color[COLOR_TEXT], TRUE, 0);
 			y += FONT_HEIGHT;
 
@@ -2408,17 +2386,11 @@ void config(char *mainMsg, char *CNF)
 
 			y += FONT_HEIGHT / 2;
 
-			if (setting->Show_Titles)
-				sprintf(c, "  %s: %s", LNG(Show_launch_titles), LNG(ON));
-			else
-				sprintf(c, "  %s: %s", LNG(Show_launch_titles), LNG(OFF));
+			sprintf(c, "  %s: %s", LNG(Show_launch_titles), (setting->Show_Titles)? LNG(ON) : LNG(OFF));
 			printXY(c, x, y, setting->color[COLOR_TEXT], TRUE, 0);
 			y += FONT_HEIGHT;
 
-			if (setting->Hide_Paths)
-				sprintf(c, "  %s: %s", LNG(Hide_full_ELF_paths), LNG(ON));
-			else
-				sprintf(c, "  %s: %s", LNG(Hide_full_ELF_paths), LNG(OFF));
+			sprintf(c, "  %s: %s", LNG(Hide_full_ELF_paths), (setting->Hide_Paths)?LNG(ON): LNG(OFF));
 			printXY(c, x, y, setting->color[COLOR_TEXT], TRUE, 0);
 			y += FONT_HEIGHT;
 
