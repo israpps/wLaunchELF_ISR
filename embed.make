@@ -102,7 +102,7 @@ iop/ps2ftpd.irx: iop/oldlibs/ps2ftpd
 $(EE_ASM_DIR)ps2atad_irx.s: $(ATAD_SOURCE) | $(EE_ASM_DIR)
 	$(BIN2S) $< $@ ps2atad_irx
 
-$(EE_ASM_DIR)ps2hdd_irx.s: $(PS2SDK)/iop/irx/ps2hdd-osd.irx | $(EE_ASM_DIR)
+$(EE_ASM_DIR)ps2hdd_irx.s: $(PS2SDK)/iop/irx/ps2hdd.irx | $(EE_ASM_DIR)# before: ps2hdd-osd.irx
 	$(BIN2S) $< $@ ps2hdd_irx
 
 $(EE_ASM_DIR)ps2fs_irx.s: $(PS2SDK)/iop/irx/ps2fs.irx | $(EE_ASM_DIR)
