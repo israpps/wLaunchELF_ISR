@@ -10,7 +10,11 @@ else # if we have mx4sio use newer IRX to avoid deadlocks when opening common me
   SIO2MAN_SOURCE = iop/__precompiled/sio2man.irx
 endif
 
-
+ifeq ($(HDD),BDM)
+ATAD_SOURCE = iop/__precompiled/ata_bd.irx
+else
+ATAD_SOURCE = $(PS2SDK)/iop/irx/ps2atad.irx
+endif
 
 #---{ MC }---#
 $(EE_ASM_DIR)mcman_irx.s: $(MCMAN_SOURCE) | $(EE_ASM_DIR)
@@ -95,7 +99,7 @@ endif
 iop/ps2ftpd.irx: iop/oldlibs/ps2ftpd
 	$(MAKE) -C $<
 
-$(EE_ASM_DIR)ps2atad_irx.s: $(PS2SDK)/iop/irx/ps2atad.irx | $(EE_ASM_DIR)
+$(EE_ASM_DIR)ps2atad_irx.s: $(ATAD_SOURCE) | $(EE_ASM_DIR)
 	$(BIN2S) $< $@ ps2atad_irx
 
 $(EE_ASM_DIR)ps2hdd_irx.s: $(PS2SDK)/iop/irx/ps2hdd-osd.irx | $(EE_ASM_DIR)
