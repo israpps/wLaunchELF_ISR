@@ -51,6 +51,7 @@ ifeq ($(HDD),BDM)
         $(error BDM ATAD Requested on build without BDM)
     endif
     HAS_BDMATAD = -BDMHDD
+    EE_CFLAGS += -DATA_BDM
 endif
 ifeq ($(SMB),1)
     EE_OBJS += smbman.o
