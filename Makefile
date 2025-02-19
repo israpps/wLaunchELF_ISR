@@ -161,7 +161,7 @@ endif
 
 ifeq ($(EXFAT),1)
     EE_OBJS += bdm_irx.o bdmfs_fatfs_irx.o usbmass_bd_irx.o
-    EE_CFLAGS += -DEXFAT
+    EE_CFLAGS += -DEXFAT -DBDM
     HAS_EXFAT = -EXFAT
 else
     EE_OBJS += usbhdfsd_irx.o
