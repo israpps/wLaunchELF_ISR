@@ -15,7 +15,7 @@ UDPTTY ?= 0
 MX4SIO ?= 0
 SIO2MAN ?= 0
 PPC_UART ?= 0
-SIO_DEBUG ?= 0
+SIO_DEBUG ?= 1
 DEBUG ?= 0
 LCDVD ?= LEGACY#or LATEST
 # ----------------------------- #
