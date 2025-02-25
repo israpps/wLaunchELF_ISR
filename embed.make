@@ -9,8 +9,11 @@ else # if we have mx4sio use newer IRX to avoid deadlocks when opening common me
   MCSERV_SOURCE = iop/__precompiled/mcserv.irx
   SIO2MAN_SOURCE = iop/__precompiled/sio2man.irx
 endif
-
-
+ifeq ($(USBD),LEGACY)
+  USBD_SOURCE = $(PS2SDK)/iop/irx/usbd.irx
+else ifeq ($(USBD),LATEST)
+  USBD_SOURCE = iop/__precompiled/usbd.irx
+endif
 
 #---{ MC }---#
 $(EE_ASM_DIR)mcman_irx.s: $(MCMAN_SOURCE) | $(EE_ASM_DIR)
@@ -29,7 +32,7 @@ $(EE_ASM_DIR)mmceman_irx.s: iop/__precompiled/mmceman.irx | $(EE_ASM_DIR)
 	$(BIN2S) $< $@ mmceman_irx
 #---{ USB }---#
 
-$(EE_ASM_DIR)usbd_irx.s: $(PS2SDK)/iop/irx/usbd.irx | $(EE_ASM_DIR)
+$(EE_ASM_DIR)usbd_irx.s: $(USBD_SOURCE) | $(EE_ASM_DIR)
 	$(BIN2S) $< $@ usbd_irx
 
 ifeq ($(EXFAT),1)
