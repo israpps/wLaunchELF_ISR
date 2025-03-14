@@ -133,12 +133,13 @@ error:
 //------------------------------
 void RunLoaderElf(char *filename, char *party)
 {
+#define ELFLOAD_ARGC 3
 	u8 *boot_elf;
 	elf_header_t *eh;
 	elf_pheader_t *eph;
 	void *pdata;
 	int i;
-	char *argv[2], bootpath[256];
+	char *argv[ELFLOAD_ARGC], bootpath[256];
 
 	if ((!strncmp(party, "hdd0:", 5)) && (!strncmp(filename, "pfs0:", 5))) {
 		if (0 > fileXioMount("pfs0:", party, FIO_MT_RDONLY)) {
@@ -203,13 +204,13 @@ void RunLoaderElf(char *filename, char *party)
 			memset(eph[i].vaddr + eph[i].filesz, 0,
 			       eph[i].memsz - eph[i].filesz);
 	}
-
+	argv[2] = (setting->reboot_iop_elf_load) ? "-r" : "-nr";
 	/* Let's go.  */
 	SifExitRpc();
 	FlushCache(0);
 	FlushCache(2);
 
-	ExecPS2((void *)eh->entry, NULL, 2, argv);
+	ExecPS2((void *)eh->entry, NULL, ELFLOAD_ARGC, argv);
 }
 //------------------------------
 //End of func:  void RunLoaderElf(char *filename, char *party)
