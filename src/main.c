@@ -87,6 +87,13 @@ IMPORT_BIN2C(mcserv_irx);
 IMPORT_BIN2C(allowdvdv_irx);
 
 
+#define GM_IF ((vu32 *)0x1F801450) 
+#define GM_IOP_TYPE (0x80000000)
+
+#define IOP_CPU_TYPE (*GM_IF & GM_IOP_TYPE)
+#define IOP_TYPE_MIPSR3000 0
+#define IOP_TYPE_POWERPC   1
+
 //#define DEBUG
 #ifdef DEBUG
 #define dbgprintf(args...) scr_printf(args)
@@ -2581,6 +2588,26 @@ int main(int argc, char *argv[])
 	int CNF_error = -1;  //assume error until CNF correctly loaded
 	int i;
 
+#ifndef NO_DECKARD
+#define XPARAM_PARAM_ADDR *((uint32_t *)0xFFFE01A0)
+#define XPARAM_VALUE_ADDR *((uint32_t *)0xFFFE01A4)
+    if (IOP_CPU_TYPE == IOP_TYPE_POWERPC) { // this PS2 is DECKARD. reset the XPARAMS to their default value in case we are not coming from a reset
+        const u32 xparam_default[0x12] = {
+            0x01F4, 0x07D0, 0x0023, 0x07D0,
+            0x0014, 0x0000, 0x0001, 0x0020,
+            0x0000, 0x0000, 0x0000, 0x0000,
+            0x0000, 0x229C, 0x06EC, 0x06EC,
+            0x0001, 0x0090
+        };
+        for (x = 0; x < 0x12; x++) {
+            XPARAM_PARAM_ADDR = 0xFFFFFFFF;
+            XPARAM_VALUE_ADDR = 0x0;
+            XPARAM_PARAM_ADDR = x;
+            XPARAM_VALUE_ADDR = xparam_default[x];
+        }
+    }
+#endif
+	
 	boot_argc = argc;
 	for (i = 0; (i < argc) && (i < 8); i++)
 		boot_argv[i] = argv[i];
