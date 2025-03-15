@@ -4,6 +4,7 @@
 MMCE ?= 0
 DS34 ?= 0
 SMB ?= 0
+HDD ?= APA# APA/BDM/NONE (NONE: To be implemented)
 TMANIP ?= 1
 ETH ?= 1
 EXFAT ?= 0
@@ -14,13 +15,13 @@ UDPTTY ?= 0
 MX4SIO ?= 0
 SIO2MAN ?= 0
 PPC_UART ?= 0
-SIO_DEBUG ?= 0
+SIO_DEBUG ?= 1
 DEBUG ?= 0
 LCDVD ?= LEGACY#or LATEST
 # ----------------------------- #
 .SILENT:
 
-BIN_NAME = $(HAS_EXFAT)$(HAS_DS34)$(HAS_ETH)$(HAS_MX4SIO)$(HAS_MMCE)$(HAS_SMB)$(HAS_DVRP)$(HAS_XFROM)$(HAS_EESIO)$(HAS_UDPTTY)$(HAS_PPCTTY)$(HAS_IOP_RESET)
+BIN_NAME = $(HAS_EXFAT)$(HAS_DS34)$(HAS_ETH)$(HAS_MX4SIO)$(HAS_MMCE)$(HAS_SMB)$(HAS_BDMATAD)$(HAS_DVRP)$(HAS_XFROM)$(HAS_EESIO)$(HAS_UDPTTY)$(HAS_PPCTTY)$(HAS_IOP_RESET)
 ifeq ($(DEBUG), 0)
   EE_BIN = UNC-BOOT$(BIN_NAME).ELF
   EE_BIN_PKD = BOOT$(BIN_NAME).ELF
@@ -44,6 +45,14 @@ EE_CFLAGS := -mgpopt -G10240 -G0 -DNEWLIB_PORT_AWARE -D_EE
 
 BIN2S = @bin2s
 
+
+ifeq ($(HDD),BDM)
+    ifneq ($(EXFAT),1)
+        $(error BDM ATAD Requested on build without BDM)
+    endif
+    HAS_BDMATAD = -BDMHDD
+    EE_CFLAGS += -DATA_BDM
+endif
 ifeq ($(SMB),1)
     EE_OBJS += smbman.o
     HAS_SMB = -SMB
@@ -153,7 +162,7 @@ endif
 
 ifeq ($(EXFAT),1)
     EE_OBJS += bdm_irx.o bdmfs_fatfs_irx.o usbmass_bd_irx.o
-    EE_CFLAGS += -DEXFAT
+    EE_CFLAGS += -DEXFAT -DBDM
     HAS_EXFAT = -EXFAT
 else
     EE_OBJS += usbhdfsd_irx.o

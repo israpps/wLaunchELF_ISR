@@ -18,7 +18,10 @@ jobs:
         bdmstuff: ["EXFAT=0", "EXFAT=1", "EXFAT=1 MX4SIO=1"]
         ds34: ["DS34=0", "DS34=1"]
         mmce: ["MMCE=0", "MMCE=1"]
+        hdd: ["HDD=APA", "HDD=BDM"]
         exclude:
+          - hdd: "HDD=BDM"
+            bdmstuff: "EXFAT=0"
           - bdmstuff: "EXFAT=1 MX4SIO=1"
             mmce: "MMCE=1"
     runs-on: ubuntu-latest
@@ -36,12 +39,12 @@ jobs:
 
     - name: Compile wLaunchELF
       run: |
-        make rebuild ${{ matrix.eth }} ${{ matrix.mmce }} ${{ matrix.bdmstuff }} ${{ matrix.ds34 }} ${{ matrix.xfrom }} ${{ github.event.inputs.make_args }}
+        make rebuild ${{ matrix.eth }} ${{ matrix.mmce }} ${{ matrix.bdmstuff }} ${{ matrix.ds34 }} ${{ matrix.xfrom }} ${{ matrix.hdd }} ${{ github.event.inputs.make_args }}
 
     - name: Upload variants artifact ELF
       uses: actions/upload-artifact@v4
       with:
-        name: "WLE-${{ matrix.eth }}-${{ matrix.mmce }}-${{ matrix.bdmstuff }}-${{ matrix.ds34 }}-${{ matrix.xfrom }}"
+        name: "WLE-${{ matrix.eth }}-${{ matrix.mmce }}-${{ matrix.bdmstuff }}-${{ matrix.ds34 }}-${{ matrix.xfrom }}-${{ matrix.hdd }}"
         path: |
             BOOT*.ELF
 
