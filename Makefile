@@ -17,6 +17,7 @@ PPC_UART ?= 0
 SIO_DEBUG ?= 0
 DEBUG ?= 0
 LCDVD ?= LEGACY#or LATEST
+USBD ?= LEGACY#or LATEST
 # ----------------------------- #
 .SILENT:
 
@@ -155,6 +156,7 @@ ifeq ($(EXFAT),1)
     EE_OBJS += bdm_irx.o bdmfs_fatfs_irx.o usbmass_bd_irx.o
     EE_CFLAGS += -DEXFAT
     HAS_EXFAT = -EXFAT
+    USBD = LATEST
 else
     EE_OBJS += usbhdfsd_irx.o
 endif
