@@ -1,7 +1,7 @@
 #.SILENT:
 
 # ---{ BUILD CONFIGURATION }--- #
-SIO_DEBUG ?= 0
+MMCE ?= 0
 DS34 ?= 0
 SMB ?= 0
 TMANIP ?= 1
@@ -12,18 +12,16 @@ IOP_RESET ?= 1
 XFROM ?= 0
 UDPTTY ?= 0
 MX4SIO ?= 0
-TTY2SIOR ?= 0
+SIO2MAN ?= 0
+PPC_UART ?= 0
+SIO_DEBUG ?= 0
 DEBUG ?= 0
 COH ?= 0
-
-# 0: on-board version, 1: homebrew version
-SIO2MAN ?= 0
-MCMAN ?= 1
-CDVDFSV ?= 1
+LCDVD ?= LEGACY#or LATEST
 # ----------------------------- #
 .SILENT:
 
-BIN_NAME = $(HAS_EXFAT)$(HAS_DS34)$(HAS_ETH)$(HAS_SMB)$(HAS_DVRP)$(HAS_XFROM)$(HAS_MX4SIO)$(HAS_COH)$(HAS_EESIO)$(HAS_UDPTTY)$(HAS_ACUART)$(HAS_IOP_RESET)
+BIN_NAME = $(HAS_COH)$(HAS_EXFAT)$(HAS_DS34)$(HAS_ETH)$(HAS_MX4SIO)$(HAS_MMCE)$(HAS_SMB)$(HAS_DVRP)$(HAS_XFROM)$(HAS_EESIO)$(HAS_UDPTTY)$(HAS_PPCTTY)$(HAS_IOP_RESET)
 ifeq ($(DEBUG), 0)
   EE_BIN = UNC-BOOT$(BIN_NAME).ELF
   EE_BIN_PKD = BOOT$(BIN_NAME).ELF
@@ -38,10 +36,10 @@ EE_OBJS = main.o config.o elf.o draw.o loader_elf.o filer.o \
 	hdd.o hdl_rpc.o hdl_info_irx.o editor.o timer.o jpgviewer.o icon.o lang.o \
 	font_uLE.o makeicon.o chkesr.o allowdvdv_irx.o
 
-EE_INCS := -I$(PS2DEV)/gsKit/include -I$(PS2SDK)/ports/include -Iiop/oldlibs/libcdvd/ee -Iinclude
+EE_INCS := -I$(PS2DEV)/gsKit/include -I$(PS2SDK)/ports/include -Iinclude
 
 EE_LDFLAGS := -L$(PS2DEV)/gsKit/lib -L$(PS2SDK)/ports/lib -Liop/oldlibs/libcdvd/lib -s
-EE_LIBS = -lgskit -ldmakit -ljpeg -lmc -lhdd -lcdvdfs -lkbd -lmf \
+EE_LIBS = -lgskit -ldmakit -ljpeg -lmc -lhdd -lkbd -lmf \
 	-lcdvd -lc -lfileXio -lpatches -lpoweroff -ldebug
 EE_CFLAGS := -mgpopt -G10240 -G0 -DNEWLIB_PORT_AWARE -D_EE
 
@@ -73,6 +71,17 @@ ifeq ($(COH), 1)
   endif
 endif
 
+ifeq ($(LCDVD),LEGACY)
+  $(info -- Building with legacy libcdvd)
+  EE_CFLAGS += -DLIBCDVD_LEGACY
+  CDVD_SOURCE = iop/cdvd.irx
+  EE_INCS += -Iiop/oldlibs/libcdvd/ee
+  EE_LIBS += -lcdvdfs
+else
+  EE_CFLAGS += -DLIBCDVD_LATEST
+  CDVD_SOURCE = iop/__precompiled/cdfs.irx
+endif
+
 ifeq ($(XFROM),1)
   HAS_XFROM = -XFROM
   EE_CFLAGS += -DXFROM
@@ -90,6 +99,13 @@ ifeq ($(DVRP),1)
   EE_OBJS += dvrdrv_irx.o dvrfile_irx.o
   EE_CFLAGS += -DDVRP
   HAS_DVRP = -DVRP
+endif
+
+ifeq ($(MMCE),1)
+    EE_OBJS += mmceman_irx.o
+    EE_CFLAGS += -DMMCE
+    HAS_MMCE = -MMCE
+    SIO2MAN = 1
 endif
 
 ifeq ($(MX4SIO),1)
@@ -136,11 +152,13 @@ ifeq ($(SIO_DEBUG),1)
   HAS_EESIO = -SIO_DEBUG
 endif
 
-ifeq ($(TTY2SIOR),1)
-  EE_LIBS += -lsior
-  EE_CFLAGS += -DTTY2SIOR
-  HAS_TTY2SIOR = -TTY2SIOR
-  EE_OBJS += tty2sior_irx.o
+ifeq ($(PPC_UART),1)
+    EE_CFLAGS += -DPOWERPC_UART
+    HAS_PPCTTY = -PPCTTY
+    EE_OBJS += ppctty.o
+    ifeq ($(UDPTTY),1)
+    $(error Both PPCTTY and UDPTTY enabled simultaneously)
+    endif
 endif
 
 ifeq ($(IOP_RESET),0)
@@ -188,15 +206,33 @@ else
   EE_CFLAGS += -DCUSTOM_COLORS
 endif
 
+ifeq ($(IOPTRAP),1)
+    EE_OBJS += ioptrap_irx.o
+    EE_CFLAGS += -DIOPTRAP
+endif
+
 
 EE_OBJS_DIR = obj/
 EE_ASM_DIR = asm/
 EE_SRC_DIR = src/
 EE_OBJS := $(EE_OBJS:%=$(EE_OBJS_DIR)%) # remap all EE_OBJ to obj subdir
 
-.PHONY: all run reset clean rebuild isoclean iso
+all: githash.h $(EE_BIN_PKD)
 
-all: githash.h iop/cdvd.irx $(EE_BIN_PKD)
+info:
+	$(info available build options:)
+	$(info   EXFAT		enable BDM and EXFAT support for it)
+	$(info   ETH		include network features?)
+	$(info   DS34		include PS3/PS4 controller support)
+	$(info   MX4SIO		support for SDCard connected to memory card slot 2)
+	$(info   MMCE		support for direct SDCard access on SD2PSX or memcardpro2)
+	$(info ----------)
+	$(info   IOPTRAP		load exception handler module to IOP)
+	$(info   UDPTTY		transfer stdout to UDP broadcast)
+	$(info   PPC_UART	transfer stdout to DECKARD UART)
+	$(info   SIO_DEBUG 	transfer EE stdout to EE UART)
+
+.PHONY: all run reset clean rebuild isoclean iso
 
 $(EE_BIN_PKD): $(EE_BIN)
 	ps2-packer $< $@
@@ -241,14 +277,14 @@ clean:
 
 rebuild: clean all
 
-info:
+info2:
 	$(info -------- wLaunchELF 4.43x_isr --------)
 	$(info EE_BIN = $(EE_BIN))
 	$(info EE_BIN_PKD = $(EE_BIN_PKD))
 	$(info TMANIP=$(TMANIP), SIO_DEBUG=$(SIO_DEBUG), DS34=$(DS34), ETH=$(ETH))
-	$(info EXFAT=$(EXFAT), XFROM=$(XFROM), UDPTTY=$(UDPTTY), MX4SIO=$(MX4SIO) COH=$(COH))
-	$(info SIO2MAN=$(SIO2MAN), MCMAN=$(MCMAN))
-	$(info IOP_RESET=$(IOP_RESET))
+	$(info EXFAT=$(EXFAT), XFROM=$(XFROM), UDPTTY=$(UDPTTY), MX4SIO=$(MX4SIO))
+	$(info MMCE=$(MMCE), COH=$(COH), IOP_RESET=$(IOP_RESET))
+
 
 #special recipe for compiling and dumping obj to subfolder
 $(EE_OBJS_DIR)%.o: $(EE_SRC_DIR)%.c | $(EE_OBJS_DIR)

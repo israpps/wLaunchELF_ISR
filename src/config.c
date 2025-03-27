@@ -39,6 +39,7 @@ enum {
 	DEF_POPUP_OPAQUE = FALSE,
 	DEF_INIT_DELAY = 0,
 	DEF_USBKBD_USED = 1,
+	DEF_STARTUP_RESET_IOP_ELFOAD = 0,
 	DEF_SHOW_TITLES = 1,
 	DEF_PATHPAD_LOCK = 0,
 	DEF_JPGVIEW_TIMER = 5,
@@ -493,6 +494,7 @@ void saveConfig(char *mainMsg, char *CNF)
 	        "Menu_Title = %s\r\n"
 	        "Init_Delay = %d\r\n"
 	        "USBKBD_USED = %d\r\n"
+	        "REBOOT_IOP_ELFLOAD = %d\r\n"
 	        "USBKBD_FILE = %s\r\n"
 	        "KBDMAP_FILE = %s\r\n"
 	        "Menu_Show_Titles = %d\r\n"
@@ -516,6 +518,7 @@ void saveConfig(char *mainMsg, char *CNF)
 	        setting->Menu_Title,       //Menu_Title
 	        setting->Init_Delay,       //Init_Delay
 	        setting->usbkbd_used,      //USBKBD_USED
+	        setting->reboot_iop_elf_load,
 	        setting->usbkbd_file,      //USBKBD_FILE
 	        setting->kbdmap_file,      //KBDMAP_FILE
 	        setting->Show_Titles,      //Menu_Show_Titles
@@ -686,6 +689,7 @@ void initConfig(void)
 	setting->Popup_Opaque = DEF_POPUP_OPAQUE;
 	setting->Init_Delay = DEF_INIT_DELAY;
 	setting->usbkbd_used = DEF_USBKBD_USED;
+	setting->reboot_iop_elf_load = DEF_STARTUP_RESET_IOP_ELFOAD;
 	setting->Show_Titles = DEF_SHOW_TITLES;
 	setting->PathPad_Lock = DEF_PATHPAD_LOCK;
 	setting->JpgView_Timer = -1;  //only used to detect missing variable
@@ -847,6 +851,8 @@ int loadConfig(char *mainMsg, char *CNF)
 			setting->Init_Delay = atoi(value);
 		else if (!strcmp(name, "USBKBD_USED"))
 			setting->usbkbd_used = atoi(value);
+		else if (!strcmp(name, "REBOOT_IOP_ELFLOAD"))
+			setting->reboot_iop_elf_load = atoi(value);
 		else if (!strcmp(name, "USBKBD_FILE"))
 			strcpy(setting->usbkbd_file, value);
 		else if (!strcmp(name, "KBDMAP_FILE"))
@@ -1581,6 +1587,7 @@ enum CONFIG_STARTUP {
 	CONFIG_STARTUP_SELECT_BTN,
 	CONFIG_STARTUP_INIT_DELAY,
 	CONFIG_STARTUP_TIMEOUT,
+	CONFIG_STARTUP_RESET_IOP_ELFOAD,
 	CONFIG_STARTUP_KEYBOARD,
 	CONFIG_STARTUP_USBKBD,
 	CONFIG_STARTUP_KBDMAP,
@@ -1672,6 +1679,8 @@ static void Config_Startup(void)
 					setting->timeout++;
 				else if (s == CONFIG_STARTUP_KEYBOARD)
 					setting->usbkbd_used = !setting->usbkbd_used;
+				else if (s == CONFIG_STARTUP_RESET_IOP_ELFOAD)
+					setting->reboot_iop_elf_load = !setting->reboot_iop_elf_load;
 				else if (s == CONFIG_STARTUP_USBKBD)
 					getFilePath(setting->usbkbd_file, USBKBD_IRX_CNF);
 				else if (s == CONFIG_STARTUP_KBDMAP)
@@ -1749,59 +1758,41 @@ static void Config_Startup(void)
 			printXY(c, x, y, setting->color[COLOR_TEXT], TRUE, 0);
 			y += FONT_HEIGHT;
 
-			if (setting->usbkbd_used)
-				sprintf(c, "  %s: %s", LNG(USB_Keyboard_Used), LNG(ON));
-			else
-				sprintf(c, "  %s: %s", LNG(USB_Keyboard_Used), LNG(OFF));
+			sprintf(c, "  %s: %s", "Reboot IOP when loading ELF", (setting->reboot_iop_elf_load) ? LNG(ON): LNG(OFF));
+			printXY(c, x, y, setting->color[COLOR_TEXT], TRUE, 0);
+			y += FONT_HEIGHT;
+			
+			sprintf(c, "  %s: %s", LNG(USB_Keyboard_Used), (setting->usbkbd_used) ? LNG(ON): LNG(OFF));
 			printXY(c, x, y, setting->color[COLOR_TEXT], TRUE, 0);
 			y += FONT_HEIGHT;
 
-			if (strlen(setting->usbkbd_file) == 0)
-				sprintf(c, "  %s: %s", LNG(USB_Keyboard_IRX), LNG(DEFAULT));
-			else
-				sprintf(c, "  %s: %s", LNG(USB_Keyboard_IRX), setting->usbkbd_file);
+			sprintf(c, "  %s: %s", LNG(USB_Keyboard_IRX), (strlen(setting->usbkbd_file) == 0) ? LNG(DEFAULT) : setting->usbkbd_file);
 			printXY(c, x, y, setting->color[COLOR_TEXT], TRUE, 0);
 			y += FONT_HEIGHT;
 
-			if (strlen(setting->kbdmap_file) == 0)
-				sprintf(c, "  %s: %s", LNG(USB_Keyboard_Map), LNG(DEFAULT));
-			else
-				sprintf(c, "  %s: %s", LNG(USB_Keyboard_Map), setting->kbdmap_file);
+			sprintf(c, "  %s: %s", LNG(USB_Keyboard_Map), (strlen(setting->kbdmap_file) == 0)? LNG(DEFAULT) : setting->kbdmap_file);
 			printXY(c, x, y, setting->color[COLOR_TEXT], TRUE, 0);
 			y += FONT_HEIGHT;
 
-			if (strlen(setting->CNF_Path) == 0)
-				sprintf(c, "  %s: %s", LNG(CNF_Path_override), LNG(NONE));
-			else
-				sprintf(c, "  %s: %s", LNG(CNF_Path_override), setting->CNF_Path);
+			sprintf(c, "  %s: %s", LNG(CNF_Path_override), (strlen(setting->CNF_Path) == 0) ? LNG(NONE) : setting->CNF_Path);
 			printXY(c, x, y, setting->color[COLOR_TEXT], TRUE, 0);
 			y += FONT_HEIGHT;
 
-			if (strlen(setting->lang_file) == 0)
-				sprintf(c, "  %s: %s", LNG(Language_File), LNG(DEFAULT));
-			else
-				sprintf(c, "  %s: %s", LNG(Language_File), setting->lang_file);
+			sprintf(c, "  %s: %s", LNG(Language_File), (strlen(setting->lang_file) == 0)? LNG(DEFAULT) : setting->lang_file);
 			printXY(c, x, y, setting->color[COLOR_TEXT], TRUE, 0);
 			y += FONT_HEIGHT;
 
-			if (strlen(setting->font_file) == 0)
-				sprintf(c, "  %s: %s", LNG(Font_File), LNG(DEFAULT));
-			else
-				sprintf(c, "  %s: %s", LNG(Font_File), setting->font_file);
+			sprintf(c, "  %s: %s", LNG(Font_File), (strlen(setting->font_file) == 0)? LNG(DEFAULT):setting->font_file);
 			printXY(c, x, y, setting->color[COLOR_TEXT], TRUE, 0);
 			y += FONT_HEIGHT;
 
-			if (strlen(setting->LK_Path[SETTING_LK_ESR]) == 0)
-				sprintf(c, "  ESR elf: %s", LNG(DEFAULT));
-			else
-				sprintf(c, "  ESR elf: %s", setting->LK_Path[SETTING_LK_ESR]);
+			sprintf(c, "  ESR elf: %s", 
+				(strlen(setting->LK_Path[SETTING_LK_ESR]) == 0) ? LNG(DEFAULT) : setting->LK_Path[SETTING_LK_ESR]);
 			printXY(c, x, y, setting->color[COLOR_TEXT], TRUE, 0);
 			y += FONT_HEIGHT;
 
-			if (strlen(setting->LK_Path[SETTING_LK_OSDSYS]) == 0)
-				sprintf(c, "  OSDSYS kelf: %s", LNG(DEFAULT));
-			else
-				sprintf(c, "  OSDSYS kelf: %s", setting->LK_Path[SETTING_LK_OSDSYS]);
+			sprintf(c, "  OSDSYS kelf: %s", (strlen(setting->LK_Path[SETTING_LK_OSDSYS]) == 0)?
+				LNG(DEFAULT) : setting->LK_Path[SETTING_LK_OSDSYS]);
 			printXY(c, x, y, setting->color[COLOR_TEXT], TRUE, 0);
 			y += FONT_HEIGHT;
 
@@ -1817,8 +1808,9 @@ static void Config_Startup(void)
 				y += FONT_HEIGHT / 2;
 			drawChar(LEFT_CUR, x, y, setting->color[COLOR_TEXT]);
 
+
 			//Tooltip section
-			if ((s == CONFIG_STARTUP_SELECT_BTN) || (s == CONFIG_STARTUP_KEYBOARD)) {  //usbkbd_used
+			if ((s == CONFIG_STARTUP_SELECT_BTN) || (s == CONFIG_STARTUP_KEYBOARD) || (s == CONFIG_STARTUP_RESET_IOP_ELFOAD)) {  //usbkbd_used
 				if (swapKeys)
 					len = sprintf(c, "\xFF"
 					                 "1:%s",
@@ -2408,17 +2400,11 @@ void config(char *mainMsg, char *CNF)
 
 			y += FONT_HEIGHT / 2;
 
-			if (setting->Show_Titles)
-				sprintf(c, "  %s: %s", LNG(Show_launch_titles), LNG(ON));
-			else
-				sprintf(c, "  %s: %s", LNG(Show_launch_titles), LNG(OFF));
+			sprintf(c, "  %s: %s", LNG(Show_launch_titles), (setting->Show_Titles)? LNG(ON) : LNG(OFF));
 			printXY(c, x, y, setting->color[COLOR_TEXT], TRUE, 0);
 			y += FONT_HEIGHT;
 
-			if (setting->Hide_Paths)
-				sprintf(c, "  %s: %s", LNG(Hide_full_ELF_paths), LNG(ON));
-			else
-				sprintf(c, "  %s: %s", LNG(Hide_full_ELF_paths), LNG(OFF));
+			sprintf(c, "  %s: %s", LNG(Hide_full_ELF_paths), (setting->Hide_Paths)?LNG(ON): LNG(OFF));
 			printXY(c, x, y, setting->color[COLOR_TEXT], TRUE, 0);
 			y += FONT_HEIGHT;
 

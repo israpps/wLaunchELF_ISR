@@ -24,6 +24,10 @@ IMPORT_BIN2C(ps2netfs_irx);
 IMPORT_BIN2C(ps2ftpd_irx);
 #endif
 
+#ifdef IOPTRAP
+IMPORT_BIN2C(ioptrap_irx);
+#endif
+
 #ifdef SMB
 IMPORT_BIN2C(smbman_irx);
 #endif
@@ -41,8 +45,8 @@ IMPORT_BIN2C(sio2man_irx);
 IMPORT_BIN2C(padman_irx);
 #endif
 
-#ifdef TTY2SIOR
-IMPORT_BIN2C(tty2sior_irx);
+#ifdef POWERPC_UART
+IMPORT_BIN2C(ppctty_irx);
 #endif
 
 IMPORT_BIN2C(usbd_irx);
@@ -67,10 +71,8 @@ IMPORT_BIN2C(dvrfile_irx);
 #ifndef USE_ROM_CDVDFSV
 IMPORT_BIN2C(cdvd_irx);
 #endif
-
-#ifdef ACUART
-IMPORT_BIN2C(acuart_tty_irx);
-IMPORT_BIN2C(accore_irx);
+#ifdef MMCE
+IMPORT_BIN2C(mmceman_irx);
 #endif
 
 // Mandatory IRX
@@ -167,6 +169,11 @@ static u8 have_vmc_fs = 0;
 #ifdef XFROM
 static u8 have_Flash_modules = 0;
 #endif
+
+#ifdef MX4SIO
+u8 mx4sio_driver_running = 0;
+#endif
+
 //State of whether DEV9 was successfully loaded or not.
 static u8 ps2dev9_loaded = 0;
 
@@ -444,8 +451,13 @@ static void Show_build_info(void)
 #else
 " MX4SIO=0"
 #endif
+#ifdef MMCE
+" MMCE=1"
+#else
+" MMCE=0"
+#endif
 , COLOR_TEXT);
-#if defined(UDPTTY) || defined(SIO_DEBUG) || defined(ACUART) || defined(NO_IOP_RESET)
+#if defined(UDPTTY) || defined(SIO_DEBUG) || defined(POWERPC_UART) || defined(NO_IOP_RESET)
 
 
 			PrintPos(-1, hpos, "Debug Features:", COLOR_SELECT);
@@ -467,10 +479,11 @@ static void Show_build_info(void)
 #else
 " SIO_DEBUG=0"
 #endif
-#ifdef ACUART
-" ACUART=1"
+
+#ifdef POWERPC_UART
+" PPC_UART=1"
 #else
-" ACUART=0"
+" PPC_UART=0"
 #endif
 , COLOR_TEXT);
 #endif
@@ -1137,6 +1150,11 @@ static void loadBasicModules(void)
 {
 	int ret, id;
 
+#ifdef IOPTRAP
+	id = SifExecModuleBuffer(ioptrap_irx, size_ioptrap_irx, 0, NULL, &ret);
+	DPRINTF(" [IOP TRAP]: id=%d ret=%d\n", id, ret);
+#endif
+
 	id = SifExecModuleBuffer(iomanx_irx, size_iomanx_irx, 0, NULL, &ret);
 	DPRINTF(" [IOMANX]: id=%d ret=%d\n", id, ret);
 	id = SifExecModuleBuffer(filexio_irx, size_filexio_irx, 0, NULL, &ret);
@@ -1152,18 +1170,12 @@ static void loadBasicModules(void)
 	DPRINTF(" [rom0:SIO2MAN]: id=%d\n", id);
 #endif
 
-#if defined(TTY2SIOR) || defined(SIO_DEBUG)
+#if defined(SIO_DEBUG)
 	// I call this just after SIO2MAN have been loaded
 	sio_init(38400, 0, 0, 0, 0);
 #endif
-#ifdef TTY2SIOR
-	SIOR_Init(0x20);
 
-	id = SifExecModuleBuffer(tty2sior_irx, size_tty2sior_irx, 0, NULL, &ret);
-	DPRINTF(" [TTY2SIOR]: id=%d ret=%d\n", id, ret);
-#endif
-
-#if defined(TTY2SIOR) || defined(SIO_DEBUG)
+#if defined(SIO_DEBUG)
 	DPRINTF("Hello from EE SIO!\n");
 #endif
 
@@ -1199,6 +1211,11 @@ static void loadBasicModules(void)
 #if defined(LOAD_LED) && defined(SUPPORT_SYSTEM_2X6) && !defined(LOAD_DOGBAIT)
 	SifLoadStartModule("rom0:LED", 0, NULL, NULL); //
 #endif
+
+#ifdef MMCE
+	id = SifExecModuleBuffer(mmceman_irx, size_mmceman_irx, 0, NULL, &ret);  //Home
+	DPRINTF(" [MMCE]: id=%d ret=%d\n", id, ret);
+#endif
 }
 //------------------------------
 //endfunc loadBasicModules
@@ -1208,15 +1225,15 @@ static void loadCdModules(void)
 	int ret, id;
 
 	if (!have_cdvd) {
-#ifdef USE_ROM_CDVDFSV //so far only recommended for arcade?
+#ifdef SUPPORT_SYSTEM_2X6 //needed for CDVDMAN RPC
     	id = SifLoadStartModule("rom0:CDVDFSV", 0, NULL, &ret);
     	DPRINTF(" [rom0:CDVDFSV]: ID=%d, ret=%d\n", id, ret);
-#else
-		id = SifExecModuleBuffer(cdvd_irx, size_cdvd_irx, 0, NULL, &ret);
-		DPRINTF(" [CDVD]: id=%d, ret=%d\n", id, ret);
 #endif
 		sceCdInit(SCECdINoD);  // SCECdINoD init without check for a disc. Reduces risk of a lockup if the drive is in a erroneous state.
-		CDVD_Init();
+		id = SifExecModuleBuffer(cdvd_irx, size_cdvd_irx, 0, NULL, &ret);
+		LCDVD_INIT();
+		DPRINTF(" [CDVD]: id=%d, ret=%d\n", id, ret);
+
 		have_cdvd = 1;
 	}
 }
@@ -1268,7 +1285,7 @@ int uLE_cdStop(void)
 				uLE_cdmode = (cdmode == SCECdPS2DVD) ? SCECdESRDVD_1 : SCECdESRDVD_0;
 			}
 		}
-		CDVD_Stop();
+		LCDVD_STOP();
 		sceCdSync(0);
 	}
 	return uLE_cdmode;
@@ -1317,9 +1334,8 @@ static void getExternalFilePath(const char *argPath, char *filePath)
 #ifndef SUPPORT_SYSTEM_2X6
 	} else if (!strncmp(argPath, "cdfs", 4)) {
 		strcpy(filePath, argPath);
-		CDVD_FlushCache();
-		CDVD_DiskReady(0);
-#endif
+		LCDVD_FLUSHCACHE();
+		LCDVD_DISKREADY(0);
 	} else {
 		genFixPath(argPath, filePath);
 	}
@@ -1461,12 +1477,13 @@ static void loadUsbModules(void)
 #ifdef MX4SIO
 	ID = SifExecModuleBuffer(mx4sio_bd_irx, size_mx4sio_bd_irx, 0, NULL, &ret);
 	DPRINTF(" [MX4SIO_BD] ID=%d, ret=%d\n", ID, ret);
+	mx4sio_driver_running = (ID > 0 && ret != 1);
 #endif
 }
 #else
 {
 	loadUsbDModule();
-	if (have_usbd && !have_usb_mass && (USB_mass_loaded = loadExternalModule("", &usb_mass_irx, size_usb_mass_irx))) {
+	if (have_usbd && !have_usb_mass && (USB_mass_loaded = loadExternalModule("USBMASS.IRX", &usb_mass_irx, size_usb_mass_irx))) {
 		delay(3);
 		have_usb_mass = 1;
 	}
@@ -2123,11 +2140,17 @@ static void Execute(char *pathin)
 			goto ELFnotFound;
 		strcpy(fullpath, path);
 		goto ELFchecked;
- #endif
+#endif
+#ifdef MMCE
+	} else if (!strncmp(path, "mmce", 4)) {
+		if ((t = checkELFheader(path)) <= 0)
+			goto ELFnotFound;
+		strcpy(fullpath, path);
+		goto ELFchecked;
+#endif
 	} else if (!strncmp(path, "mass", 4)) {
 		if ((t = checkELFheader(path, TYPE_ELF)) <= 0)
 			goto ELFnotFound;
-		//coming here means the ELF is fine
 		party[0] = 0;
 
 		strcpy(fullpath, path);
@@ -2401,8 +2424,8 @@ static void Execute(char *pathin)
 		return;
  #ifndef SUPPORT_SYSTEM_2X6
 	} else if (!strncmp(path, "cdfs", 4)) {
-		CDVD_FlushCache();
-		CDVD_DiskReady(0);
+		LCDVD_FLUSHCACHE();
+		LCDVD_DISKREADY(0);
 		party[0] = 0;
 		goto CheckELF_path;
  #endif
@@ -2482,6 +2505,12 @@ static void Reset()
 	have_HDD_modules = 0;
 #ifdef XFROM
 	have_Flash_modules = 0;
+#endif
+
+#ifdef POWERPC_UART
+int i, d;
+    i = SifExecModuleBuffer(&ppctty_irx, size_ppctty_irx, 0, NULL, &d);
+    DPRINTF(" [PPCTTY]: id=%d, ret=%d\n", i, d);
 #endif
 
 #ifdef UDPTTY

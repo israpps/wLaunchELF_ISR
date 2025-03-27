@@ -27,10 +27,12 @@ $(EE_ASM_DIR)mcserv_irx.s: $(MCSERV_SOURCE) | $(EE_ASM_DIR)
 
 $(EE_ASM_DIR)sio2man.s: $(SIO2MAN_SOURCE) | $(EE_ASM_DIR)
 	$(BIN2S) $< $@ sio2man_irx
-
 	
 $(EE_ASM_DIR)mx4sio_bd.s: iop/__precompiled/mx4sio_bd.irx | $(EE_ASM_DIR)
 	$(BIN2S) $< $@ mx4sio_bd_irx
+	
+$(EE_ASM_DIR)mmceman_irx.s: iop/__precompiled/mmceman.irx | $(EE_ASM_DIR)
+	$(BIN2S) $< $@ mmceman_irx
 #---{ USB }---#
 
 $(EE_ASM_DIR)usbd_irx.s: $(PS2SDK)/iop/irx/usbd.irx | $(EE_ASM_DIR)
@@ -55,8 +57,12 @@ endif
 iop/cdvd.irx: iop/oldlibs/libcdvd
 	$(MAKE) -C $<
 
-$(EE_ASM_DIR)cdvd_irx.s: iop/cdvd.irx | $(EE_ASM_DIR)
+$(EE_ASM_DIR)cdvd_irx.s: $(CDVD_SOURCE) | $(EE_ASM_DIR)
 	$(BIN2S) $< $@ cdvd_irx
+	$(MAKE) -C iop/oldlibs/libcdvd
+
+$(EE_ASM_DIR)ioptrap_irx.s: $(PS2SDK)/iop/irx/ioptrap.irx | $(EE_ASM_DIR)
+	$(BIN2S) $< $@ ioptrap_irx
 
 $(EE_ASM_DIR)poweroff_irx.s: $(PS2SDK)/iop/irx/poweroff.irx | $(EE_ASM_DIR)
 	$(BIN2S) $< $@ poweroff_irx
@@ -171,11 +177,8 @@ $(EE_ASM_DIR)ps2kbd_irx.s: $(PS2SDK)/iop/irx/ps2kbd.irx | $(EE_ASM_DIR)
 $(EE_ASM_DIR)sior_irx.s: $(PS2SDK)/iop/irx/sior.irx | $(EE_ASM_DIR)
 	$(BIN2S) $< $@ sior_irx
 
-$(EE_ASM_DIR)acuart_tty_irx.s: iop/__precompiled/acuart_tty.irx | $(EE_ASM_DIR)
-	$(BIN2S) $< $@ acuart_tty_irx
-	
-$(EE_ASM_DIR)accore_irx.s: iop/__precompiled/accore.irx | $(EE_ASM_DIR)
-	$(BIN2S) $< $@ accore_irx
+$(EE_ASM_DIR)ppctty.s:iop/__precompiled/ppctty.irx | $(EE_ASM_DIR)
+	$(BIN2S) $< $@ ppctty_irx
 
 iop/AllowDVDV.irx: iop/AllowDVDV
 	$(MAKE) -C $<

@@ -102,12 +102,12 @@ static void Command_List(void)
 			printXY(LNG(Right_Joystick_Vertical_Zoom), x, y, setting->color[COLOR_TEXT], TRUE, 0);
 			y += FONT_HEIGHT;
 			if (swapKeys)
-				sprintf(tmp, "ÿ1: %s", LNG(FullScreen_Mode));
+				sprintf(tmp, "\xff1: %s", LNG(FullScreen_Mode));
 			else
-				sprintf(tmp, "ÿ0: %s", LNG(FullScreen_Mode));
+				sprintf(tmp, "\xff0: %s", LNG(FullScreen_Mode));
 			printXY(tmp, x, y, setting->color[COLOR_TEXT], TRUE, 0);
 			y += FONT_HEIGHT;
-			sprintf(tmp, "ÿ3: %s", LNG(Exit_To_Jpg_Browser));
+			sprintf(tmp, "\xff3: %s", LNG(Exit_To_Jpg_Browser));
 			printXY(tmp, x, y, setting->color[COLOR_TEXT], TRUE, 0);
 			y += FONT_HEIGHT;
 
@@ -173,13 +173,13 @@ static void View_Render(void)
 	// Draw color8 graph4
 	gsKit_prim_sprite(gsGlobal, ScreenPosX, ScreenPosY, ScreenPosX1, ScreenPosY1, 0, setting->color[COLOR_GRAPH4]);
 	// Draw picture
-	if (PicRotate == 0 || PicRotate == 1 || PicRotate == 3) {  // No rotation, rotate +90°, -90°
+	if (PicRotate == 0 || PicRotate == 1 || PicRotate == 3) {  // No rotation, rotate +90ï¿½, -90ï¿½
 		gsKit_prim_sprite_texture(gsGlobal,
 		                          &TexPicture,
 		                          ScreenPosX + ScreenOffsetX, ScreenPosY + ScreenOffsetY, PanPosX, PanPosY,
 		                          ScreenPosX1 - ScreenOffsetX, ScreenPosY1 - ScreenOffsetY, PanPosX1, PanPosY1,
 		                          0, GS_SETREG_RGBAQ(Brightness * 1.28f, Brightness * 1.28f, Brightness * 1.28f, 0x80, 0x00));
-	} else if (PicRotate == 2) {  // Rotate 180°
+	} else if (PicRotate == 2) {  // Rotate 180ï¿½
 		gsKit_prim_sprite_texture(gsGlobal,
 		                          &TexPicture,
 		                          ScreenPosX + ScreenOffsetX, ScreenPosY + ScreenOffsetY, PanPosX1, PanPosY1,
@@ -604,7 +604,7 @@ void JpgViewer(char *file)
 			jpg_browser_up = FALSE;
 		}  //ends if(jpg_browser_cd)
 		if (!strncmp(path, "cdfs", 4)) {
-			CDVD_Stop();
+			LCDVD_STOP();
 		}
 		if (top > jpg_browser_nfiles - rows)
 			top = jpg_browser_nfiles - rows;
@@ -812,13 +812,13 @@ void JpgViewer(char *file)
 			//Tooltip section
 			msg1[0] = '\0';
 			if (swapKeys)
-				sprintf(msg1, "ÿ1:%s", LNG(View));
+				sprintf(msg1, "\xff1:%s", LNG(View));
 			else
-				sprintf(msg1, "ÿ0:%s", LNG(View));
+				sprintf(msg1, "\xff0:%s", LNG(View));
 			if (jpg_browser_mode == LIST)
-				sprintf(tmp, " ÿ3:%s ÿ2:%s", LNG(Up), LNG(Thumb));
+				sprintf(tmp, " \xff3:%s \xff2:%s", LNG(Up), LNG(Thumb));
 			else
-				sprintf(tmp, " ÿ3:%s ÿ2:%s", LNG(Up), LNG(List));
+				sprintf(tmp, " \xff3:%s \xff2:%s", LNG(Up), LNG(List));
 			strcat(msg1, tmp);
 			sprintf(tmp, " Sel:%s Start:%s L1/R1:%dsec L2:",
 			        LNG(Exit), LNG(SlideShow), SlideShowTime);

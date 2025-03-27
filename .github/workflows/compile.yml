@@ -15,12 +15,15 @@ jobs:
       fail-fast: false
       matrix:
         eth: ["ETH=0", "ETH=1"]
-        bdmstuff: ["EXFAT=1", "EXFAT=1 MX4SIO=1"] #"EXFAT=0", 
-        #ds34: ["DS34=0", "DS34=1"]
-        coh: ["COH=1", "COH=1 ACUART=1"] #"COH=0",
+        bdmstuff: ["EXFAT=0", "EXFAT=1", "EXFAT=1 MX4SIO=1"]
+        ds34: ["DS34=0", "DS34=1"]
+        mmce: ["MMCE=0", "MMCE=1"]
+        coh: ["COH=0", "COH=1"]
         exclude:
           - bdmstuff: "EXFAT=1 MX4SIO=1"
             coh: "COH=1"
+          - bdmstuff: "EXFAT=1 MX4SIO=1"
+            mmce: "MMCE=1"
     runs-on: ubuntu-latest
     container: ps2dev/ps2dev:v1.0
     steps:
@@ -36,12 +39,13 @@ jobs:
 
     - name: Compile wLaunchELF
       run: |
-        make rebuild SIO_DEBUG=1 ${{ matrix.coh }} ${{ matrix.eth }} ${{ matrix.bdmstuff }} ${{ matrix.ds34 }} ${{ matrix.xfrom }} ${{ github.event.inputs.make_args }}
+        make rebuild ${{ matrix.eth }} ${{ matrix.mmce }} ${{ matrix.bdmstuff }} ${{ matrix.ds34 }} ${{ matrix.xfrom }} ${{ matrix.coh }} ${{ github.event.inputs.make_args }}
+
 
     - name: Upload variants artifact ELF
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
-        name: WLE
+        name: "WLE-${{ matrix.eth }}-${{ matrix.mmce }}-${{ matrix.bdmstuff }}-${{ matrix.ds34 }}-${{ matrix.xfrom }}"
         path: |
             BOOT*.ELF
 
@@ -59,6 +63,10 @@ jobs:
 
     - name: Download all artifacts
       uses: actions/download-artifact@v4
+      with:
+        path: WLE/
+        pattern: "WLE-*"
+        merge-multiple: true
 
     - name: list
       run: |
@@ -74,6 +82,15 @@ jobs:
         prerelease: false
         files: |
                WLE/*.ELF
+
+    - name: notify on discord
+      if: github.ref == 'refs/heads/master'
+      uses: tsickert/discord-webhook@v5.3.0
+      with:
+        webhook-url: ${{ secrets.DISCORD_FEED }}
+        content: |
+          ## wLaunchELF 4.43x_isr has been updated!
+          ### [Download Page](https://israpps.github.io/projects/wlaunchelf-isr)
 
     - name: Create release
       if: github.ref == 'refs/heads/master'

@@ -45,20 +45,21 @@
 #include <floatlib.h>
 #include <usbhdfsd-common.h>
 #include "hdl_rpc.h"
+#include "cdvd_macro.h"
 #include "iop/ds34usb/ee/libds34usb.h"
 #include "iop/ds34bt/ee/libds34bt.h"
 
 #include <sio.h>
 #include <sior_rpc.h>
 
-#ifdef SIO_DEBUG
+#ifdef SIO_DEBUG //EE SIO will be printed separated. no need for diferentiation
 	#define DPRINTF(format, args...) \
     	sio_printf(format, ##args)
-#elif defined(TTY2SIOR) || defined(COMMON_PRINTF) || defined(UDPTTY)
+#elif defined(POWERPC_UART) || defined(COMMON_PRINTF) || defined(UDPTTY) //printf has to travel to IOP, add color escape to make up the diff
 	#define DPRINTF(format, args...) \
     	printf("\033[1;94;40m"format"\033[m", ##args)
 #else
-	#define DPRINTF(format, args...) // strip away printf from consumer builds
+	#define DPRINTF(format, args...)// strip away printf from consumer builds
 #endif
 
 #define TRUE 1
@@ -186,6 +187,7 @@ typedef struct
 	int Popup_Opaque;
 	int Init_Delay;
 	int usbkbd_used;
+	int reboot_iop_elf_load;
 	int Show_Titles;
 	int PathPad_Lock;
 	int JpgView_Timer;
@@ -212,6 +214,10 @@ extern int swapKeys;
 extern int GUI_active;  // Skin and Main Skin switch
 extern int cdmode;      //Last detected disc type
 extern u8 console_is_PSX;
+
+#ifdef MX4SIO
+extern u8 mx4sio_driver_running;
+#endif
 
 void load_vmc_fs(void);
 #ifdef ETH

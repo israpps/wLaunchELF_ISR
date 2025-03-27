@@ -63,7 +63,14 @@ int checkELFheader(char *path, int type)
 	char fullpath[MAX_PATH], tmp[MAX_PATH], *p;
 
 	strcpy(fullpath, path);
-	if (!strncmp(fullpath, "mc", 2) || !strncmp(fullpath, "vmc", 3) || !strncmp(fullpath, "rom", 3) || !strncmp(fullpath, "cdrom", 5) || !strncmp(fullpath, "cdfs", 4)) {
+	if (!strncmp(fullpath, "mc", 2) 
+		|| !strncmp(fullpath, "vmc", 3)
+		|| !strncmp(fullpath, "rom", 3)
+		|| !strncmp(fullpath, "cdrom", 5)
+#ifdef MMCE
+		|| !strncmp(fullpath, "mmce", 4)
+#endif
+		|| !strncmp(fullpath, "cdfs", 4)) {
 		;  //fullpath is already correct
 	} else if (!strncmp(fullpath, "hdd0:", 5)) {
 		p = &path[5];
@@ -129,12 +136,13 @@ error:
 //------------------------------
 void RunLoaderElf(char *filename, char *party)
 {
+#define ELFLOAD_ARGC 3
 	u8 *boot_elf;
 	elf_header_t *eh;
 	elf_pheader_t *eph;
 	void *pdata;
 	int i;
-	char *argv[2], bootpath[256];
+	char *argv[ELFLOAD_ARGC], bootpath[256];
 
 	if ((!strncmp(party, "hdd0:", 5)) && (!strncmp(filename, "pfs0:", 5))) {
 		if (0 > fileXioMount("pfs0:", party, FIO_MT_RDONLY)) {
@@ -199,13 +207,13 @@ void RunLoaderElf(char *filename, char *party)
 			memset(eph[i].vaddr + eph[i].filesz, 0,
 			       eph[i].memsz - eph[i].filesz);
 	}
-
+	argv[2] = (setting->reboot_iop_elf_load) ? "-r" : "-nr";
 	/* Let's go.  */
 	SifExitRpc();
 	FlushCache(0);
 	FlushCache(2);
 
-	ExecPS2((void *)eh->entry, NULL, 2, argv);
+	ExecPS2((void *)eh->entry, NULL, ELFLOAD_ARGC, argv);
 }
 //------------------------------
 //End of func:  void RunLoaderElf(char *filename, char *party)
