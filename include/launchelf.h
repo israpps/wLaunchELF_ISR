@@ -1,10 +1,10 @@
 #ifndef LAUNCHELF_H
 #define LAUNCHELF_H
 #define HACK_FOLDER "BXEXEC-OPENTUNA"
-#ifndef DVRP
+#ifndef SUPPORT_SYSTEM_2X6
 #define ULE_VERSION "v4.43x_isr"
 #else
-#define ULE_VERSION "v4.43x_isr_dvr"
+#define ULE_VERSION "v4.43x_isr_coh"
 #endif
 //#ifndef ULE_VERDATE
 //#define ULE_VERDATE __DATE__
@@ -233,7 +233,11 @@ int IsSupportedFileType(char *path);
 void loadFlashModules(void);
 
 /* elf.c */
-int checkELFheader(char *filename);
+#define TYPE_ELF 0
+#define TYPE_IRX 1
+#define ELF_HEADER_ID_EE 0x2
+#define ELF_HEADER_ID_IRX 0xFF80
+int checkELFheader(char *filename, int type);
 void RunLoaderElf(char *filename, char *);
 
 /* draw.c */

@@ -195,6 +195,21 @@ void pad_psu_header(psu_header *psu)
 {
 	memset((void *)psu, 0xFF, sizeof(psu_header));
 }
+// functions below are all related to noob-helper checks on COH models
+#ifdef SUPPORT_SYSTEM_2X6
+///dongleguard
+/// checks if the file about to be touched is a security dongle boot file.
+/// if it is, prompts the user to confirm the operation before proceeding.
+/// returns 1 if user wants to proceed. returns 0 if user does not want to proceed or the file is not a boot file
+int dongleguard(char *filepath) {
+	DPRINTF("%s(%s)\n", __FUNCTION__, filepath);
+    if (!strcmp(filepath, "mc0:/boot.bin")) {
+		return (ynDialog("you're about to remove/modify the security dongle boot file\n"
+			"dont do this if you don't know what it is\n\nContinue?")>0);
+    }
+	return -1;
+}
+#endif
 //--------------------------------------------------------------
 // getHddParty below takes as input the string path and the struct file
 // and uses these to calculate the output strings party and dir. If the
@@ -510,6 +525,7 @@ int ynDialog(const char *message)
 	drawScr();
 	drawSprite(setting->color[COLOR_BACKGR], dx, dy, dx + dw + 1, (dy + dh) + 1);
 	drawScr();
+	DPRINTF("%s:%d\n", __func__, ret);
 	return ret;
 }
 //------------------------------
@@ -2161,7 +2177,7 @@ void make_title_cfg(const char *path, const FILEINFO *file, char **_msg0)
 //------------------------------
 //endfunc make_title_cfg
 //--------------------------------------------------------------
-int delete (const char *path, const FILEINFO *file)
+int delete(const char *path, const FILEINFO *file)
 {
 	FILEINFO files[MAX_ENTRY];
 	char party[MAX_NAME], dir[MAX_PATH], hdddir[MAX_PATH];
@@ -2184,6 +2200,10 @@ int delete (const char *path, const FILEINFO *file)
 	}
 	sprintf(dir, "%s%s", path, file->name);
 	genLimObjName(dir, 0);
+#ifdef SUPPORT_SYSTEM_2X6
+        if (!dongleguard(dir))
+	        return 0;
+#endif
 #ifdef ETH
 	if (!strncmp(dir, "host:/", 6))
 		makeHostPath(dir + 5, dir + 6);
@@ -2192,7 +2212,7 @@ int delete (const char *path, const FILEINFO *file)
 		strcat(dir, "/");
 		nfiles = getDir(dir, files);
 		for (i = 0; i < nfiles; i++) {
-			ret = delete (dir, &files[i]);  //recursively delete contents of folder
+			ret = delete(dir, &files[i]);  //recursively delete contents of folder
 			if (ret < 0)
 				return -1;
 		}
@@ -2262,6 +2282,10 @@ int Rename(const char *path, const FILEINFO *file, const char *name)
 	} else if (!strncmp(path, "mc", 2)) {
 		sprintf(oldPath, "%s%s", path, file->name);
 		sprintf(newPath, "%s%s", path, name);
+#ifdef SUPPORT_SYSTEM_2X6
+        if (!dongleguard(oldPath)>0)
+	        return 0;
+#endif
 		if ((test = fileXioDopen(newPath)) >= 0) {  //Does folder of same name exist ?
 			fileXioDclose(test);
 			ret = -EEXIST;
@@ -2454,6 +2478,11 @@ restart_copy:  //restart point for PM_PSU_RESTORE to reprocess modified argument
 	} else
 		sprintf(out, "%s%s", outPath, newfile.name);
 
+#ifdef SUPPORT_SYSTEM_2X6
+    if (!dongleguard(out)>0)
+	    return 0;
+#endif
+
 	if (!strcmp(in, out))
 		return 0;  //if in and out are identical our work is done.
 
@@ -2575,7 +2604,7 @@ restart_copy:  //restart point for PM_PSU_RESTORE to reprocess modified argument
 				if (ynDialog(progress) < 0)
 					return -1;
 				if ((PasteMode == PM_MC_BACKUP) || (PasteMode == PM_MC_RESTORE) || (PasteMode == PM_PSU_RESTORE)) {
-					ret = delete (outPath, &newfile);  //Attempt recursive delete
+					ret = delete(outPath, &newfile);  //Attempt recursive delete
 					if (ret < 0)
 						return -1;
 					if (newdir(outPath, newfile.name) < 0)
@@ -3527,8 +3556,10 @@ int setFileList(const char *path, const char *ext, FILEINFO *files, int cnfmode)
 			files[nfiles++].stats.AttrFile = sceMcFileAttrSubdir;
 		}
 #endif
+#ifndef SUPPORT_SYSTEM_2X6
 		strcpy(files[nfiles].name, "cdfs:");
 		files[nfiles++].stats.AttrFile = sceMcFileAttrSubdir;
+#endif
 		if ((cnfmode != USBD_IRX_CNF) && (cnfmode != USBKBD_IRX_CNF) && (cnfmode != USBMASS_IRX_CNF)) {
 			//The condition above blocks selecting USB drivers from USB devices
 			if (USB_mass_ix[0] || !USB_mass_scanned) {
@@ -3958,7 +3989,7 @@ int getFilePath(char *out, int cnfmode)
 					//pushed R3 for a file (treat as uLE-related)
 					sprintf(out, "%s%s", path, files[browser_sel].name);
 					// Must to include a function for check IRX Header
-					if (((cnfmode == LK_ELF_CNF) || (cnfmode == NON_CNF)) && (checkELFheader(out) < 0)) {
+					if (((cnfmode == LK_ELF_CNF) || (cnfmode == NON_CNF)) && (checkELFheader(out, TYPE_ELF) < 0)) {
 						browser_pushed = FALSE;
 						sprintf(msg0, "%s.", LNG(This_file_isnt_an_ELF));
 						out[0] = 0;
@@ -4055,7 +4086,7 @@ int getFilePath(char *out, int cnfmode)
 								sprintf(tmp1, " %s", LNG(deleting));
 								strcat(tmp, tmp1);
 								drawMsg(tmp);
-								ret = delete (path, &files[browser_sel]);
+								ret = delete(path, &files[browser_sel]);
 							} else {
 								for (i = 0; i < browser_nfiles; i++) {
 									if (marks[i]) {
@@ -4067,7 +4098,7 @@ int getFilePath(char *out, int cnfmode)
 										sprintf(tmp1, " %s", LNG(deleting));
 										strcat(tmp, tmp1);
 										drawMsg(tmp);
-										ret = delete (path, &files[i]);
+										ret = delete(path, &files[i]);
 										if (ret < 0)
 											break;
 									}
@@ -4272,8 +4303,19 @@ int getFilePath(char *out, int cnfmode)
 			browser_nfiles = setFileList(path, ext, files, cnfmode);
 			if (!cnfmode) {  //Calculate free space (unless configuring)
 				if (!strncmp(path, "mc", 2)) {
-					mcGetInfo(path[2] - '0', 0, &mctype_PSx, &mcfreeSpace, NULL);
+					int mcformatted=MC_UNFORMATTED;
+					mcGetInfo(path[2] - '0', 0, &mctype_PSx, &mcfreeSpace, &mcformatted);
 					mcSync(0, NULL, &ret);
+#ifdef SUPPORT_SYSTEM_2X6
+					if (strlen(path)==5) {
+						sprintf(msg0, "%s status: type:%d format:%d ret:%d",
+							(path[2] == '0')?"Security dongle":"Memory Card",
+							mctype_PSx,
+							mcformatted,
+							ret);
+						browser_pushed = FALSE;
+					}
+#endif
 					freeSpace = mcfreeSpace * ((mctype_PSx == 1) ? 8192 : 1024);
 					vfreeSpace = TRUE;
 				} else if (!strncmp(path, "vmc", 3)) {
@@ -4454,7 +4496,7 @@ int getFilePath(char *out, int cnfmode)
 						iconcolr = COLOR_GRAPH1;
 					} else {
 						iconbase = ICON_FILE;
-						if (genCmpFileExt(files[top + i].name, "ELF"))
+						if (genCmpFileExt(files[top + i].name, "ELF") || genCmpFileExt(files[top + i].name, "IRX"))
 							iconcolr = COLOR_GRAPH2;
 						else if (
 									genCmpFileExt(files[top + i].name, "TXT") || 
@@ -4702,7 +4744,7 @@ void subfunc_Paste(char *mess, char *path)
 		if (ret < 0)
 			break;
 		if (browser_cut) {
-			ret = delete (clipPath, &clipFiles[i]);
+			ret = delete(clipPath, &clipFiles[i]);
 			if (ret < 0)
 				break;
 		}
