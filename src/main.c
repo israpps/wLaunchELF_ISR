@@ -2832,10 +2832,6 @@ int main(int argc, char *argv[])
 		sprintf(mainMsg, "%s", LNG(Loaded_Config));
 
 #ifdef SUPPORT_SYSTEM_2X6
-	if (ROMVER_data[4] != 'T' || ROMVER_data[5] != 'Z') {
-		drawMsg("ERR: Console is not arcade system. use regular wLaunchELF instead");
-		SleepThread();
-	}
 #define ACJV_PATHCNT 5
 	int id, ret;
 	const char* ACJVPATHS[ACJV_PATHCNT] = {"./ACJVLOAD.IRX", "mc0:/ACJVLOAD.IRX", "mc1:/ACJVLOAD.IRX", "mass0:/ACJVLOAD.IRX", "mass1:/ACJVLOAD.IRX"};
