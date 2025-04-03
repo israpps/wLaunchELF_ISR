@@ -68,9 +68,10 @@ IMPORT_BIN2C(dvrdrv_irx);
 IMPORT_BIN2C(dvrfile_irx);
 #endif
 
-#ifndef USE_ROM_CDVDFSV
+#ifndef NO_CDVD_CDFS
 IMPORT_BIN2C(cdvd_irx);
 #endif
+
 #ifdef MMCE
 IMPORT_BIN2C(mmceman_irx);
 #endif
@@ -1230,11 +1231,13 @@ static void loadCdModules(void)
     	DPRINTF(" [rom0:CDVDFSV]: ID=%d, ret=%d\n", id, ret);
 #endif
 		sceCdInit(SCECdINoD);  // SCECdINoD init without check for a disc. Reduces risk of a lockup if the drive is in a erroneous state.
+#ifndef NO_CDVD_CDFS
 		id = SifExecModuleBuffer(cdvd_irx, size_cdvd_irx, 0, NULL, &ret);
 		LCDVD_INIT();
 		DPRINTF(" [CDVD]: id=%d, ret=%d\n", id, ret);
-
+#endif
 		have_cdvd = 1;
+		
 	}
 }
 //------------------------------
@@ -1331,11 +1334,12 @@ static void getExternalFilePath(const char *argPath, char *filePath)
 		mountDVRPParty(party);
 
 #endif
-#ifndef SUPPORT_SYSTEM_2X6
+#ifndef NO_CDVD_CDFS
 	} else if (!strncmp(argPath, "cdfs", 4)) {
 		strcpy(filePath, argPath);
 		LCDVD_FLUSHCACHE();
 		LCDVD_DISKREADY(0);
+#endif
 	} else {
 		genFixPath(argPath, filePath);
 	}

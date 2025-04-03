@@ -38,7 +38,9 @@
 #include <debug.h>
 #include <gsKit.h>
 #include <dmaKit.h>
+#ifndef NO_CDVD_CDFS
 #include <cdvd_rpc.h>
+#endif
 #include <libcdvd.h>
 #include <libjpg.h>
 #include <libkbd.h>

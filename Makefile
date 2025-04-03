@@ -18,6 +18,7 @@ SIO_DEBUG ?= 0
 DEBUG ?= 0
 COH ?= 0
 LCDVD ?= LEGACY#or LATEST
+
 # ----------------------------- #
 .SILENT:
 
@@ -53,7 +54,7 @@ ifeq ($(SMB),1)
 endif
 
 ifeq ($(COH), 1)
-  CDVDFSV = 0
+  LCDVD=NONE
   SIO2MAN = 0
   MCMAN = 0
   EE_OBJS += ioprp.o
@@ -77,9 +78,13 @@ ifeq ($(LCDVD),LEGACY)
   CDVD_SOURCE = iop/cdvd.irx
   EE_INCS += -Iiop/oldlibs/libcdvd/ee
   EE_LIBS += -lcdvdfs
-else
+  EE_OBJS += cdvd_irx.o
+else ifeq ($(LCDVD), LATEST)
   EE_CFLAGS += -DLIBCDVD_LATEST
   CDVD_SOURCE = iop/__precompiled/cdfs.irx
+  EE_OBJS += cdvd_irx.o
+else ifeq ($(LCDVD), NONE)
+  EE_CFLAGS += -DNO_CDVD_CDFS
 endif
 
 ifeq ($(XFROM),1)
@@ -135,11 +140,6 @@ else
   EE_CFLAGS += -DUSE_ROM_MCMAN
 endif
 
-ifeq ($(CDVDFSV),1)
-  EE_OBJS += cdvd_irx.o
-else
-  EE_CFLAGS += -DUSE_ROM_CDVDFSV
-endif
 
 ifeq ($(LIBPAD),2)
   EE_LIBS += -lpadx
@@ -226,7 +226,8 @@ info:
 	$(info   DS34		include PS3/PS4 controller support)
 	$(info   MX4SIO		support for SDCard connected to memory card slot 2)
 	$(info   MMCE		support for direct SDCard access on SD2PSX or memcardpro2)
-	$(info ----------)
+	$(info   COH		support for Arcade PS2 models (system2x6 and Python1))
+	$(info ------------------------)
 	$(info   IOPTRAP		load exception handler module to IOP)
 	$(info   UDPTTY		transfer stdout to UDP broadcast)
 	$(info   PPC_UART	transfer stdout to DECKARD UART)
