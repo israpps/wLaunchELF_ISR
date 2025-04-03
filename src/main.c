@@ -2147,7 +2147,7 @@ static void Execute(char *pathin)
 #endif
 #ifdef MMCE
 	} else if (!strncmp(path, "mmce", 4)) {
-		if ((t = checkELFheader(path)) <= 0)
+		if ((t = checkELFheader(path, TYPE_ELF)) <= 0)
 			goto ELFnotFound;
 		strcpy(fullpath, path);
 		goto ELFchecked;
@@ -2832,9 +2832,9 @@ int main(int argc, char *argv[])
 		sprintf(mainMsg, "%s", LNG(Loaded_Config));
 
 #ifdef SUPPORT_SYSTEM_2X6
-#define ACJV_PATHCNT 5
+#define ACJV_PATHCNT 6
 	int id, ret;
-	const char* ACJVPATHS[ACJV_PATHCNT] = {"./ACJVLOAD.IRX", "mc0:/ACJVLOAD.IRX", "mc1:/ACJVLOAD.IRX", "mass0:/ACJVLOAD.IRX", "mass1:/ACJVLOAD.IRX"};
+	const char* ACJVPATHS[ACJV_PATHCNT] = {"./ACJVLOAD.IRX", "mc0:/ACJVLOAD.IRX", "mmce0:/COH/ACJVLOAD.IRX", "mc1:/ACJVLOAD.IRX", "mass0:/ACJVLOAD.IRX", "mass1:/ACJVLOAD.IRX"};
 	for (i=0;i<ACJV_PATHCNT;i++) {
 		id = SifLoadStartModule(ACJVPATHS[i], 0, NULL, &ret);
 		DPRINTF(" [%s]: ID=%d, ret=%d\n", ACJVPATHS[i], id, ret);
@@ -2843,12 +2843,12 @@ int main(int argc, char *argv[])
 			break;
 		}
 	}
-	sprintf(mainMsg + strlen(mainMsg), (i == -1) ? " | ACJVLOAD loaded" : " | ACJVLOAD not found");
+	sprintf(mainMsg + strlen(mainMsg), " | JVS INIT");
 	if (
 #ifdef LOAD_DAEMON
 	1
 #else
-		exists("mass:/watchdog.opt") || exists("mc0:/watchdog.opt") || exists("mc1:/watchdog.opt") || exists("host:/watchdog.opt")
+		exists("mc0:/watchdog.opt") || exists("mmce0:/watchdog.opt") || exists("mc1:/watchdog.opt") || exists("mass:/watchdog.opt") || exists("host:/watchdog.opt")
 #endif
 		) {
 		DPRINTF("Starting watchdog\n");
@@ -2859,18 +2859,19 @@ int main(int argc, char *argv[])
 	
 	{
 		int var_cnt;
-		char *RAM_p, *CNF_p, *name, *value;
-		if ((RAM_p = preloadCNF("mc1:IOPBOOT.CNF"))) {
+		char *RAM_p = preloadCNF("mc0:IOPBOOT.CNF"), *CNF_p, *name, *value;
+		if (!RAM_p) RAM_p = preloadCNF("mc1:IOPBOOT.CNF");
+		if (RAM_p) {
 			CNF_p = RAM_p;
 			for (var_cnt = 0; get_CNF_string(&CNF_p, &name, &value); var_cnt++) {
 				id = SifLoadStartModule(value, 0, NULL, &ret);
 				printf("%s:%s %d %d\n", name, value, id, ret);
-				if (ret != 0 || id < 0) {drawMsg(value); sleep(2);}
+				if (ret != 0 || id < 0) {drawMsg(name); sleep(2);}
 				// ((i & 3) != 0)
 			}
 			free(RAM_p);
+			sprintf(mainMsg + strlen(mainMsg)," | IOPLS OK");
 		}
-		sprintf(mainMsg + strlen(mainMsg), (RAM_p) ? " | IOPLS OK" : " | IOPLS NG");
 	}
 #endif
 	

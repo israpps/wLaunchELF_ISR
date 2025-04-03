@@ -23,7 +23,7 @@ It features:
 
 - `BOOT`: Base filename, means nothing
 - `UNC`: Executable is Uncompressed
-- `COH`: Special version for PS2 `COH-H` Models (Namco System 246/256 specifically)
+- `COH`: Special version for PS2 `COH-H` Models (Namco System 246/256 and konami python1 specifically)
 - `NO_NETWORK`: Network features are disabled and network IRX drivers stripped away, with the purpose of making app smaller
 - `XFROM`: Support for accessing the [PSX-DESR](https://upload.wikimedia.org/wikipedia/commons/f/fa/Console_psx.jpg) internal flash memory.
 - `EXFAT`: Support for accessing EXFAT filesystems from BDM devices (USB & MX4SIO)
