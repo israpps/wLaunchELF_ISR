@@ -18,11 +18,13 @@ jobs:
         bdmstuff: ["EXFAT=0", "EXFAT=1", "EXFAT=1 MX4SIO=1"]
         ds34: ["DS34=0", "DS34=1"]
         mmce: ["MMCE=0", "MMCE=1"]
-        coh: ["COH=0", "COH=1"]
+        coh: ["COH=1"] #"COH=0", 
         exclude:
-          - bdmstuff: "EXFAT=1 MX4SIO=1"
+          - bdmstuff: "EXFAT=1 MX4SIO=1" #Who would want MX4SIO on arcade?
             coh: "COH=1"
-          - bdmstuff: "EXFAT=1 MX4SIO=1"
+          - eth: "ETH=1" #arcade does not use network as we know it...
+            coh: "COH=1"
+          - bdmstuff: "EXFAT=1 MX4SIO=1" #MX4SIO incompatible with MMCE (both hook the same thing)
             mmce: "MMCE=1"
     runs-on: ubuntu-latest
     container: ps2dev/ps2dev:v1.0
@@ -41,7 +43,6 @@ jobs:
       run: |
         make rebuild ${{ matrix.eth }} ${{ matrix.mmce }} ${{ matrix.bdmstuff }} ${{ matrix.ds34 }} ${{ matrix.xfrom }} ${{ matrix.coh }} ${{ github.event.inputs.make_args }}
 
-
     - name: Upload variants artifact ELF
       uses: actions/upload-artifact@v4
       with:
@@ -51,7 +52,7 @@ jobs:
 
 ####################################################### 
   release:
-    if: github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/master' || github.ref == 'refs/heads/system-2x6-support'
     runs-on: ubuntu-latest
     needs: [build]
     steps:
@@ -82,6 +83,17 @@ jobs:
         prerelease: false
         files: |
                WLE/*.ELF
+
+    - name: Create release
+      if: github.ref == 'refs/heads/system-2x6-support'
+      uses: marvinpinto/action-automatic-releases@latest
+      with:
+        repo_token: "${{ secrets.GITHUB_TOKEN }}"
+        automatic_release_tag: "arcade"
+        title: "wLaunchELF 4.43x_isr_coh (for ARCADE PS2)"
+        prerelease: false
+        files: |
+               WLE/*COH*.ELF
 
     - name: notify on discord
       if: github.ref == 'refs/heads/master'

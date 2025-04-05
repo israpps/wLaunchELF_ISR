@@ -17,3 +17,4 @@ iop/vmc_fs.irx
 iso/
 *.iso
 *.zip
+*.KELF
