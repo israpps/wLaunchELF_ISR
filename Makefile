@@ -110,7 +110,9 @@ ifeq ($(MMCE),1)
     EE_OBJS += mmceman_irx.o
     EE_CFLAGS += -DMMCE
     HAS_MMCE = -MMCE
+ifeq ($(COH),0)#arcade rom0:SIO2MAN == retail rom0:XSIO2MAN
     SIO2MAN = 1
+endif
 endif
 
 ifeq ($(MX4SIO),1)
