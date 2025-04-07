@@ -383,7 +383,7 @@ static void Show_About_uLE(void)
 #define SET_NEXT_CARD 1
 #define SET_PREV_CARD 2
 #define BUILD_SETCARD(param, type, mode, num) param  = type << 24; param |= mode << 16; param |= num;
-
+#define BUILD_SETCHANNEL(param, mode, num) param  = mode << 16; param |= num;
 enum mmceman_cmds {
     MMCE_CMD_PING = 0x1,
     MMCE_CMD_GET_STATUS,
@@ -429,13 +429,13 @@ static void refresh_mmceman_data(struct cardinfo_t* CardInfo) {
 		} else CardInfo[i].validcard = FALSE;
 	}
 }
-
+#define INFORM_ERR(res, cause) if (res == -1) snprintf(Notifs, MAX_TEXT_LINE, cause": %s", LNG(Failed))
 static void Show_MMCEManager(void)
 {
+	char Notifs[MAX_TEXT_LINE] = "MMCE Manager";
 	int event = 1, post_event = 0, curcard = 0, res, i;
 	int hpos[2] = {2, 40}; 
 	char TextRow[256];
-	char* unk = LNG(Unknown);
 	struct cardinfo_t CardInfo[2] = {
 	    {LNG(Unknown), -1, -1, FALSE, ""},
 	    {LNG(Unknown), -1, -1, FALSE, ""},
@@ -459,17 +459,29 @@ static void Show_MMCEManager(void)
 			} else if (new_pad & PAD_CROSS) {
 				curcard ^= 1;
 				event |= 2;
-			} else if (new_pad & PAD_R1 || new_pad & PAD_R2) {
-				u32 param;
-				BUILD_SETCARD(param, VMC_NORMAL, (new_pad & PAD_R1) ? SET_PREV_CARD : SET_NEXT_CARD, 0)
-				res = fileXioDevctl(mmce, MMCE_CMD_SET_CARD, &param, sizeof(param), NULL, 0);
-				event |= 2;
 			} else if (new_pad & PAD_SELECT) {
 				refresh_mmceman_data(CardInfo);
 				event |= 2;
-			} else if (new_pad & PAD_START) {
-				if (keyboard(TextRow, 36) > 0) {
-					fileXioDevctl(mmce, MMCE_CMD_SET_GAMEID, TextRow, 255, NULL, 0);
+				strcpy(Notifs, "MMCE Manager");
+			}
+			if (CardInfo[curcard].validcard) {
+				if (new_pad & PAD_START) {
+					if (keyboard(TextRow, 36) > 0) {
+						res = fileXioDevctl(mmce, MMCE_CMD_SET_GAMEID, TextRow, 255, NULL, 0);
+						event |= 2;
+						INFORM_ERR(res, "SetGameID");
+					}
+				} else if (new_pad & PAD_R1 || new_pad & PAD_R2) {
+					u32 param;
+					BUILD_SETCARD(param, VMC_NORMAL, (new_pad & PAD_R1) ? SET_PREV_CARD : SET_NEXT_CARD, 0)
+					res = fileXioDevctl(mmce, MMCE_CMD_SET_CARD, &param, sizeof(param), NULL, 0);
+					INFORM_ERR(res, "SetCard");
+					event |= 2;
+				} else if (new_pad & PAD_L1 || new_pad & PAD_L2) {
+					u32 param;
+					BUILD_SETCHANNEL(param, (new_pad & PAD_L1) ? SET_PREV_CARD : SET_NEXT_CARD, 0)
+					res = fileXioDevctl(mmce, MMCE_CMD_SET_CHANNEL, &param, sizeof(param), NULL, 0);
+					INFORM_ERR(res, "SetChannel");
 					event |= 2;
 				}
 			}
@@ -489,17 +501,16 @@ static void Show_MMCEManager(void)
 				if (CardInfo[i].validcard) {
 					sprintf(TextRow, " Device: %s", CardInfo[i].product);
 					PrintPos(02, hpos[i], TextRow, COLOR_TEXT);
-					sprintf(TextRow, " Revision: %d, Protocol: %d", CardInfo[i].revision, CardInfo[i].protocol);
+					sprintf(TextRow, " Rev: %d, Protocol: %d", CardInfo[i].revision, CardInfo[i].protocol);
 					PrintPos(03, hpos[i], TextRow, COLOR_TEXT);
-					snprintf(TextRow, 36, " GameId '%s'", CardInfo[i].gid);
+					snprintf(TextRow, 36, " GameID '%s'", CardInfo[i].gid);
 					PrintPos(04, hpos[i], TextRow, COLOR_TEXT);
 				} else {
-					sprintf(TextRow, "%s", "No device Found");
+					sprintf(TextRow, "%s", " No device found");
 					PrintPos(02, hpos[i], TextRow, COLOR_GRAPH3);
 				}
 			}
-			
-			setScrTmp("MMCE Manager", "R1/R2:card L1/L2:chan START:SetGameID "FNCH_CROSS":card slot "FNCH_CIRCLE":Back SELECT:Refresh");
+			setScrTmp(Notifs, "R1/R2:card L1/L2:chan START:SetGameID "FNCH_CROSS":card slot "FNCH_CIRCLE":Back SELECT:Refresh");
 		}
 		drawScr();
 		post_event = event;
