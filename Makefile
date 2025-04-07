@@ -206,6 +206,12 @@ githash.h:
 	printf '"\n#endif\n' >> $@
 
 clean:
+	@rm -f githash.h $(EE_BIN) $(EE_BIN_PKD)
+	@rm -rf $(EE_OBJS_DIR)
+	@rm -rf $(EE_ASM_DIR)
+	@rm -f iop/*.irx
+
+rclean: clean #short for Real Clean
 	$(MAKE) -C loader clean
 	$(MAKE) -C iop/hdl_info clean
 	$(MAKE) -C iop/ps2host clean
@@ -213,10 +219,6 @@ clean:
 	$(MAKE) -C iop/AllowDVDV clean
 	$(MAKE) -C iop/oldlibs/libcdvd clean
 	$(MAKE) -C iop/oldlibs/ps2ftpd clean
-	@rm -f githash.h $(EE_BIN) $(EE_BIN_PKD)
-	@rm -rf $(EE_OBJS_DIR)
-	@rm -rf $(EE_ASM_DIR)
-	@rm -f iop/*.irx
 
 rebuild: clean all
 
