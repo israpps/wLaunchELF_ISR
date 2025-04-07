@@ -438,8 +438,8 @@ static void Show_MMCEManager(void)
 		if (event || post_event) {  //NB: We need to update two frame buffers per event
 			clrScr(setting->color[COLOR_BACKGR]);
 			drawOpSprite(setting->color[COLOR_FRAME],
-			             SCREEN_WIDTH / 2 - 21, Frame_start_y,
-			             SCREEN_WIDTH / 2 - 19, Frame_end_y);
+			             ((SCREEN_WIDTH-LINE_THICKNESS) / 2) , Frame_start_y,
+			             ((SCREEN_WIDTH-LINE_THICKNESS) / 2) +LINE_THICKNESS, Frame_end_y);
 			//PrintPos(03, 10, "Device Info:", COLOR_TEXT);
 			for (i = 0; i < 2; i++)
 			{
