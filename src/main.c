@@ -376,48 +376,79 @@ static void Show_About_uLE(void)
 }
 
 #ifdef MMCE
+#define VMC_NORMAL    0
+#define VMC_BOOTCARD  1
+
+#define SET_SPECIFIC  0
+#define SET_NEXT_CARD 1
+#define SET_PREV_CARD 2
+#define BUILD_SETCARD(param, type, mode, num) param  = type << 24; param |= mode << 16; param |= num;
+
+enum mmceman_cmds {
+    MMCE_CMD_PING = 0x1,
+    MMCE_CMD_GET_STATUS,
+    MMCE_CMD_GET_CARD,
+    MMCE_CMD_SET_CARD,
+    MMCE_CMD_GET_CHANNEL,
+    MMCE_CMD_SET_CHANNEL,
+    MMCE_CMD_GET_GAMEID,
+    MMCE_CMD_SET_GAMEID,
+    MMCE_CMD_RESET,
+    MMCE_SETTINGS_ACK_WAIT_CYCLES,
+    MMCE_SETTINGS_SET_ALARMS,
+};
+
+#define MAX_GAMEID_LEN 256
 struct cardinfo_t {
 	char* product;
 	int revision;
 	int protocol;
 	int validcard;
+	char gid[MAX_GAMEID_LEN];
 };
-static void Show_MMCEManager(void)
-{
-	int event = 1, post_event = 0, curcard = 0, res, i;
-	int hpos[2] = {2, 38}; 
-	char TextRow[256];
-	char* sd2psx = "SD2PSX";
-	char* mcpro = "MemCardPro2";
-	char* unk = LNG(Unknown);
-	struct cardinfo_t CardInfo[2] = {
-	    {unk, 0, 0, FALSE},
-	    {unk, 0, 0, FALSE},
-	};
-	
+
+const char *mmce_product_ids[] = {"Unknown", "SD2PSX", "MemCard PRO2", "PicoMemcard+", "PicoMemcardZero"};
+static void refresh_mmceman_data(struct cardinfo_t* CardInfo) {
 	char* mmce = "mmce0:";
+	int i, res;
 	for (i = 0; i < 2; i++) {
 		mmce[4] = '0'+i;
-    	res = fileXioDevctl(mmce, 0x1 /*MMCE_CMD_PING*/, NULL, 0, NULL, 0);
+		res = fileXioDevctl(mmce, MMCE_CMD_PING, NULL, 0, NULL, 0);
 		if (res != -1) {
-        	if (((res & 0xFF00) >> 8) == 1) {
-        	    CardInfo[i].product = sd2psx;
-        	} else if (((res & 0xFF00) >> 8) == 2) {
-        	    CardInfo[i].product = mcpro;
-        	} else {
-				CardInfo[i].product = unk;
-        	}
+			if (((res & 0xFF00) >> 8) > 0 && ((res & 0xFF00) >> 8) < 5) {
+				CardInfo[i].product = mmce_product_ids[((res & 0xFF00) >> 8)];
+			} else {
+				CardInfo[i].product = LNG(Unknown);
+			}
 			CardInfo[i].revision = (res & 0xFF);
 			CardInfo[i].protocol = ((res & 0xFF0000) >> 16);
 			CardInfo[i].validcard = TRUE;
-    	} else CardInfo[i].validcard = FALSE;
+			if (fileXioDevctl(mmce, MMCE_CMD_GET_GAMEID, NULL, 0, &CardInfo[i].gid, MAX_GAMEID_LEN) == -1) {
+				strncpy(CardInfo[i].gid, LNG(Unknown), MAX_GAMEID_LEN);
+			}
+		} else CardInfo[i].validcard = FALSE;
 	}
+}
+
+static void Show_MMCEManager(void)
+{
+	int event = 1, post_event = 0, curcard = 0, res, i;
+	int hpos[2] = {2, 40}; 
+	char TextRow[256];
+	char* unk = LNG(Unknown);
+	struct cardinfo_t CardInfo[2] = {
+	    {LNG(Unknown), -1, -1, FALSE, ""},
+	    {LNG(Unknown), -1, -1, FALSE, ""},
+	};
+	char* mmce = "mmce0:";
+	refresh_mmceman_data(CardInfo);
 	
 	//----- Start of event loop -----
 	while (1) {
 		//Pad response section
 		waitAnyPadReady();
 		if (readpad() && new_pad) {
+			mmce[4] = '0'+curcard;//update the devctl target on every new pad to avoid surprises
 			if (new_pad & PAD_CIRCLE) {
 				event |= 2;
 				if (setting->GUI_skin[0]) {
@@ -428,8 +459,19 @@ static void Show_MMCEManager(void)
 			} else if (new_pad & PAD_CROSS) {
 				curcard ^= 1;
 				event |= 2;
+			} else if (new_pad & PAD_R1 || new_pad & PAD_R2) {
+				u32 param;
+				BUILD_SETCARD(param, VMC_NORMAL, (new_pad & PAD_R1) ? SET_PREV_CARD : SET_NEXT_CARD, 0)
+				res = fileXioDevctl(mmce, MMCE_CMD_SET_CARD, &param, sizeof(param), NULL, 0);
+				event |= 2;
+			} else if (new_pad & PAD_SELECT) {
+				refresh_mmceman_data(CardInfo);
+				event |= 2;
 			} else if (new_pad & PAD_START) {
-				//SET GAMEID
+				if (keyboard(TextRow, 36) > 0) {
+					fileXioDevctl(mmce, MMCE_CMD_SET_GAMEID, TextRow, 255, NULL, 0);
+					event |= 2;
+				}
 			}
 
 		}
@@ -441,8 +483,7 @@ static void Show_MMCEManager(void)
 			             ((SCREEN_WIDTH-LINE_THICKNESS) / 2) , Frame_start_y,
 			             ((SCREEN_WIDTH-LINE_THICKNESS) / 2) +LINE_THICKNESS, Frame_end_y);
 			//PrintPos(03, 10, "Device Info:", COLOR_TEXT);
-			for (i = 0; i < 2; i++)
-			{
+			for (i = 0; i < 2; i++) {
 				sprintf(TextRow, "mmce%d: ", i);
 				PrintPos(01, hpos[i], TextRow, curcard==i? COLOR_SELECT : COLOR_TEXT);
 				if (CardInfo[i].validcard) {
@@ -450,13 +491,15 @@ static void Show_MMCEManager(void)
 					PrintPos(02, hpos[i], TextRow, COLOR_TEXT);
 					sprintf(TextRow, " Revision: %d, Protocol: %d", CardInfo[i].revision, CardInfo[i].protocol);
 					PrintPos(03, hpos[i], TextRow, COLOR_TEXT);
+					snprintf(TextRow, 36, " GameId '%s'", CardInfo[i].gid);
+					PrintPos(04, hpos[i], TextRow, COLOR_TEXT);
 				} else {
 					sprintf(TextRow, "%s", "No device Found");
 					PrintPos(02, hpos[i], TextRow, COLOR_GRAPH3);
 				}
 			}
 			
-			setScrTmp("MMCE Manager", "R1/R2:card  L1/L2:chan  START:SetGameID  "FNCH_CROSS":card slot  "FNCH_CIRCLE":Back");
+			setScrTmp("MMCE Manager", "R1/R2:card L1/L2:chan START:SetGameID "FNCH_CROSS":card slot "FNCH_CIRCLE":Back SELECT:Refresh");
 		}
 		drawScr();
 		post_event = event;
