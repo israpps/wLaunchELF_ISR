@@ -472,7 +472,22 @@ extern int Check_ESR_Disc(void);
 
 #define USB_MASS_MAX_DRIVES 10
 
-extern char USB_mass_ix[10];
+enum bdmtypes {
+	BD_UNKNOWN = 0,
+	BD_USB,
+	BD_MX4SIO,
+	BD_IEEE1394,
+	BD_UDPBD,
+	BD_ATAD,
+
+	BD_COUNT,
+};
+
+extern const char* bdmnames[BD_COUNT];
+extern char* bdmpaths[BD_COUNT];
+extern int bdmpathsindx[BD_COUNT];
+extern char USB_mass_ix[USB_MASS_MAX_DRIVES];
+extern char USB_mass_bx[USB_MASS_MAX_DRIVES];
 extern int USB_mass_max_drives;
 extern u64 USB_mass_scan_time;
 extern int USB_mass_scanned;
