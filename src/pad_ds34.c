@@ -433,9 +433,15 @@ int setupPad(void)
 {
 	int ret, i, port, state, modes;
 
+	DPRINTF("padInit(0)..");
 	padInit(0);
+	DPRINTF(".done!\n");
+	DPRINTF("ds34usb_init()..");
 	ds34usb_init();
+	DPRINTF(".done!\n");
+	DPRINTF("ds34bt_init()..");
 	ds34bt_init();
+	DPRINTF(".done!\n");
 
 	for (port = 0; port < 2; port++) {
 		padtype_t[port] = 0;  // Assume that we don't have a proper PS2 controller

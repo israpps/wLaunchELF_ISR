@@ -1,10 +1,10 @@
 #ifndef LAUNCHELF_H
 #define LAUNCHELF_H
 #define HACK_FOLDER "BXEXEC-OPENTUNA"
-#ifndef DVRP
+#ifndef SUPPORT_SYSTEM_2X6
 #define ULE_VERSION "v4.43x_isr"
 #else
-#define ULE_VERSION "v4.43x_isr_dvr"
+#define ULE_VERSION "v4.43x_isr_coh"
 #endif
 //#ifndef ULE_VERDATE
 //#define ULE_VERDATE __DATE__
@@ -38,7 +38,9 @@
 #include <debug.h>
 #include <gsKit.h>
 #include <dmaKit.h>
+#ifndef NO_CDVD_CDFS
 #include <cdvd_rpc.h>
+#endif
 #include <libcdvd.h>
 #include <libjpg.h>
 #include <libkbd.h>
@@ -57,7 +59,7 @@
     	sio_printf(format, ##args)
 #elif defined(POWERPC_UART) || defined(COMMON_PRINTF) || defined(UDPTTY) //printf has to travel to IOP, add color escape to make up the diff
 	#define DPRINTF(format, args...) \
-    	printf("\033[1;94;40m"format"\033[m", ##args)
+    	printf(/*"\033[1;94;40m"*/ format /*"\033[m"*/, ##args)
 #else
 	#define DPRINTF(format, args...)// strip away printf from consumer builds
 #endif
@@ -233,7 +235,11 @@ int IsSupportedFileType(char *path);
 void loadFlashModules(void);
 
 /* elf.c */
-int checkELFheader(char *filename);
+#define TYPE_ELF 0
+#define TYPE_IRX 1
+#define ELF_HEADER_ID_EE 0x2
+#define ELF_HEADER_ID_IRX 0xFF80
+int checkELFheader(char *filename, int type);
 void RunLoaderElf(char *filename, char *);
 
 /* draw.c */

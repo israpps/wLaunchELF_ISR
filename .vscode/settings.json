@@ -1,6 +1,7 @@
 {
     "files.associations": {
         "*.make": "makefile",
-        "libds34bt.h": "c"
+        "libds34bt.h": "c",
+        "typeinfo": "c"
     }
 }

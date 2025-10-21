@@ -1,0 +1,27 @@
+{
+  "name": "PS2SDK (1.0 Legacy)",
+  "image": "ps2dev/ps2dev:v1.0",
+  "workspaceFolder": "/project",
+  "workspaceMount": "source=${localWorkspaceFolder},target=/project,type=bind",
+
+  "customizations": {
+    "vscode": {
+      "settings": {
+        "C_Cpp.intelliSenseEngine": "default",
+        "C_Cpp.default.configurationProvider": "ms-vscode.makefile-tools",
+        "C_Cpp.default.includePath": [
+          "/project",
+          "/usr/local/ps2dev/ps2sdk/common/include",
+          "/usr/local/ps2dev/ps2sdk/ee/include",
+          "/usr/local/ps2dev/ps2sdk/iop/include"
+        ]
+      },
+      "extensions": [
+        "ms-vscode.cpptools",
+        "ms-vscode.makefile-tools"
+      ]
+    }
+  },
+
+  "remoteUser": "root"
+}
