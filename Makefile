@@ -55,7 +55,7 @@ endif
 
 ifeq ($(COH), 1)
   LCDVD=NONE
-  SIO2MAN = 0
+  SIO2MAN = 1
   MCMAN = 0
   EE_OBJS += ioprp.o
   EE_LIBS += -liopreboot
