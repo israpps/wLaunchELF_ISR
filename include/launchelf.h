@@ -59,7 +59,7 @@
     	sio_printf(format, ##args)
 #elif defined(POWERPC_UART) || defined(COMMON_PRINTF) || defined(UDPTTY) //printf has to travel to IOP, add color escape to make up the diff
 	#define DPRINTF(format, args...) \
-    	printf("\033[1;94;40m"format"\033[m", ##args)
+    	printf(/*"\033[1;94;40m"*/ format /*"\033[m"*/, ##args)
 #else
 	#define DPRINTF(format, args...)// strip away printf from consumer builds
 #endif
