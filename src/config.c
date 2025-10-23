@@ -1758,7 +1758,7 @@ static void Config_Startup(void)
 			printXY(c, x, y, setting->color[COLOR_TEXT], TRUE, 0);
 			y += FONT_HEIGHT;
 
-			sprintf(c, "  %s: %s", "Reboot IOP when loading ELF", (setting->reboot_iop_elf_load) ? LNG(ON): LNG(OFF));
+			sprintf(c, "  %s: %s", LNG(Reboot_IOP_loading_ELF), (setting->reboot_iop_elf_load) ? LNG(ON): LNG(OFF));
 			printXY(c, x, y, setting->color[COLOR_TEXT], TRUE, 0);
 			y += FONT_HEIGHT;
 			
