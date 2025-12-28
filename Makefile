@@ -64,6 +64,7 @@ endif
 ifeq ($(XFROM),1)
     HAS_XFROM = -XFROM
     EE_CFLAGS += -DXFROM
+    EE_OBJS += xfromman_irx.o extflash_irx.o
 endif
 
 ifeq ($(DS34),1)

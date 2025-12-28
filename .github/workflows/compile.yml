@@ -18,6 +18,7 @@ jobs:
         bdmstuff: ["EXFAT=0", "EXFAT=1", "EXFAT=1 MX4SIO=1"]
         ds34: ["DS34=0", "DS34=1"]
         mmce: ["MMCE=0", "MMCE=1"]
+        xfrom: ["XFROM=0", "XFROM=1"]
         exclude:
           - bdmstuff: "EXFAT=1 MX4SIO=1"
             mmce: "MMCE=1"

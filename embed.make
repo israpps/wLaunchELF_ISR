@@ -30,6 +30,7 @@ $(EE_ASM_DIR)mmceman_irx.s: iop/__precompiled/mmceman.irx | $(EE_ASM_DIR)
  
 $(EE_ASM_DIR)extflash_irx.s: iop/__precompiled/extflash.irx | $(EE_ASM_DIR)
 	$(BIN2S) $< $@ extflash_irx
+
 $(EE_ASM_DIR)xfromman_irx.s: iop/__precompiled/xfromman.irx | $(EE_ASM_DIR)
 	$(BIN2S) $< $@ xfromman_irx
 
@@ -37,7 +38,6 @@ $(EE_ASM_DIR)xfromman_irx.s: iop/__precompiled/xfromman.irx | $(EE_ASM_DIR)
 
 $(EE_ASM_DIR)usbd_irx.s: $(PS2SDK)/iop/irx/usbd.irx | $(EE_ASM_DIR)
 	$(BIN2S) $< $@ usbd_irx
-
 ifeq ($(EXFAT),1)
 $(EE_ASM_DIR)bdm_irx.s:iop/__precompiled/bdm.irx | $(EE_ASM_DIR)
 	$(BIN2S) $< $@ bdm_irx
