@@ -61,10 +61,10 @@ $(EE_ASM_DIR)ioptrap_irx.s: $(PS2SDK)/iop/irx/ioptrap.irx | $(EE_ASM_DIR)
 $(EE_ASM_DIR)poweroff_irx.s: $(PS2SDK)/iop/irx/poweroff.irx | $(EE_ASM_DIR)
 	$(BIN2S) $< $@ poweroff_irx
 
-$(EE_ASM_DIR)iomanx_irx.s: $(PS2SDK)/iop/irx/iomanX.irx | $(EE_ASM_DIR)
+$(EE_ASM_DIR)iomanx_irx.s: iop/__precompiled/iomanX.irx | $(EE_ASM_DIR)
 	$(BIN2S) $< $@ iomanx_irx
 
-$(EE_ASM_DIR)filexio_irx.s: $(PS2SDK)/iop/irx/fileXio.irx | $(EE_ASM_DIR)
+$(EE_ASM_DIR)filexio_irx.s: iop/__precompiled/fileXio.irx | $(EE_ASM_DIR)
 	$(BIN2S) $< $@ filexio_irx
 
 $(EE_ASM_DIR)ps2dev9_irx.s: $(PS2SDK)/iop/irx/ps2dev9.irx | $(EE_ASM_DIR)
