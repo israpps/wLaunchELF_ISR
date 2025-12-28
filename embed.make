@@ -27,6 +27,12 @@ $(EE_ASM_DIR)mx4sio_bd.s: iop/__precompiled/mx4sio_bd.irx | $(EE_ASM_DIR)
 	
 $(EE_ASM_DIR)mmceman_irx.s: iop/__precompiled/mmceman.irx | $(EE_ASM_DIR)
 	$(BIN2S) $< $@ mmceman_irx
+ 
+$(EE_ASM_DIR)extflash_irx.s: iop/__precompiled/extflash.irx | $(EE_ASM_DIR)
+	$(BIN2S) $< $@ extflash_irx
+$(EE_ASM_DIR)xfromman_irx.s: iop/__precompiled/xfromman.irx | $(EE_ASM_DIR)
+	$(BIN2S) $< $@ xfromman_irx
+
 #---{ USB }---#
 
 $(EE_ASM_DIR)usbd_irx.s: $(PS2SDK)/iop/irx/usbd.irx | $(EE_ASM_DIR)

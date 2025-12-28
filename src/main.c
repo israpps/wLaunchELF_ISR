@@ -904,13 +904,15 @@ static void load_ps2atad(void)
 //endfunc load_ps2atad
 //---------------------------------------------------------------------------
 #ifdef XFROM
+IMPORT_BIN2C(extflash_irx);
+IMPORT_BIN2C(xfromman_irx);
 static void load_pflash(void)
 {
-	int ID;
-	ID = SifLoadModule("rom0:PFLASH", 0, NULL);
-		DPRINTF(" [rom0:PFLASH]: ID=%d\n", ID);
-	ID = SifLoadModule("rom0:PXFROMMAN", 0, NULL);
-		DPRINTF(" [rom0:PXFROMMAN]: ID=%d\n", ID);
+	int ID, ret;
+		ID = SifExecModuleBuffer(extflash_irx, size_extflash_irx, NULL, 0, &ret);
+		DPRINTF(" [PFLASH]: ID=%d, ret=%d\n", ID, ret);
+		ID = SifExecModuleBuffer(xfromman_irx, size_xfromman_irx, NULL, 0, &ret);
+		DPRINTF(" [XFROMMAN]: ID=%d, ret=%d\n", ID, ret);
 }
 //------------------------------
 //endfunc load_pflash
