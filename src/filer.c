@@ -1236,60 +1236,7 @@ int readHDDDVRP(const char *path, FILEINFO *info, int max)
 //endfunc readHDDDVRP
 //--------------------------------------------------------------
 #endif
-#ifdef XFROM
-int readXFROM(const char *path, FILEINFO *info, int max)
-{
-	iox_dirent_t dirbuf;
-	char dir[MAX_PATH];
-	int i = 0, fd;
-	//volatile int j;
 
-	loadFlashModules();
-
-	strcpy(dir, path);
-	if ((fd = fileXioDopen(path)) < 0)
-	{
-		DPRINTF("ERROR: Cannot open path '%s'\n", path);
-		return 0;
-	}
-
-	while (fileXioDread(fd, &dirbuf) > 0) {
-		if (dirbuf.stat.mode & FIO_S_IFDIR &&
-		    (!strcmp(dirbuf.name, ".") || !strcmp(dirbuf.name, "..")))
-			continue;  //Skip pseudopaths "." and ".."
-
-		strcpy(info[i].name, dirbuf.name);
-		clear_mcTable(&info[i].stats);
-		if (dirbuf.stat.mode & FIO_S_IFDIR) {
-			info[i].stats.AttrFile = MC_ATTR_norm_folder;
-		} else if (dirbuf.stat.mode & FIO_S_IFREG) {
-			info[i].stats.AttrFile = MC_ATTR_norm_file;
-			info[i].stats.FileSizeByte = dirbuf.stat.size;
-			info[i].stats.Reserve2 = dirbuf.stat.hisize;
-		} else
-			{
-				DPRINTF("ERROR: Skipping entry wich is neither file or folder '%s'\n", path);
-				continue;  //Skip entry which is neither a file nor a folder
-			}
-		strncpy((char *)info[i].stats.EntryName, info[i].name, 32);
-		memcpy((void *)&info[i].stats._Create, dirbuf.stat.ctime, 8);
-		memcpy((void *)&info[i].stats._Modify, dirbuf.stat.mtime, 8);
-		i++;
-		if (i == max)
-			break;
-	}
-
-	fileXioDclose(fd);
-
-	size_valid = 1;
-	time_valid = 1;
-
-	return i;
-}
-#endif
-//------------------------------
-//endfunc readXFROM
-//--------------------------------------------------------------
 #ifndef USBMASS_IOCTL_GET_DRIVERNAME
 #define USBMASS_IOCTL_GET_DRIVERNAME 0x0003
 #endif
@@ -1551,8 +1498,11 @@ int getDir(const char *path, FILEINFO *info)
 		n = readGENERIC(path, info, max);
 #endif
 #ifdef XFROM
-	else if (!strncmp(path, "xfrom", 5))
-		n = readXFROM(path, info, max);
+	else if (!strncmp(path, "xfrom", 5)) {
+		
+		loadFlashModules();
+		n = readGENERIC(path, info, max);
+	}
 #endif
 	else if (!strncmp(path, "vmc", 3))
 		n = readVMC(path, info, max);
@@ -3539,11 +3489,8 @@ int setFileList(const char *path, const char *ext, FILEINFO *files, int cnfmode)
 		}
 #endif
 #ifdef XFROM
-		if (console_is_PSX)
-		{
-			strcpy(files[nfiles].name, "xfrom0:");
-			files[nfiles++].stats.AttrFile = sceMcFileAttrSubdir;
-		}
+		strcpy(files[nfiles].name, "xfrom0:");
+		files[nfiles++].stats.AttrFile = sceMcFileAttrSubdir;
 #endif
 		strcpy(files[nfiles].name, "cdfs:");
 		files[nfiles++].stats.AttrFile = sceMcFileAttrSubdir;
