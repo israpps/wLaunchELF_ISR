@@ -220,6 +220,15 @@ rclean: clean #short for Real Clean
 	$(MAKE) -C iop/oldlibs/libcdvd clean
 	$(MAKE) -C iop/oldlibs/ps2ftpd clean
 
+iopstuff:
+	$(MAKE) clean all -C loader
+	$(MAKE) clean all -C iop/hdl_info
+	$(MAKE) clean all -C iop/ps2host
+	$(MAKE) clean all -C iop/vmc_fs
+	$(MAKE) clean all -C iop/AllowDVDV
+	$(MAKE) clean all -C iop/oldlibs/libcdvd
+	$(MAKE) clean all -C iop/oldlibs/ps2ftpd
+
 rebuild: clean all
 
 info:
