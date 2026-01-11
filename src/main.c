@@ -382,6 +382,8 @@ struct cardinfo_t {
 	int revision;
 	int protocol;
 	int validcard;
+	int card;
+	int chan;
 	char gid[MAX_GAMEID_LEN];
 };
 
@@ -404,6 +406,8 @@ static void refresh_mmceman_data(struct cardinfo_t* CardInfo) {
 			if (fileXioDevctl(mmce, MMCE_CMD_GET_GAMEID, NULL, 0, &CardInfo[i].gid, MAX_GAMEID_LEN) == -1) {
 				strncpy(CardInfo[i].gid, LNG(Unknown), MAX_GAMEID_LEN);
 			}
+			CardInfo[i].card = fileXioDevctl(mmce, MMCE_CMD_GET_CHANNEL, NULL, 0, NULL, 0);
+			CardInfo[i].chan = fileXioDevctl(mmce, MMCE_CMD_GET_CARD, NULL, 0, NULL, 0);
 		} else CardInfo[i].validcard = FALSE;
 	}
 }
@@ -483,6 +487,11 @@ static void Show_MMCEManager(void)
 					PrintPos(03, hpos[i], TextRow, COLOR_TEXT);
 					snprintf(TextRow, 36, " GameID '%s'", CardInfo[i].gid);
 					PrintPos(04, hpos[i], TextRow, COLOR_TEXT);
+					
+					snprintf(TextRow, 36, " channel %d", CardInfo[i].chan);
+					PrintPos(05, hpos[i], TextRow, COLOR_TEXT);
+					snprintf(TextRow, 36, " card    %d", CardInfo[i].card);
+					PrintPos(06, hpos[i], TextRow, COLOR_TEXT);
 				} else {
 					sprintf(TextRow, "%s", " No device found");
 					PrintPos(02, hpos[i], TextRow, COLOR_GRAPH3);
