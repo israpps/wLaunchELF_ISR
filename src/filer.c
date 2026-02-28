@@ -77,10 +77,6 @@ char mountedDVRPParty[MOUNT_LIMIT][MAX_NAME];
 int latestDVRPMount = -1;
 #endif
 
-#ifdef MX4SIO
-int mx4sio_idx = -1; // To keep track of wich mass#:/ device represents MX4SIO
-#endif
-
 int file_show = 1;  //dlanor: 0==name_only, 1==name+size+time, 2==title+size+time
 int file_sort = 1;  //dlanor: 0==none, 1==name, 2==title, 3==mtime
 int size_valid = 0;
@@ -1242,38 +1238,24 @@ int readHDDDVRP(const char *path, FILEINFO *info, int max)
 #endif
 void scan_USB_mass(void)
 {
-#ifdef MX4SIO
-	static char DEVID[5];
-#endif
 	int i, dd;
 	iox_stat_t chk_stat;
-	char mass_path[8] = "mass0:/";
+	char mass_path[8] = 
+#ifdef BDM
+	"usb0:/";
+#else
+	"mass0:/";
+#endif
 	if ((USB_mass_max_drives < 2)  //No need for dynamic lists with only one drive
 	    || (USB_mass_scanned && ((Timer() - USB_mass_scan_time) < 5000)))
 		return;
 
-#ifdef MX4SIO
-	mx4sio_idx = -1; //assume none is mx4sio // this MUST ALWAYS be after the USB_mass_scan_time check
-#endif
-
 	for (i = 0; i < USB_mass_max_drives; i++) {
-		mass_path[4] = '0' + i;
+		mass_path[USBPATH_DEVNR_INDX] = '0' + i;
 		if (fileXioGetStat(mass_path, &chk_stat) < 0) {
 			USB_mass_ix[i] = 0;
 			continue;
 		}
-#ifdef MX4SIO
-    	if ((dd = fileXioDopen(mass_path)) >= 0) {
-    	    int *intptr_ctl = (int *)DEVID;
-    	    *intptr_ctl = fileXioIoctl(dd, USBMASS_IOCTL_GET_DRIVERNAME, "");
-    	    fileXioDclose(dd);
-		if (!strncmp(DEVID, "sdc", 3))
-		{
-			mx4sio_idx = i;
-			DPRINTF("%s: Found MX4SIO device at mass%d:/\n", __func__, i);
-		}
-    	}
-#endif
 		USB_mass_ix[i] = '0' + i;
 		USB_mass_scanned = 1;
 		USB_mass_scan_time = Timer();
@@ -1482,11 +1464,16 @@ int getDir(const char *path, FILEINFO *info)
 	else if (!strncmp(path, "dvr_hdd", 7))
 		n = readHDDDVRP(path, info, max);
 #endif
+#ifndef BDM
 	else if (!strncmp(path, "mass", 4)) {
 		if (!USB_mass_scanned)
 			scan_USB_mass();
 		n = readGENERIC(path, info, max);
 	}
+#else
+	else if (!strncmp(path, "usb", 3) || !strncmp(path, "mx4sio", 6) || !strncmp(path, "ilink", 5) || !strncmp(path, "ata", 3))
+	n = readGENERIC(path, info, max);
+#endif
 	else if (!strncmp(path, "cdfs", 4))
 		n = readCD(path, info, max);
 #ifdef ETH
@@ -1689,7 +1676,8 @@ int menu(const char *path, FILEINFO *file)
 		enable[TIMEMANIP] = FALSE;
 	} 
 //#endif //TMANIP
-	if ( (genCmpFileExt(file->name, "ELF")) && ( (!strncmp(path, "mass", 4)) || (!strncmp(path, "hdd0:/", 6) && !menu_disabled) ) )
+	if ( (genCmpFileExt(file->name, "ELF")) && ( (!strncmp(path, "mass", 4)) || (!strncmp(path, "hdd0:/", 6) 
+	&& !menu_disabled) ) )
 	{
 		enable[TITLE_CFG] = TRUE;
 	} else {enable[TITLE_CFG] = FALSE;}
@@ -3494,20 +3482,42 @@ int setFileList(const char *path, const char *ext, FILEINFO *files, int cnfmode)
 #endif
 		strcpy(files[nfiles].name, "cdfs:");
 		files[nfiles++].stats.AttrFile = sceMcFileAttrSubdir;
+#ifdef ILINK
+		strcpy(files[nfiles].name, "ilink:");
+		files[nfiles++].stats.AttrFile = sceMcFileAttrSubdir;
+#endif
+#ifdef ATA_BD
+		strcpy(files[nfiles].name, "ata:");
+		files[nfiles++].stats.AttrFile = sceMcFileAttrSubdir;
+#endif
+#ifdef MX4SIO
+		strcpy(files[nfiles].name, "mx4sio:");
+		files[nfiles++].stats.AttrFile = sceMcFileAttrSubdir;
+#endif
 		if ((cnfmode != USBD_IRX_CNF) && (cnfmode != USBKBD_IRX_CNF) && (cnfmode != USBMASS_IRX_CNF)) {
 			//The condition above blocks selecting USB drivers from USB devices
 			if (USB_mass_ix[0] || !USB_mass_scanned) {
+#ifdef BDM
+				strcpy(files[nfiles].name, "usb:");
+#else
 				strcpy(files[nfiles].name, "mass:");
+#endif
 				files[nfiles++].stats.AttrFile = sceMcFileAttrSubdir;
 			}
 			for (i = 1; i < 10; i++) {
 				if (USB_mass_ix[i]) {
+#ifdef BDM
+					strcpy(files[nfiles].name, "usb0:");
+#else
 					strcpy(files[nfiles].name, "mass0:");
-					files[nfiles].name[4] = USB_mass_ix[i];
+#endif
+					files[nfiles].name[USBPATH_DEVNR_INDX] = USB_mass_ix[i];
 					files[nfiles++].stats.AttrFile = sceMcFileAttrSubdir;
 				}
 			}
 		}
+
+
 		if (!cnfmode || (cnfmode == JPG_CNF)) {
 			//This condition blocks selecting any CONFIG items on PC
 			//or in a virtual memory card
@@ -4335,7 +4345,7 @@ int getFilePath(char *out, int cnfmode)
 				else if ((file_show == 2) && files[top + i].title[0] != 0) {
 					mcTitle = files[top + i].title;
 				} else {  //Show normal file/folder names
-#ifdef MX4SIO
+#if 0 //originally used for MX4SIO renaming. keep in case we wanna rename something else
 					if (path[0] == 0) { // we are on root. apply the unique "alias" here
 						if ((!strncmp(files[top + i].name, "mass", 4)) //
 						&& (files[top + i].name[4] == ('0' + mx4sio_idx) || (mx4sio_idx == 0 && files[top + i].name[4] == ':')) //index corresponds to mx4sio index, also assume that if device path index 4 is equal to ':' then it is index 0

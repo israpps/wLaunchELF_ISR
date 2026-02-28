@@ -1506,7 +1506,12 @@ static void closeAllAndPoweroff(void)
 
 	// As required by some (typically 2.5") HDDs, issue the SCSI STOP UNIT command to avoid causing an emergency park.
 	fileXioDevctl("mass:", USBMASS_DEVCTL_STOP_ALL, NULL, 0, NULL, 0);
-
+#ifdef BDM
+	fileXioDevctl("usb:", USBMASS_DEVCTL_STOP_ALL, NULL, 0, NULL, 0);
+#ifdef ILINK
+	fileXioDevctl("ilink:", USBMASS_DEVCTL_STOP_ALL, NULL, 0, NULL, 0);
+#endif
+#endif
 	/* Power-off the PlayStation 2 console. */
 	poweroffShutdown();
 }

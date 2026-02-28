@@ -67,6 +67,9 @@ int checkELFheader(char *path)
 #ifdef MMCE
 		|| !strncmp(fullpath, "mmce", 4)
 #endif
+#ifdef BDM
+		|| !strncmp(fullpath, "usb", 3) || !strncmp(fullpath, "mx4sio", 6) || !strncmp(fullpath, "ilink", 5) || !strncmp(fullpath, "ata", 3)
+#endif
 		|| !strncmp(fullpath, "cdfs", 4)) {
 		;  //fullpath is already correct
 	} else if (!strncmp(fullpath, "hdd0:", 5)) {

@@ -472,6 +472,11 @@ extern int Check_ESR_Disc(void);
 
 #define USB_MASS_MAX_DRIVES 10
 
+#ifndef BDM
+#define USBPATH_DEVNR_INDX 4
+#else
+#define USBPATH_DEVNR_INDX 3
+#endif
 extern char USB_mass_ix[10];
 extern int USB_mass_max_drives;
 extern u64 USB_mass_scan_time;
