@@ -14,7 +14,7 @@ Based off of [wLE_ISR](https://github.com/israpps/wLaunchELF_ISR)
 | __xfrom:/__ | PSX DESR-XXXX flash storage | Hidden on non-PSX |
 | __dvr_hdd0:/__ | PSX DESR-XXXX digital video recorder hdd partition/side | Hidden on non-PSX |
 | __cdfs:/__ | CD/DVD File System | Always |
-| __udpfs:/__ | Network interface used with [PCM720s UDPFSD Server](https://github.com/pcm720/udpfsdf ) | Always |
+| __udpfs:/__ | Network interface used with [PCM720s UDPFSD Server](https://github.com/pcm720/udpfsd) | Always |
 
 Drivers are lazy loading for for maximum compatibility. MMCE and MX4SIO will incure an IOP reboot as the 2 are incompatible.
 
