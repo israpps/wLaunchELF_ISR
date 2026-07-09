@@ -1,4 +1,4 @@
-# __wLaunchELF 4.60_R3Z__
+# __wLaunchELF_R3Z__
 
 Based off of [wLE_ISR](https://github.com/israpps/wLaunchELF_ISR)
 
