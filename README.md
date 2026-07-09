@@ -32,6 +32,7 @@ Dual HDD/ATA support is built in for future development.
 - HDD/ATA drives hidden for deckard ps2 (SCPH-75K+)
 - Xfrom/dvr_hdd0 hidden from non-PSX consoles
 - Dual hdd support
+- multi-usb support
 - All drivers besides core lazy loading for faster boot and support of everything
 - Create and Extract PSU options so user knows what will happen
 - Extra file extensions for Text Editor ShortCuts
