@@ -43,7 +43,8 @@ Drivers load on demand for maximum compatibility and initial boot speed.
 - Timestamp manipulation feature to fix the date of any memory card folder containing any icon-based exploit _(\*tuna)_
 - Launch KELFs (encrypted elfs)
 - [LaunchELF with Args](#launchelf-with-args)
-- [APA Header injection](#HDD-APA-header-injection) Thanks to Alex Parrado and @israpps 
+- [APA Header injection](#HDD-APA-header-injection) Thanks to Alex Parrado and @israpps
+- warnings when modifying/deleting exploit folders on PS2/PSX
 - Support for PS3/PS4 Dualshocks thanks to Alex Parrado (DS34 build)
 
 ### LaunchELF with Args
