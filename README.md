@@ -23,6 +23,7 @@ Drivers load on demand for maximum compatibility and initial boot speed.
 [^2]: Dual HDD/ATA support is built in for future development.
 
 ## Features:
+- LoadBOOTer MC Exploit installer, supports Retail PS2/PSX and DEX(DTL-HXXXXX)
 - RetroGem Game ID for [PIXEL FX RetroGem](https://www.pixelfx.co/hdmi-retro-gem)
 - Launch PS1 VCDs with option for custom POPStarter path, falls back to defaults.
 - Writes to history file for disc launches for mmce vmc change
