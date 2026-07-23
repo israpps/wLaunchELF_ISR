@@ -24,6 +24,18 @@ static int test_joy = 0;
 int semPoll,semRunning,semFinish;
 int isRunning;
 
+void clearPadPressState(void)
+{
+	memset(old_pad_t, 0, sizeof(old_pad_t));
+	memset(new_pad_t, 0, sizeof(new_pad_t));
+	memset(paddata_t, 0, sizeof(paddata_t));
+	memset(ret, 0, sizeof(ret));
+	old_pad = 0;
+	new_pad = 0;
+	paddata = 0;
+	joy_value = 0;
+}
+
 // Alarm handler
 static void alrmHandler(s32 alarm_id, u16 time, void *arg2)
 {

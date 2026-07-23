@@ -3,10 +3,7 @@
 
 #include "filer_shared.h"
 
-extern char parties[MAX_PARTITIONS][MAX_PART_NAME + 1];
-
 #ifdef DVRP
-extern int ndvrpparties;
 extern char mountedDVRPParty[MOUNT_LIMIT][MAX_NAME];
 extern int latestDVRPMount;
 #endif

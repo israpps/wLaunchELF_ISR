@@ -14,6 +14,232 @@
 extern u8 loader_elf[];
 extern int size_loader_elf;
 
+#define LAUNCH_ARG_MAX_COUNT 12
+#define LAUNCH_ARG_MAX_LINE 255
+#define LAUNCH_ARG_MAX_BYTES 2048
+#define ELFLOAD_BASE_ARGC 3
+#define ELFLOAD_MAX_ARGC 15
+
+static char launchArgStorage[LAUNCH_ARG_MAX_COUNT][LAUNCH_ARG_MAX_LINE + 1];
+static int launchArgCount;
+static int launchArgBytes;
+static char launchArgSource[MAX_PATH];
+
+void LaunchArgsClear(void)
+{
+	launchArgCount = 0;
+	launchArgBytes = 0;
+	launchArgSource[0] = '\0';
+}
+
+int LaunchArgsPending(void)
+{
+	return launchArgCount > 0;
+}
+
+int LaunchArgsGetCount(void)
+{
+	return launchArgCount;
+}
+
+static int launchArgsSetError(char *message, size_t message_size, const char *format, int limit)
+{
+	if (message != NULL && message_size > 0)
+		snprintf(message, message_size, format, limit);
+	LaunchArgsClear();
+	return -1;
+}
+
+static int launchArgsSetPlainError(char *message, size_t message_size, const char *text)
+{
+	if (message != NULL && message_size > 0)
+		snprintf(message, message_size, "%s", text);
+	LaunchArgsClear();
+	return -1;
+}
+
+static void launchArgsMakeOpenPath(const char *path, char *file_path, size_t file_path_size)
+{
+	strncpy(file_path, path, file_path_size - 1);
+	file_path[file_path_size - 1] = '\0';
+	if (genFixPath(path, file_path) < 0) {
+		strncpy(file_path, path, file_path_size - 1);
+		file_path[file_path_size - 1] = '\0';
+	}
+}
+
+static int launchArgsCommitLine(const char *line, int line_len, char *message, size_t message_size)
+{
+	if (line_len <= 0)
+		return 0;
+	if (launchArgCount >= LAUNCH_ARG_MAX_COUNT)
+		return launchArgsSetError(message, message_size, LNG(Launch_Args_Too_Many), LAUNCH_ARG_MAX_COUNT);
+	if (line_len > LAUNCH_ARG_MAX_LINE)
+		return launchArgsSetError(message, message_size, LNG(Launch_Arg_Too_Long), LAUNCH_ARG_MAX_LINE);
+	if (launchArgBytes + line_len + 1 > LAUNCH_ARG_MAX_BYTES)
+		return launchArgsSetError(message, message_size, LNG(Launch_Args_Too_Large), LAUNCH_ARG_MAX_BYTES);
+
+	memcpy(launchArgStorage[launchArgCount], line, line_len);
+	launchArgStorage[launchArgCount][line_len] = '\0';
+	launchArgCount++;
+	launchArgBytes += line_len + 1;
+	return 0;
+}
+
+static int launchArgsParseChar(int ch, char *line, int *line_len, int *skip_lf, char *message, size_t message_size)
+{
+	if (*skip_lf) {
+		*skip_lf = 0;
+		if (ch == '\n')
+			return 0;
+	}
+	if (ch == '\r') {
+		if (launchArgsCommitLine(line, *line_len, message, message_size) < 0)
+			return -1;
+		*line_len = 0;
+		*skip_lf = 1;
+		return 0;
+	}
+	if (ch == '\n') {
+		if (launchArgsCommitLine(line, *line_len, message, message_size) < 0)
+			return -1;
+		*line_len = 0;
+		return 0;
+	}
+	if (ch == '\0')
+		return launchArgsSetPlainError(message, message_size, LNG(Launch_Args_Invalid));
+	if (*line_len >= LAUNCH_ARG_MAX_LINE)
+		return launchArgsSetError(message, message_size, LNG(Launch_Arg_Too_Long), LAUNCH_ARG_MAX_LINE);
+
+	line[*line_len] = ch;
+	(*line_len)++;
+	return 0;
+}
+
+static int launchArgsFinishParse(const char *source, const char *line, int line_len, char *message, size_t message_size)
+{
+	if (launchArgsCommitLine(line, line_len, message, message_size) < 0)
+		return -1;
+	if (launchArgCount <= 0)
+		return launchArgsSetPlainError(message, message_size, LNG(Launch_Args_Empty));
+
+	if (source != NULL) {
+		strncpy(launchArgSource, source, sizeof(launchArgSource) - 1);
+		launchArgSource[sizeof(launchArgSource) - 1] = '\0';
+	}
+	if (message != NULL && message_size > 0)
+		snprintf(message, message_size, LNG(Launch_Args_Loaded), launchArgCount);
+	return launchArgCount;
+}
+
+static int launchArgsReadFromFd(const char *source, int fd, char *message, size_t message_size)
+{
+	char line[LAUNCH_ARG_MAX_LINE + 1];
+	unsigned char buffer[512];
+	int i, rd, line_len, skip_lf;
+
+	line_len = 0;
+	skip_lf = 0;
+	while ((rd = genRead(fd, buffer, (int)sizeof(buffer))) > 0) {
+		for (i = 0; i < rd; i++) {
+			if (launchArgsParseChar(buffer[i], line, &line_len, &skip_lf, message, message_size) < 0) {
+				genClose(fd);
+				return -1;
+			}
+		}
+	}
+	genClose(fd);
+	if (rd < 0)
+		return launchArgsSetPlainError(message, message_size, LNG(Launch_Args_Invalid));
+
+	return launchArgsFinishParse(source, line, line_len, message, message_size);
+}
+
+int LaunchArgsLoadFromBuffer(const char *source, const char *buffer, int size, char *message, size_t message_size)
+{
+	char line[LAUNCH_ARG_MAX_LINE + 1];
+	int i, line_len, skip_lf;
+
+	LaunchArgsClear();
+	if (buffer == NULL || size < 0)
+		return launchArgsSetPlainError(message, message_size, LNG(Launch_Args_Invalid));
+
+	line_len = 0;
+	skip_lf = 0;
+	for (i = 0; i < size; i++) {
+		if (launchArgsParseChar((unsigned char)buffer[i], line, &line_len, &skip_lf, message, message_size) < 0)
+			return -1;
+	}
+
+	return launchArgsFinishParse(source, line, line_len, message, message_size);
+}
+
+int LaunchArgsLoadFromFile(const char *path, char *message, size_t message_size)
+{
+	char file_path[MAX_PATH];
+	int fd;
+
+	LaunchArgsClear();
+	if (path == NULL || path[0] == '\0')
+		return launchArgsSetPlainError(message, message_size, LNG(Launch_Args_Invalid));
+
+	launchArgsMakeOpenPath(path, file_path, sizeof(file_path));
+	fd = genOpen(file_path, FIO_O_RDONLY);
+	if (fd < 0)
+		return launchArgsSetPlainError(message, message_size, LNG(Failed_Opening_File));
+
+	return launchArgsReadFromFd(path, fd, message, message_size);
+}
+
+int LaunchArgsLoadSidecarForExec(const char *exec_path, char *message, size_t message_size)
+{
+	char arg_path[MAX_PATH];
+	char file_path[MAX_PATH];
+	const char *name_start;
+	const char *slash;
+	const char *colon;
+	const char *dot;
+	size_t base_len;
+	int fd;
+
+	if (exec_path == NULL || exec_path[0] == '\0' || LaunchArgsPending())
+		return 0;
+
+	slash = strrchr(exec_path, '/');
+	colon = strrchr(exec_path, ':');
+	name_start = exec_path;
+	if (slash != NULL)
+		name_start = slash + 1;
+	if (colon != NULL && colon + 1 > name_start)
+		name_start = colon + 1;
+
+	dot = strrchr(name_start, '.');
+	base_len = (dot != NULL) ? (size_t)(dot - exec_path) : strlen(exec_path);
+	if (base_len + 4 >= sizeof(arg_path))
+		return 0;
+
+	snprintf(arg_path, sizeof(arg_path), "%.*s.arg", (int)base_len, exec_path);
+	launchArgsMakeOpenPath(arg_path, file_path, sizeof(file_path));
+	fd = genOpen(file_path, FIO_O_RDONLY);
+	if (fd < 0)
+		return 0;
+
+	LaunchArgsClear();
+	return launchArgsReadFromFd(arg_path, fd, message, message_size);
+}
+
+int LaunchArgsCopyToArgv(char **argv, int max_args)
+{
+	int i, count;
+
+	count = launchArgCount;
+	if (count > max_args)
+		count = max_args;
+	for (i = 0; i < count; i++)
+		argv[i] = launchArgStorage[i];
+	return count;
+}
+
 static int readExecHeader(const char *path, u8 *header, int header_len, int *opened_file)
 {
 	int fd, rd, total;
@@ -472,12 +698,12 @@ int PrepareMbrLaunchPayload(const char *path, char *mem_arg, size_t mem_arg_size
 //------------------------------
 void RunLoaderElf(char *filename, char *party, const char *selected_path, int exec_kind, int reboot_iop_elf_load)
 {
-#define ELFLOAD_ARGC 3
-	char *argv[ELFLOAD_ARGC], bootpath[256];
+	char *argv[ELFLOAD_MAX_ARGC], bootpath[256];
 	static char exec_target[MAX_PATH];
 	static char exec_arg0[MAX_PATH];
 	static char loader_arg[8];
 	const char *handoff_path = NULL;
+	int argc;
 #ifdef DVRP
 	int dvr_pfs_ix = -1;
 	char dvr_pfs_name[10] = "dvr_pfs0:";
@@ -548,11 +774,15 @@ void RunLoaderElf(char *filename, char *party, const char *selected_path, int ex
 	}
 
 	(void)exec_kind;
+	argc = ELFLOAD_BASE_ARGC - 1;
+	if (LaunchArgsPending())
+		argc += LaunchArgsCopyToArgv(&argv[argc], ELFLOAD_MAX_ARGC - ELFLOAD_BASE_ARGC);
 	snprintf(loader_arg, sizeof(loader_arg), "%s", (reboot_iop_elf_load) ? "-la=AR" : "-la=A");
-	argv[2] = loader_arg;
-	DPRINTF("RunLoaderElf: loader mode arg='%s'\n", argv[2]);
+	argv[argc++] = loader_arg;
+	LaunchArgsClear();
+	DPRINTF("RunLoaderElf: loader mode arg='%s' argc=%d\n", loader_arg, argc);
 
-	RunEmbeddedLoader(ELFLOAD_ARGC, argv);
+	RunEmbeddedLoader(argc, argv);
 }
 //------------------------------
 //End of func:  void RunLoaderElf(char *filename, char *party, const char *selected_path, int exec_kind, int reboot_iop_elf_load)

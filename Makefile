@@ -28,13 +28,18 @@ else
   EE_BIN = UNC-BOOT.ELF
   EE_BIN_PKD = BOOT.ELF
 endif
-EE_OBJS = main.o main_actions.o main_boot.o main_modules.o main_menu.o main_info_screens.o main_gameid.o main_history.o init.o main_startup.o main_fileops.o config.o config_screen.o config_startup.o config_network.o config_advanced.o gui.o gui_colors.o virtual_keyboard.o elf.o draw.o draw_gs.o draw_text.o loader_elf.o filer.o filer_device.o filer_mount.o filer_fileops.o filer_actions.o filer_browser.o filer_copy.o \
+EE_OBJS = main.o main_actions.o main_boot.o main_modules.o main_menu.o main_info_screens.o main_console_info.o main_gameid.o main_history.o init.o main_startup.o main_fileops.o main_exploit_installer.o config.o config_screen.o config_startup.o config_network.o config_advanced.o gui.o gui_colors.o virtual_keyboard.o elf.o draw.o draw_gs.o draw_text.o loader_elf.o filer.o filer_device.o filer_mount.o filer_fileops.o filer_actions.o filer_browser.o filer_copy.o \
 	gui_sort.o gui_texteditor.o gui_hdd0_format.o psu_functions.o \
 	poweroff_irx.o iomanx_irx.o filexio_irx.o ps2dev9_irx.o dev9_poweroff_irx.o \
 	ps2hdd_irx.o ps2fs_irx.o usbd_irx.o mcman_irx.o mcserv_irx.o \
 	cdvd_irx.o xparam_irx.o vmcman_irx.o ps2kbd_irx.o \
-	hdd.o hdl_rpc.o hdl_info_irx.o editor.o editor_menu.o editor_input.o editor_rules.o editor_file.o timer.o icon.o lang.o popstarter.o \
-	font_uLE.o makeicon.o chkesr.o allowdvdv_irx.o
+	hdd.o hdd_header_injector.o hdl_rpc.o hdl_info_irx.o editor.o editor_menu.o editor_input.o editor_rules.o editor_file.o timer.o icon.o lang.o popstarter.o \
+	font_uLE.o makeicon.o chkesr.o allowdvdv_irx.o \
+	exploit_system_xlf_header.o exploit_xsystem_xlf_header.o exploit_dtl_system_xlf_header.o exploit_xlf_body.o \
+	exploit_osdsys_kernel.o exploit_osd110_kernel.o \
+	exploit_jpn_sys.o exploit_usa_sys.o exploit_eur_sys.o exploit_chn_sys.o \
+	exploit_list_icn.o \
+	secrsif_irx.o exploit_ioprp_img.o
 
 EE_INCS := -I$(PS2DEV)/gsKit/include -I$(PS2SDK)/ports/include -Iinclude
 
@@ -84,19 +89,24 @@ else
   endif
 endif
 SECR_LIB_SOURCE := thirdparty/ps2sdk-master/ee/rpc/secr/src/libsecr.c
+IOPREBOOT_INC_DIR := $(PS2SDK)/ee/iopreboot/include
+ifneq ($(wildcard thirdparty/ps2sdk-master/ee/iopreboot/include/iopcontrol_special.h),)
+    IOPREBOOT_INC_DIR := thirdparty/ps2sdk-master/ee/iopreboot/include
+endif
+EE_INCS += -Ithirdparty/ps2sdk-master/ee/rpc/secr/include -Ithirdparty/ps2sdk-master/common/include -I$(IOPREBOOT_INC_DIR)
+EE_LIBS += -liopreboot
+ifneq ($(wildcard $(PS2SDK)/ee/lib/libsecr.a),)
+    EE_LIBS += -lsecr
+else ifneq ($(wildcard $(SECR_LIB_SOURCE)),)
+    EE_OBJS += libsecr.o
+else
+    $(error Missing libsecr. Update PS2SDK or provide thirdparty/ps2sdk-master)
+endif
 
 ifeq ($(XFROM),1)
     HAS_XFROM = -XFROM
     EE_CFLAGS += -DXFROM
-    EE_INCS += -Ithirdparty/ps2sdk-master/ee/rpc/secr/include -Ithirdparty/ps2sdk-master/common/include
-    EE_OBJS += xfromman_irx.o xfromserv_irx.o extflash_irx.o secrsif_irx.o
-    ifneq ($(wildcard $(PS2SDK)/ee/lib/libsecr.a),)
-        EE_LIBS += -lsecr
-    else ifneq ($(wildcard $(SECR_LIB_SOURCE)),)
-        EE_OBJS += libsecr.o
-    else
-        $(error Missing libsecr. Update PS2SDK or provide thirdparty/ps2sdk-master)
-    endif
+    EE_OBJS += xfromman_irx.o xfromserv_irx.o extflash_irx.o
 endif
 
 ifeq ($(DS34),1)

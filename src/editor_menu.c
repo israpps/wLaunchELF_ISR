@@ -17,6 +17,7 @@ int editorMenu(void)
 	menu_len = strlen(LNG(Save)) > menu_len ? strlen(LNG(Save)) : menu_len;
 	menu_len = strlen(LNG(Save_As)) > menu_len ? strlen(LNG(Save_As)) : menu_len;
 	menu_len = strlen(LNG(Windows)) > menu_len ? strlen(LNG(Windows)) : menu_len;
+	menu_len = strlen(LNG(Launch_With_Args)) > menu_len ? strlen(LNG(Launch_With_Args)) : menu_len;
 	menu_len = strlen(LNG(Exit)) > menu_len ? strlen(LNG(Exit)) : menu_len;
 
 	int menu_ch_w = menu_len + 1;                                 //Total characters in longest menu string.
@@ -38,6 +39,8 @@ int editorMenu(void)
 	}
 	if (!Num_Window)
 		enable[WINDOWS] = FALSE;
+	if (!Window[Active_Window][OPENED] || Window[Active_Window][CREATED] || Path[Active_Window][0] == '\0')
+		enable[LAUNCH_WITH_ARGS] = FALSE;
 
 	for (Menu_Sel = 0; Menu_Sel < NUM_MENU; Menu_Sel++)
 		if (enable[Menu_Sel] == TRUE)
@@ -91,6 +94,8 @@ int editorMenu(void)
 					strcpy(tmp, LNG(Save_As));
 				else if (i == WINDOWS)
 					strcpy(tmp, LNG(Windows));
+				else if (i == LAUNCH_WITH_ARGS)
+					strcpy(tmp, LNG(Launch_With_Args));
 				else if (i == EXIT)
 					strcpy(tmp, LNG(Exit));
 

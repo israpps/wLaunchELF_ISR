@@ -486,6 +486,7 @@ void saveConfigToPath(char *mainMsg, char *CNF, const char *target_path)
 	        "Misc_PS2Net = %s\r\n"
 	        "Misc_PS2PowerOff = %s\r\n"
 	        "Misc_HddManager = %s\r\n"
+	        "Misc_Exploit_Installer = %s\r\n"
 	        "Misc_TextEditor = %s\r\n"
 	        "Misc_Configure = %s\r\n"
 	        "Misc_ShowFont = %s\r\n"
@@ -502,6 +503,7 @@ void saveConfigToPath(char *mainMsg, char *CNF, const char *target_path)
 	        setting->Misc_PS2Net + i,
 	        setting->Misc_PS2PowerOff + i,
 	        setting->Misc_HddManager + i,
+	        setting->Misc_Exploit_Installer + i,
 	        setting->Misc_TextEditor + i,
 	        setting->Misc_Configure + i,
 	        setting->Misc_ShowFont + i,
@@ -528,6 +530,7 @@ void saveConfigToPath(char *mainMsg, char *CNF, const char *target_path)
 	        "REBOOT_IOP_ELFLOAD = %d\r\n"
 	        "VirtualKeyboardLayout = %s\r\n"
 	        "Hide_Hdd = %d\r\n"
+	        "Hide_MCMMCE = %d\r\n"
 	        "USBKBD_USED = %d\r\n"
 	        "USBKBD_FILE = %s\r\n"
 	        "KBDMAP_FILE = %s\r\n"
@@ -554,6 +557,7 @@ void saveConfigToPath(char *mainMsg, char *CNF, const char *target_path)
 	        setting->reboot_iop_elf_load,
 	        getVirtualKeyboardLayoutConfigName(setting->virtual_keyboard_layout),
 	        setting->Hide_Hdd,
+	        setting->Hide_MCMMCE,
 	        setting->usbkbd_used,      //USBKBD_USED
 	        setting->usbkbd_file,      //USBKBD_FILE
 	        setting->kbdmap_file,      //KBDMAP_FILE
@@ -680,6 +684,7 @@ void initConfig(void)
 	sprintf(setting->Misc_PS2Net, "%s/%s", LNG_DEF(MISC), LNG_DEF(PS2Net));
 	sprintf(setting->Misc_PS2PowerOff, "%s/%s", LNG_DEF(MISC), LNG_DEF(PS2PowerOff));
 	sprintf(setting->Misc_HddManager, "%s/%s", LNG_DEF(MISC), LNG_DEF(HddManager));
+	sprintf(setting->Misc_Exploit_Installer, "%s/%s", LNG_DEF(MISC), LNG_DEF(Exploit_Installer));
 	sprintf(setting->Misc_TextEditor, "%s/%s", LNG_DEF(MISC), LNG_DEF(TextEditor));
 	sprintf(setting->Misc_Configure, "%s/%s", LNG_DEF(MISC), LNG_DEF(Configure));
 	sprintf(setting->Misc_ShowFont, "%s/%s", LNG_DEF(MISC), LNG_DEF(ShowFont));
@@ -733,6 +738,7 @@ void initConfig(void)
 	setting->reboot_iop_elf_load = DEF_STARTUP_RESET_IOP_ELFLOAD;
 	setting->virtual_keyboard_layout = DEF_VIRTUAL_KEYBOARD_LAYOUT;
 	setting->Hide_Hdd = DEF_HIDE_HDD;
+	setting->Hide_MCMMCE = DEF_HIDE_MCMMCE;
 	setting->Show_Titles = DEF_SHOW_TITLES;
 	setting->PathPad_Lock = DEF_PATHPAD_LOCK;
 	setting->PSU_HugeNames = DEF_PSU_HUGENAMES;
@@ -860,6 +866,9 @@ int loadConfig(char *mainMsg, char *CNF)
 				sprintf(setting->Misc_Show_Build_Info, "%s%s", setting->Misc, value);
 			else if (!strcmp(name, "Misc_OSDSYS"))
 				sprintf(setting->Misc_OSDSYS, "%s%s", setting->Misc, value);
+			else if (!strcmp(name, "Misc_Exploit_Installer"))
+				sprintf(setting->Misc_Exploit_Installer, "%s%s", setting->Misc,
+				        !strcmp(value, "Exploit Installer") ? LNG_DEF(Exploit_Installer) : value);
 			else if (!strcmp(name, "Misc_Reboot_IOP"))
 				sprintf(setting->Misc_Reboot_IOP, "%s%s", setting->Misc, value);
 			//----------
@@ -893,6 +902,8 @@ int loadConfig(char *mainMsg, char *CNF)
 		} else if (!strcmp(name, "Hide_Hdd")) {
 			int hide_hdd = atoi(value);
 			setting->Hide_Hdd = (hide_hdd >= 0 && hide_hdd < HIDE_HDD_COUNT) ? hide_hdd : DEF_HIDE_HDD;
+		} else if (!strcmp(name, "Hide_MCMMCE")) {
+			setting->Hide_MCMMCE = (atoi(value) != 0);
 		} else if (!strcmp(name, "USBKBD_FILE"))
 			strcpy(setting->usbkbd_file, value);
 		else if (!strcmp(name, "KBDMAP_FILE"))

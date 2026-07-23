@@ -2,6 +2,7 @@
 //File name:    hdd.c
 //--------------------------------------------------------------
 #include "launchelf.h"
+#include "hdd_header_injector.h"
 
 #define MAX_PARTGB 128                  //Partition MAX in GB
 #define MAX_PARTMB (MAX_PARTGB * 1024)  //Partition MAX in MB
@@ -30,13 +31,37 @@ enum {  //For menu commands
 	CREATE = 0,
 	REMOVE,
 	RENAME,
+	INJECT_HEADER,
 	EXPAND,
 	FORMAT,
 	NUM_MENU
 };
 
+enum {
+	HEADER_INJECT_THIS_PARTITION = 0,
+	HEADER_INJECT_MATCHING_PARTITIONS,
+	HEADER_INJECT_MATCHING_CREATE_MISSING,
+	HEADER_INJECT_CANCEL
+};
+
+enum {
+	HEADER_CREATE_PROMPT_CANCEL = -1,
+	HEADER_CREATE_PROMPT_SKIP = 0,
+	HEADER_CREATE_PROMPT_CREATE = 1
+};
+
+/* EXPAND remains implemented below, but hidden until APA chain expansion is safe. */
+static const int hdd_party_menu_items[] = {
+	CREATE,
+	REMOVE,
+	RENAME,
+	INJECT_HEADER,
+	FORMAT,
+};
+
 #define SECTORS_PER_MB 2048  //Divide by this to convert from sector count to MB
 #define MB 1048576
+#define HDD_PARTITION_CREATE_CANCELLED (-EINTR)
 
 /* local fallback for newer SDKs that do not provide floatlib degree trig helpers */
 #ifndef WLE_DEG_TO_RADF
@@ -53,8 +78,166 @@ static PARTYINFO PartyInfo[MAX_PARTITIONS];
 static int numParty;
 static u32 hddSize, hddFree, hddFreeSpace, hddUsed;
 static int hddConnected, hddFormated, hddRealStatus;
+static HddHeaderSourcePartition hdd_header_source_partitions[MAX_PARTITIONS];
+
+static int HddConfirmTwoButtonDialog(const char *message, const char *decline_label)
+{
+	char msg[512];
+	int dh, dw, dx, dy;
+	int sel = 0, a = 6, b = 4, c = 2, n, tw;
+	int i, len, ret;
+	int left_x, right_x, y;
+	int button_width;
+	int event, post_event = 0;
+
+	snprintf(msg, sizeof(msg), "%s", message);
+	msg[sizeof(msg) - 1] = '\0';
+
+	for (i = 0, n = 1; msg[i] != 0; i++) {
+		if (msg[i] == '\n') {
+			msg[i] = 0;
+			n++;
+		}
+	}
+	for (i = len = tw = 0; i < n; i++) {
+		ret = printXY(&msg[len], 0, 0, 0, FALSE, 0);
+		if (ret > tw)
+			tw = ret;
+		len += strlen(&msg[len]) + 1;
+	}
+
+	button_width = (strlen(LNG(OK)) + strlen(decline_label) + 6) * FONT_WIDTH;
+	if (tw < button_width)
+		tw = button_width;
+
+	dh = FONT_HEIGHT * (n + 1) + 2 * 2 + a + b + c;
+	dw = 2 * 2 + a * 2 + tw;
+	dx = (SCREEN_WIDTH - dw) / 2;
+	dy = (SCREEN_HEIGHT - dh) / 2;
+	left_x = dx + a + FONT_WIDTH;
+	right_x = dx + dw - a - (strlen(decline_label) + 1) * FONT_WIDTH;
+	y = dy + a + b + 2 + n * FONT_HEIGHT;
+
+	event = 1;
+	while (1) {
+		waitPadReady(0, 0);
+		if (readpad()) {
+			if (new_pad & PAD_LEFT) {
+				event |= 2;
+				sel = 0;
+			} else if (new_pad & PAD_RIGHT) {
+				event |= 2;
+				sel = 1;
+			} else if ((!swapKeys && new_pad & PAD_CROSS) || (swapKeys && new_pad & PAD_CIRCLE)) {
+				ret = -1;
+				break;
+			} else if ((swapKeys && new_pad & PAD_CROSS) || (!swapKeys && new_pad & PAD_CIRCLE)) {
+				ret = (sel == 0) ? 1 : -1;
+				break;
+			}
+		}
+
+		if (event || post_event) {
+			drawPopSprite(setting->color[COLOR_BACKGR],
+			              dx, dy,
+			              dx + dw, (dy + dh));
+			drawFrame(dx, dy, dx + dw, (dy + dh), setting->color[COLOR_FRAME]);
+			for (i = len = 0; i < n; i++) {
+				printXY(&msg[len], dx + 2 + a, (dy + a + 2 + i * FONT_HEIGHT), setting->color[COLOR_TEXT], TRUE, 0);
+				len += strlen(&msg[len]) + 1;
+			}
+
+			printXY(LNG(OK), left_x, y, setting->color[COLOR_TEXT], TRUE, 0);
+			printXY(decline_label, right_x, y, setting->color[COLOR_TEXT], TRUE, 0);
+			if (sel == 0)
+				drawChar(LEFT_CUR, left_x - FONT_WIDTH, y, setting->color[COLOR_TEXT]);
+			else
+				drawChar(LEFT_CUR, right_x - FONT_WIDTH - 1, y, setting->color[COLOR_TEXT]);
+		}
+		drawLastMsg();
+		post_event = event;
+		event = 0;
+	}
+	drawSprite(setting->color[COLOR_BACKGR], dx, dy, dx + dw + 1, (dy + dh) + 1);
+	drawScr();
+	drawSprite(setting->color[COLOR_BACKGR], dx, dy, dx + dw + 1, (dy + dh) + 1);
+	drawScr();
+	return ret;
+}
+
+static int ConfirmProtectedPartitionCreate(const char *party, int skip_instead_of_cancel)
+{
+	if (party == NULL || strncmp(party, "__", 2))
+		return 1;
+
+	if (skip_instead_of_cancel)
+		return (HddConfirmTwoButtonDialog(LNG(Protected_Partition_Create_Warning), LNG(Skip)) == 1);
+
+	return (ynDialog(LNG(Protected_Partition_Create_Warning)) == 1);
+}
 
 static char DbgMsg[MAX_TEXT_LINE * 30];
+
+typedef struct
+{
+	int Code;
+	const char *ShortText;
+	const char *InfoText;
+} HDDSTATUSINFO;
+
+static const HDDSTATUSINFO HddStatusInfo[] = {
+	{3, "NO HDD", "No suitable HDD was detected by the HDD driver.\nCheck the drive, adapter, power, DEV9, or ATA stack."},
+	{2, "LOCKED", "The HDD was detected, but the driver could not\ncomplete the unlock/usability check."},
+	{1, "NO APA", "The HDD is usable, but no APA format was found.\nFormat the HDD before creating partitions."},
+	{0, "READY", "The HDD is detected, usable, and APA formatted."},
+	{-1, "EPERM", "Operation not permitted.\nThe HDD driver refused the status operation."},
+	{-2, "ENOENT", "The HDD device/path was not found.\nhdd0: may not be registered by the driver."},
+	{-3, "ESRCH", "A required service or RPC target was not found.\nHDD modules may not be running correctly."},
+	{-5, "EIO", "I/O error while querying the HDD.\nCheck the drive, adapter, cabling, and power."},
+	{-6, "ENXIO", "No such device or address.\nThe HDD hardware may be missing or unreachable."},
+	{-11, "EAGAIN", "The HDD resource is temporarily unavailable.\nRetry after the HDD stack settles."},
+	{-12, "ENOMEM", "Out of memory while querying HDD status.\nSystem or module memory may be exhausted."},
+	{-13, "EACCES", "Access denied while querying HDD status.\nThe device or driver state refused access."},
+	{-16, "EBUSY", "The HDD/device resource is busy.\nAnother operation or mount may be holding it."},
+	{-19, "ENODEV", "No such device.\nHDD driver/device registration may be missing."},
+};
+
+static const HDDSTATUSINFO *GetHddStatusInfo(int status)
+{
+	int i;
+
+	for (i = 0; i < (int)(sizeof(HddStatusInfo) / sizeof(HddStatusInfo[0])); i++) {
+		if (HddStatusInfo[i].Code == status)
+			return &HddStatusInfo[i];
+	}
+
+	return NULL;
+}
+
+static const char *GetHddStatusShortText(int status)
+{
+	const HDDSTATUSINFO *info = GetHddStatusInfo(status);
+
+	return (info != NULL) ? info->ShortText : "UNKNOWN";
+}
+
+void DebugDisp(char *Message);
+
+static void ShowHddStatusInfo(void)
+{
+	const HDDSTATUSINFO *info = GetHddStatusInfo(hddRealStatus);
+	char message[MAX_TEXT_LINE * 30];
+
+	if (info != NULL) {
+		snprintf(message, sizeof(message), "%s\nNumber: %d\nStatus: %s\n\n%s",
+		         LNG(HDD_STATUS), hddRealStatus, info->ShortText, info->InfoText);
+	} else {
+		snprintf(message, sizeof(message), "%s\nNumber: %d\nStatus: UNKNOWN\n\nNo specific HDD status description is available\nfor this code.",
+		         LNG(HDD_STATUS), hddRealStatus);
+	}
+
+	DebugDisp(message);
+}
 
 //--------------------------------------------------------------
 ///*
@@ -349,18 +532,19 @@ int MenuParty(PARTYINFO Info)
 {
 	u64 color;
 	char enable[NUM_MENU], tmp[64];
-	int x, y, i, sel;
+	int x, y, i, sel, cmd;
+	int menu_count = sizeof(hdd_party_menu_items) / sizeof(hdd_party_menu_items[0]);
 	int event, post_event = 0;
 
 	int menu_len = strlen(LNG(Create)) > strlen(LNG(Remove)) ?
 	                   strlen(LNG(Create)) :
 	                   strlen(LNG(Remove));
 	menu_len = strlen(LNG(Rename)) > menu_len ? strlen(LNG(Rename)) : menu_len;
-	menu_len = strlen(LNG(Expand)) > menu_len ? strlen(LNG(Expand)) : menu_len;
+	menu_len = strlen(LNG(Inject_Header)) > menu_len ? strlen(LNG(Inject_Header)) : menu_len;
 	menu_len = strlen(LNG(Format)) > menu_len ? strlen(LNG(Format)) : menu_len;
 
 	int menu_ch_w = menu_len + 1;                                 //Total characters in longest menu string
-	int menu_ch_h = NUM_MENU;                                     //Total number of menu lines
+	int menu_ch_h = menu_count;                                   //Total number of menu lines
 	int mSprite_Y1 = 64;                                          //Top edge of sprite
 	int mSprite_X2 = SCREEN_WIDTH - 35;                           //Right edge of sprite
 	int mSprite_X1 = mSprite_X2 - (menu_ch_w + 3) * FONT_WIDTH;   //Left edge of sprite
@@ -378,10 +562,18 @@ int MenuParty(PARTYINFO Info)
 	if ((Info.Name[0] == '_') && (Info.Name[1] == '_')) {
 		enable[REMOVE] = FALSE;
 	}
+	if (Info.Name[0] == '\0') {
+		enable[REMOVE] = FALSE;
+		enable[RENAME] = FALSE;
+		enable[INJECT_HEADER] = FALSE;
+	}
 	if (Info.Treatment == TREAT_SYSTEM) {
 		enable[REMOVE] = FALSE;
 		enable[RENAME] = FALSE;
-		enable[EXPAND] = FALSE;
+		enable[INJECT_HEADER] = FALSE;
+	}
+	if (Info.Treatment != TREAT_PFS) {
+		enable[INJECT_HEADER] = FALSE;
 	}
 	/*if (Info.Treatment == TREAT_HDL_RAW) {
 		enable[EXPAND] = FALSE;
@@ -393,8 +585,8 @@ int MenuParty(PARTYINFO Info)
 		enable[EXPAND] = FALSE;
 	}//*/
 	enable[EXPAND] = FALSE;
-	for (sel = 0; sel < NUM_MENU; sel++)
-		if (enable[sel] == TRUE)
+	for (sel = 0; sel < menu_count; sel++)
+		if (enable[hdd_party_menu_items[sel]] == TRUE)
 			break;
 
 	event = 1;  //event = initial entry
@@ -402,20 +594,20 @@ int MenuParty(PARTYINFO Info)
 		//Pad response section
 		waitPadReady(0, 0);
 		if (readpad()) {
-			if (new_pad & PAD_UP && sel < NUM_MENU) {
+			if (new_pad & PAD_UP && sel < menu_count) {
 				event |= 2;  //event |= valid pad command
 				do {
 					sel--;
 					if (sel < 0)
-						sel = NUM_MENU - 1;
-				} while (!enable[sel]);
-			} else if (new_pad & PAD_DOWN && sel < NUM_MENU) {
+						sel = menu_count - 1;
+				} while (!enable[hdd_party_menu_items[sel]]);
+			} else if (new_pad & PAD_DOWN && sel < menu_count) {
 				event |= 2;  //event |= valid pad command
 				do {
 					sel++;
-					if (sel == NUM_MENU)
+					if (sel == menu_count)
 						sel = 0;
-				} while (!enable[sel]);
+				} while (!enable[hdd_party_menu_items[sel]]);
 			} else if ((new_pad & PAD_TRIANGLE) || (!swapKeys && new_pad & PAD_CROSS) || (swapKeys && new_pad & PAD_CIRCLE)) {
 				return -1;
 			} else if ((swapKeys && new_pad & PAD_CROSS) || (!swapKeys && new_pad & PAD_CIRCLE)) {
@@ -432,19 +624,20 @@ int MenuParty(PARTYINFO Info)
 			              mSprite_X2, mSprite_Y2);
 			drawFrame(mSprite_X1, mSprite_Y1, mSprite_X2, mSprite_Y2, setting->color[COLOR_FRAME]);
 
-			for (i = 0, y = mSprite_Y1 + FONT_HEIGHT / 2; i < NUM_MENU; i++) {
-				if (i == CREATE)
+			for (i = 0, y = mSprite_Y1 + FONT_HEIGHT / 2; i < menu_count; i++) {
+				cmd = hdd_party_menu_items[i];
+				if (cmd == CREATE)
 					strcpy(tmp, LNG(Create));
-				else if (i == REMOVE)
+				else if (cmd == REMOVE)
 					strcpy(tmp, LNG(Remove));
-				else if (i == RENAME)
+				else if (cmd == RENAME)
 					strcpy(tmp, LNG(Rename));
-				else if (i == EXPAND)
-					strcpy(tmp, LNG(Expand));
-				else if (i == FORMAT)
+				else if (cmd == INJECT_HEADER)
+					strcpy(tmp, LNG(Inject_Header));
+				else if (cmd == FORMAT)
 					strcpy(tmp, LNG(Format));
 
-				if (enable[i])
+				if (enable[cmd])
 					color = setting->color[COLOR_TEXT];
 				else
 					color = setting->color[COLOR_FRAME];
@@ -452,7 +645,7 @@ int MenuParty(PARTYINFO Info)
 				printXY(tmp, mSprite_X1 + 2 * FONT_WIDTH, y, color, TRUE, 0);
 				y += FONT_HEIGHT;
 			}
-			if (sel < NUM_MENU)
+			if (sel < menu_count)
 				drawChar(LEFT_CUR, mSprite_X1 + FONT_WIDTH, mSprite_Y1 + (FONT_HEIGHT / 2 + sel * FONT_HEIGHT), setting->color[COLOR_TEXT]);
 
 			//Tooltip section
@@ -479,10 +672,210 @@ int MenuParty(PARTYINFO Info)
 		post_event = event;
 		event = 0;
 	}  //ends while
-	return sel;
+	return hdd_party_menu_items[sel];
 }
 //------------------------------
 //endfunc MenuParty
+//--------------------------------------------------------------
+static int MenuHeaderSource(const char **source_device)
+{
+	const char *items[4];
+	const char *title = LNG(Header_Source);
+	u64 color;
+	char tmp[64];
+	int x, y, i, sel, count;
+	int menu_len, menu_ch_w, menu_ch_h;
+	int mSprite_X1, mSprite_Y1, mSprite_X2, mSprite_Y2;
+	int event, post_event = 0;
+
+	if (source_device == NULL)
+		return -1;
+
+	count = 0;
+	items[count++] = "usb:";
+#ifdef MMCE
+	items[count++] = "mmce0:";
+	items[count++] = "mmce1:";
+#endif
+#ifdef UDPFS
+	items[count++] = "udpfs:";
+#endif
+
+	menu_len = strlen(title);
+	for (i = 0; i < count; i++)
+		menu_len = strlen(items[i]) > menu_len ? strlen(items[i]) : menu_len;
+
+	menu_ch_w = menu_len + 1;
+	menu_ch_h = count + 1;
+	mSprite_Y1 = 64;
+	mSprite_X2 = SCREEN_WIDTH - 35;
+	mSprite_X1 = mSprite_X2 - (menu_ch_w + 3) * FONT_WIDTH;
+	mSprite_Y2 = mSprite_Y1 + (menu_ch_h + 1) * FONT_HEIGHT;
+
+	sel = 0;
+	event = 1;
+	while (1) {
+		waitPadReady(0, 0);
+		if (readpad()) {
+			if (new_pad & PAD_UP) {
+				event |= 2;
+				sel--;
+				if (sel < 0)
+					sel = count - 1;
+			} else if (new_pad & PAD_DOWN) {
+				event |= 2;
+				sel++;
+				if (sel == count)
+					sel = 0;
+			} else if ((new_pad & PAD_TRIANGLE) || (!swapKeys && new_pad & PAD_CROSS) || (swapKeys && new_pad & PAD_CIRCLE)) {
+				return -1;
+			} else if ((swapKeys && new_pad & PAD_CROSS) || (!swapKeys && new_pad & PAD_CIRCLE)) {
+				event |= 2;
+				break;
+			}
+		}
+
+		if (event || post_event) {
+			drawPopSprite(setting->color[COLOR_BACKGR],
+			              mSprite_X1, mSprite_Y1,
+			              mSprite_X2, mSprite_Y2);
+			drawFrame(mSprite_X1, mSprite_Y1, mSprite_X2, mSprite_Y2, setting->color[COLOR_FRAME]);
+
+			printXY(title, mSprite_X1 + 2 * FONT_WIDTH, mSprite_Y1 + FONT_HEIGHT / 2, setting->color[COLOR_SELECT], TRUE, 0);
+
+			for (i = 0, y = mSprite_Y1 + FONT_HEIGHT / 2 + FONT_HEIGHT; i < count; i++) {
+				strcpy(tmp, items[i]);
+				color = setting->color[COLOR_TEXT];
+				printXY(tmp, mSprite_X1 + 2 * FONT_WIDTH, y, color, TRUE, 0);
+				y += FONT_HEIGHT;
+			}
+			drawChar(LEFT_CUR, mSprite_X1 + FONT_WIDTH, mSprite_Y1 + (FONT_HEIGHT / 2 + (sel + 1) * FONT_HEIGHT), setting->color[COLOR_TEXT]);
+
+			x = SCREEN_MARGIN;
+			y = Menu_tooltip_y;
+			drawSprite(setting->color[COLOR_BACKGR],
+			           0, y - 1,
+			           SCREEN_WIDTH, y + 16);
+			if (swapKeys)
+				sprintf(tmp, "\xFF"
+				             "1:%s \xFF"
+				             "0:%s \xFF"
+				             "3:%s",
+				        LNG(OK), LNG(Cancel), LNG(Back));
+			else
+				sprintf(tmp, "\xFF"
+				             "0:%s \xFF"
+				             "1:%s \xFF"
+				             "3:%s",
+				        LNG(OK), LNG(Cancel), LNG(Back));
+			printXY(tmp, x, y, setting->color[COLOR_SELECT], TRUE, 0);
+		}
+		drawScr();
+		post_event = event;
+		event = 0;
+	}
+
+	*source_device = items[sel];
+	return sel;
+}
+//------------------------------
+//endfunc MenuHeaderSource
+//--------------------------------------------------------------
+static int MenuHeaderInjectMode(void)
+{
+	const char *items[4];
+	const char *title = LNG(Header_Inject_Mode);
+	u64 color;
+	char tmp[80];
+	int x, y, i, sel, count;
+	int menu_len, menu_ch_w, menu_ch_h;
+	int mSprite_X1, mSprite_Y1, mSprite_X2, mSprite_Y2;
+	int event, post_event = 0;
+
+	count = 0;
+	items[count++] = LNG(Header_Inject_This_Partition);
+	items[count++] = LNG(Header_Inject_Matching_Partitions);
+	items[count++] = LNG(Header_Inject_Matching_Create_Missing);
+	items[count++] = LNG(Cancel);
+
+	menu_len = strlen(title);
+	for (i = 0; i < count; i++)
+		menu_len = strlen(items[i]) > menu_len ? strlen(items[i]) : menu_len;
+
+	menu_ch_w = menu_len + 1;
+	menu_ch_h = count + 1;
+	mSprite_Y1 = 64;
+	mSprite_X2 = SCREEN_WIDTH - 35;
+	mSprite_X1 = mSprite_X2 - (menu_ch_w + 3) * FONT_WIDTH;
+	mSprite_Y2 = mSprite_Y1 + (menu_ch_h + 1) * FONT_HEIGHT;
+
+	sel = 0;
+	event = 1;
+	while (1) {
+		waitPadReady(0, 0);
+		if (readpad()) {
+			if (new_pad & PAD_UP) {
+				event |= 2;
+				sel--;
+				if (sel < 0)
+					sel = count - 1;
+			} else if (new_pad & PAD_DOWN) {
+				event |= 2;
+				sel++;
+				if (sel == count)
+					sel = 0;
+			} else if ((new_pad & PAD_TRIANGLE) || (!swapKeys && new_pad & PAD_CROSS) || (swapKeys && new_pad & PAD_CIRCLE)) {
+				return HEADER_INJECT_CANCEL;
+			} else if ((swapKeys && new_pad & PAD_CROSS) || (!swapKeys && new_pad & PAD_CIRCLE)) {
+				event |= 2;
+				break;
+			}
+		}
+
+		if (event || post_event) {
+			drawPopSprite(setting->color[COLOR_BACKGR],
+			              mSprite_X1, mSprite_Y1,
+			              mSprite_X2, mSprite_Y2);
+			drawFrame(mSprite_X1, mSprite_Y1, mSprite_X2, mSprite_Y2, setting->color[COLOR_FRAME]);
+
+			printXY(title, mSprite_X1 + 2 * FONT_WIDTH, mSprite_Y1 + FONT_HEIGHT / 2, setting->color[COLOR_SELECT], TRUE, 0);
+
+			for (i = 0, y = mSprite_Y1 + FONT_HEIGHT / 2 + FONT_HEIGHT; i < count; i++) {
+				strcpy(tmp, items[i]);
+				color = setting->color[COLOR_TEXT];
+				printXY(tmp, mSprite_X1 + 2 * FONT_WIDTH, y, color, TRUE, 0);
+				y += FONT_HEIGHT;
+			}
+			drawChar(LEFT_CUR, mSprite_X1 + FONT_WIDTH, mSprite_Y1 + (FONT_HEIGHT / 2 + (sel + 1) * FONT_HEIGHT), setting->color[COLOR_TEXT]);
+
+			x = SCREEN_MARGIN;
+			y = Menu_tooltip_y;
+			drawSprite(setting->color[COLOR_BACKGR],
+			           0, y - 1,
+			           SCREEN_WIDTH, y + 16);
+			if (swapKeys)
+				sprintf(tmp, "\xFF"
+				             "1:%s \xFF"
+				             "0:%s \xFF"
+				             "3:%s",
+				        LNG(OK), LNG(Cancel), LNG(Back));
+			else
+				sprintf(tmp, "\xFF"
+				             "0:%s \xFF"
+				             "1:%s \xFF"
+				             "3:%s",
+				        LNG(OK), LNG(Cancel), LNG(Back));
+			printXY(tmp, x, y, setting->color[COLOR_SELECT], TRUE, 0);
+		}
+		drawScr();
+		post_event = event;
+		event = 0;
+	}
+
+	return (sel == HEADER_INJECT_CANCEL) ? HEADER_INJECT_CANCEL : sel;
+}
+//------------------------------
+//endfunc MenuHeaderInjectMode
 //--------------------------------------------------------------
 int CreateParty(char *party, int size)
 {
@@ -490,8 +883,6 @@ int CreateParty(char *party, int size)
 	//	int  remSize = size-2048;
 	char tmpName[MAX_ENTRY];
 	//	t_hddFilesystem hddFs[MAX_PARTITIONS];
-
-	drawMsg(LNG(Creating_New_Partition));
 
 	tmpName[0] = 0;
 	sprintf(tmpName, "%s", party);
@@ -502,6 +893,12 @@ int CreateParty(char *party, int size)
 		}
 	}
 	strcpy(party, tmpName);
+
+	if (!ConfirmProtectedPartitionCreate(party, 0))
+		return HDD_PARTITION_CREATE_CANCELLED;
+
+	drawMsg(LNG(Creating_New_Partition));
+
 	/*	if(remSize <= 0)*/
 	ret = hddMakeFilesystem(size, party, FS_GROUP_APPLICATION);
 	/*	else{
@@ -528,6 +925,40 @@ int CreateParty(char *party, int size)
 }
 //------------------------------
 //endfunc CreateParty
+//--------------------------------------------------------------
+static int CreatePartyExact(const char *party, int size, int skip_instead_of_cancel)
+{
+	char party_name[MAX_PART_NAME + 1];
+	int ret;
+
+	if (party == NULL || party[0] == '\0')
+		return -EINVAL;
+
+	snprintf(party_name, sizeof(party_name), "%s", party);
+	party_name[sizeof(party_name) - 1] = '\0';
+
+	if (!ConfirmProtectedPartitionCreate(party_name, skip_instead_of_cancel))
+		return HDD_PARTITION_CREATE_CANCELLED;
+
+	drawMsg(LNG(Creating_New_Partition));
+
+	ret = hddMakeFilesystem(size, party_name, FS_GROUP_APPLICATION);
+
+	if (ret > 0) {
+		GetHddInfo();
+		drawMsg(LNG(New_Partition_Created));
+	} else {
+		drawMsg(LNG(Failed_Creating_New_Partition));
+	}
+
+	WaitTime = Timer();
+	while (Timer() < WaitTime + 1500)
+		;  // print operation result during 1.5 sec.
+
+	return ret;
+}
+//------------------------------
+//endfunc CreatePartyExact
 //--------------------------------------------------------------
 int RemoveParty(PARTYINFO Info)
 {
@@ -745,6 +1176,285 @@ int FormatHdd(void)
 //------------------------------
 //endfunc FormatHdd
 //--------------------------------------------------------------
+typedef struct
+{
+	int Injected;
+	int Created;
+	int Skipped;
+	int Failed;
+	int Invalid;
+	int PfsCopyFailed;
+	int Stopped;
+} HDDHEADERBULKSTATS;
+
+static int FindPartitionIndexByName(const char *partition_name)
+{
+	int i;
+
+	if (partition_name == NULL)
+		return -1;
+
+	for (i = 0; i < numParty; i++) {
+		if (!strcmp(PartyInfo[i].Name, partition_name))
+			return i;
+	}
+
+	return -1;
+}
+
+static int FindInjectablePartitionIndexByName(const char *partition_name)
+{
+	int i;
+
+	if (partition_name == NULL)
+		return -1;
+
+	for (i = 0; i < numParty; i++) {
+		if (!strcmp(PartyInfo[i].Name, partition_name) && PartyInfo[i].Treatment == TREAT_PFS)
+			return i;
+	}
+
+	return -1;
+}
+
+static int HeaderCreateMissingDialog(const char *partition_name)
+{
+	char msg[512];
+	int dh, dw, dx, dy;
+	int label_x[3];
+	const char *labels[3];
+	int sel = 0, a = 6, b = 4, c = 2, n, tw;
+	int i, y, len, ret, labels_width;
+	int event, post_event = 0;
+
+	snprintf(msg, sizeof(msg), "Create missing partition?\nhdd0:%s", partition_name);
+	msg[sizeof(msg) - 1] = '\0';
+
+	labels[0] = LNG(OK);
+	labels[1] = LNG(Skip);
+	labels[2] = LNG(CANCEL);
+
+	for (i = 0, n = 1; msg[i] != 0; i++) {
+		if (msg[i] == '\n') {
+			msg[i] = 0;
+			n++;
+		}
+	}
+	for (i = len = tw = 0; i < n; i++) {
+		ret = printXY(&msg[len], 0, 0, 0, FALSE, 0);
+		if (ret > tw)
+			tw = ret;
+		len += strlen(&msg[len]) + 1;
+		}
+		if (tw < 176)
+			tw = 176;
+		labels_width = (strlen(labels[0]) + strlen(labels[1]) + strlen(labels[2]) + 8) * FONT_WIDTH;
+		if (tw < labels_width)
+			tw = labels_width;
+
+		dh = FONT_HEIGHT * (n + 1) + 2 * 2 + a + b + c;
+	dw = 2 * 2 + a * 2 + tw;
+	dx = (SCREEN_WIDTH - dw) / 2;
+	dy = (SCREEN_HEIGHT - dh) / 2;
+
+	label_x[0] = dx + a + FONT_WIDTH;
+	label_x[1] = dx + (dw - strlen(labels[1]) * FONT_WIDTH) / 2;
+	label_x[2] = dx + dw - a - strlen(labels[2]) * FONT_WIDTH;
+
+	event = 1;
+	while (1) {
+		waitPadReady(0, 0);
+		if (readpad()) {
+			if (new_pad & PAD_LEFT) {
+				event |= 2;
+				sel--;
+				if (sel < 0)
+					sel = 2;
+			} else if (new_pad & PAD_RIGHT) {
+				event |= 2;
+				sel++;
+				if (sel > 2)
+					sel = 0;
+			} else if ((new_pad & PAD_TRIANGLE) || (!swapKeys && new_pad & PAD_CROSS) || (swapKeys && new_pad & PAD_CIRCLE)) {
+				ret = HEADER_CREATE_PROMPT_CANCEL;
+				break;
+			} else if ((swapKeys && new_pad & PAD_CROSS) || (!swapKeys && new_pad & PAD_CIRCLE)) {
+				ret = (sel == 0) ? HEADER_CREATE_PROMPT_CREATE : ((sel == 1) ? HEADER_CREATE_PROMPT_SKIP : HEADER_CREATE_PROMPT_CANCEL);
+				break;
+			}
+		}
+
+		if (event || post_event) {
+			drawPopSprite(setting->color[COLOR_BACKGR],
+			              dx, dy,
+			              dx + dw, (dy + dh));
+			drawFrame(dx, dy, dx + dw, (dy + dh), setting->color[COLOR_FRAME]);
+			for (i = len = 0; i < n; i++) {
+				printXY(&msg[len], dx + 2 + a, (dy + a + 2 + i * FONT_HEIGHT), setting->color[COLOR_TEXT], TRUE, 0);
+				len += strlen(&msg[len]) + 1;
+			}
+
+			y = dy + a + b + 2 + n * FONT_HEIGHT;
+			for (i = 0; i < 3; i++)
+				printXY(labels[i], label_x[i], y, setting->color[COLOR_TEXT], TRUE, 0);
+			drawChar(LEFT_CUR, label_x[sel] - FONT_WIDTH, y, setting->color[COLOR_TEXT]);
+		}
+		drawScr();
+		post_event = event;
+		event = 0;
+	}
+
+	return ret;
+}
+
+static int InjectHeaderIntoPartition(const char *partition_name, const char *source_device, HDDHEADERBULKSTATS *stats)
+{
+	char source_dir[MAX_PATH];
+	char msg[MAX_TEXT_LINE];
+	int pfs_files_copied;
+	int pfs_copy_error;
+	int ret;
+
+	source_dir[0] = '\0';
+	pfs_files_copied = 0;
+	pfs_copy_error = 0;
+
+	snprintf(msg, sizeof(msg), "Injecting header into hdd0:%s", partition_name);
+	drawMsg(msg);
+
+	ret = InjectHddPartitionHeaderFromSource(partition_name, source_device, source_dir, sizeof(source_dir),
+	                                         &pfs_files_copied, &pfs_copy_error);
+	if (ret >= 0) {
+		if (stats != NULL) {
+			stats->Injected++;
+			if (pfs_copy_error < 0)
+				stats->PfsCopyFailed++;
+		}
+		return 0;
+	}
+
+	if (stats != NULL)
+		stats->Failed++;
+	return ret;
+}
+
+static void ShowHeaderBulkSummary(const HDDHEADERBULKSTATS *stats)
+{
+	if (stats == NULL)
+		return;
+
+	snprintf(DbgMsg, sizeof(DbgMsg),
+	         "Header injection summary\n"
+	         "Injected: %d  Created: %d\n"
+	         "Skipped: %d  Failed: %d\n"
+	         "Invalid header folders: %d\n"
+	         "PFS copy failed: %d%s",
+	         stats->Injected, stats->Created,
+	         stats->Skipped, stats->Failed,
+	         stats->Invalid,
+	         stats->PfsCopyFailed,
+	         stats->Stopped ? "\nStopped." : "");
+	DebugDisp(DbgMsg);
+}
+
+static void InjectMatchingHeadersFromSource(const char *source_device, int create_missing)
+{
+	HDDHEADERBULKSTATS stats;
+	char confirm[MAX_PATH];
+	int source_count;
+	int invalid_count;
+	int partition_index;
+	int prompt_ret;
+	int party_size;
+	int ret;
+	int i;
+
+	memset(&stats, 0, sizeof(stats));
+
+	source_count = HddHeaderListSourcePartitions(source_device, hdd_header_source_partitions, MAX_PARTITIONS, &invalid_count);
+	if (source_count < 0) {
+		snprintf(DbgMsg, sizeof(DbgMsg), "Unable to read %s/__Headers/\nError %d", source_device, source_count);
+		DebugDisp(DbgMsg);
+		return;
+	}
+
+	stats.Invalid = invalid_count;
+	if (source_count == 0) {
+		ShowHeaderBulkSummary(&stats);
+		return;
+	}
+
+	if (create_missing) {
+		snprintf(confirm, sizeof(confirm),
+		         "Inject matching headers from %s?\n"
+		         "Missing partitions will be prompted one at a time.",
+		         source_device);
+	} else {
+		snprintf(confirm, sizeof(confirm),
+		         "Inject headers into matching partitions from %s?\n"
+		         "Use %s/__Headers/",
+		         source_device, source_device);
+	}
+	if (ynDialog(confirm) != 1)
+		return;
+
+	unmountAll();
+	unmountParty(0);
+	unmountParty(1);
+
+	for (i = 0; i < source_count; i++) {
+		partition_index = FindInjectablePartitionIndexByName(hdd_header_source_partitions[i].name);
+		if (partition_index >= 0) {
+			InjectHeaderIntoPartition(PartyInfo[partition_index].Name, source_device, &stats);
+			continue;
+		}
+
+		if (FindPartitionIndexByName(hdd_header_source_partitions[i].name) >= 0) {
+			stats.Skipped++;
+			continue;
+		}
+
+		if (!create_missing) {
+			stats.Skipped++;
+			continue;
+		}
+
+		prompt_ret = HeaderCreateMissingDialog(hdd_header_source_partitions[i].name);
+		if (prompt_ret == HEADER_CREATE_PROMPT_SKIP) {
+			stats.Skipped++;
+			continue;
+		}
+		if (prompt_ret == HEADER_CREATE_PROMPT_CANCEL) {
+			stats.Stopped = 1;
+			break;
+		}
+
+		drawMsg(LNG(Select_New_Partition_Size_In_MB));
+		drawMsg(LNG(Select_New_Partition_Size_In_MB));
+		party_size = sizeSelector(128);
+		if (party_size <= 0) {
+			stats.Stopped = 1;
+			break;
+		}
+
+		ret = CreatePartyExact(hdd_header_source_partitions[i].name, party_size, 1);
+		if (ret == HDD_PARTITION_CREATE_CANCELLED) {
+			stats.Skipped++;
+			continue;
+		} else if (ret > 0) {
+			stats.Created++;
+			invalidatePartitionCaches();
+			InjectHeaderIntoPartition(hdd_header_source_partitions[i].name, source_device, &stats);
+		} else {
+			stats.Failed++;
+		}
+	}
+
+	ShowHeaderBulkSummary(&stats);
+}
+//------------------------------
+//endfunc InjectMatchingHeadersFromSource
+//--------------------------------------------------------------
 void hddManager(void)
 {
 	char c[MAX_PATH];
@@ -792,6 +1502,8 @@ void hddManager(void)
 				unmountParty(0);  //unconditionally unmount primary mountpoint
 				unmountParty(1);  //unconditionally unmount secondary mountpoint
 				return;
+			} else if (new_pad & PAD_L1) {
+				ShowHddStatusInfo();
 			} else if (new_pad & PAD_SQUARE) {
 				if (PartyInfo[browser_sel].Treatment == TREAT_HDL_RAW) {
 					loadHdlInfoModule();
@@ -817,14 +1529,14 @@ void hddManager(void)
 						if ((ret = sizeSelector(partySize)) > 0) {
 							if (ynDialog(LNG(Create_New_Partition)) == 1) {
 								CreateParty(tmp, ret);
-								nparties = 0;  //Tell FileBrowser to refresh party list
+								invalidatePartitionCaches();  //Tell FileBrowser to refresh partition lists
 							}
 						}
 					}
 				} else if (ret == REMOVE) {
 					if (ynDialog(LNG(Remove_Current_Partition)) == 1) {
 						RemoveParty(PartyInfo[browser_sel]);
-						nparties = 0;  //Tell FileBrowser to refresh party list
+						invalidatePartitionCaches();  //Tell FileBrowser to refresh partition lists
 					}
 				} else if (ret == RENAME) {
 					drawMsg(LNG(Enter_New_Partition_Name));
@@ -840,10 +1552,60 @@ void hddManager(void)
 						if (keyboard(tmp, MAX_PART_NAME) > 0) {
 							if (ynDialog(LNG(Rename_Current_Partition)) == 1) {
 								RenameParty(PartyInfo[browser_sel], tmp);
-								nparties = 0;  //Tell FileBrowser to refresh party list
+								invalidatePartitionCaches();  //Tell FileBrowser to refresh partition lists
 							}
 						}
 					}  //ends clause for normal partition RENAME
+				} else if (ret == INJECT_HEADER) {
+					const char *source_device = NULL;
+					char source_dir[MAX_PATH];
+					char confirm[MAX_PATH];
+					int inject_mode;
+					int pfs_files_copied;
+					int pfs_copy_error;
+
+					if (MenuHeaderSource(&source_device) >= 0)
+						inject_mode = MenuHeaderInjectMode();
+					else
+						inject_mode = HEADER_INJECT_CANCEL;
+
+					if (source_device != NULL && inject_mode == HEADER_INJECT_THIS_PARTITION) {
+						snprintf(confirm, sizeof(confirm),
+						         "Inject APA header into hdd0:%s from %s?\n"
+						         "Use %s/__Headers/%s/\n"
+						         "Required: system.cnf; PS2: icon.sys, list.ico\n"
+						         "Optional: boot.kelf, info.sys, jkt_*.png, BOOT.ELF",
+						         PartyInfo[browser_sel].Name, source_device, source_device, PartyInfo[browser_sel].Name);
+						if (ynDialog(confirm) == 1) {
+							unmountAll();
+							unmountParty(0);
+							unmountParty(1);
+							source_dir[0] = '\0';
+							pfs_files_copied = 0;
+							pfs_copy_error = 0;
+							ret = InjectHddPartitionHeaderFromSource(PartyInfo[browser_sel].Name, source_device, source_dir, sizeof(source_dir),
+							                                         &pfs_files_copied, &pfs_copy_error);
+							if (ret >= 0) {
+								if (pfs_copy_error < 0)
+									snprintf(tmp, sizeof(tmp), "Header injected; PFS copy failed: %d", pfs_copy_error);
+								else if (pfs_files_copied > 0)
+									snprintf(tmp, sizeof(tmp), "Header injected; PFS files copied: %d", pfs_files_copied);
+								else
+									snprintf(tmp, sizeof(tmp), "Header injected from %s", source_dir);
+								drawMsg(tmp);
+							} else {
+								snprintf(tmp, sizeof(tmp), "Header injection failed: %d", ret);
+								drawMsg(tmp);
+							}
+							WaitTime = Timer();
+							while (Timer() < WaitTime + 1500)
+								;
+						}
+					} else if (source_device != NULL && inject_mode == HEADER_INJECT_MATCHING_PARTITIONS) {
+						InjectMatchingHeadersFromSource(source_device, 0);
+					} else if (source_device != NULL && inject_mode == HEADER_INJECT_MATCHING_CREATE_MISSING) {
+						InjectMatchingHeadersFromSource(source_device, 1);
+					}
 				} else if (ret == EXPAND) {
 					drawMsg(LNG(Select_New_Partition_Size_In_MB));
 					drawMsg(LNG(Select_New_Partition_Size_In_MB));
@@ -852,13 +1614,13 @@ void hddManager(void)
 						if (ynDialog(LNG(Expand_Current_Partition)) == 1) {
 							ret -= partySize;
 							ExpandParty(PartyInfo[browser_sel], ret);
-							nparties = 0;  //Tell FileBrowser to refresh party list
+							invalidatePartitionCaches();  //Tell FileBrowser to refresh partition lists
 						}
 					}
 				} else if (ret == FORMAT) {
 					if (ynDialog(LNG(Format_HDD)) == 1) {
 						FormatHdd();
-						nparties = 0;  //Tell FileBrowser to refresh party list
+						invalidatePartitionCaches();  //Tell FileBrowser to refresh partition lists
 					}
 				}
 			}  //Ends clause for R1 menu
@@ -887,7 +1649,7 @@ void hddManager(void)
 
 			y = Menu_start_y;
 
-			sprintf(c, "%s: %d", LNG(HDD_STATUS), hddRealStatus);
+			snprintf(c, sizeof(c), "%s: %d %s", LNG(HDD_STATUS), hddRealStatus, GetHddStatusShortText(hddRealStatus));
 			x = ((((SCREEN_WIDTH / 2 - 25) - Menu_start_x) / 2) + Menu_start_x) - (strlen(c) * FONT_WIDTH) / 2;
 			printXY(c, x, y, setting->color[COLOR_TEXT], TRUE, 0);
 
@@ -1124,9 +1886,9 @@ void hddManager(void)
 				}  //ends clause for scrollbar
 			}      //ends hdd formated
 			//Tooltip section
-			sprintf(tooltip, "R1:%s  \xFF"
-			                 "3:%s",
-			        LNG(MENU), LNG(Exit));
+			snprintf(tooltip, sizeof(tooltip), "R1:%s L1:%s  \xFF"
+			                                   "3:%s",
+			         LNG(MENU), LNG(Status_Info), LNG(Exit));
 			if (PartyInfo[browser_sel].Treatment == TREAT_HDL_RAW) {
 				sprintf(tmp, " \xFF"
 				             "2:%s",

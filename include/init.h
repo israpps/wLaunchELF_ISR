@@ -5,6 +5,7 @@ void setInitPhaseComplete(void);
 void closeKeyboardIfOpened(void);
 
 void Reset(void);
+unsigned int getIopResetGeneration(void);
 void loadUsbModules(void);
 int ensureUsbKeyboardReady(void);
 #ifdef DS34
@@ -15,9 +16,9 @@ void closeAllAndPoweroff(void);
 void startKbd(void);
 void ensureCoreIoStackReady(void);
 void rebootIopAndReloadCoreStack(void);
-#ifdef XFROM
+void rebootIopAndReloadCoreStackSilent(void);
 int loadSecrSifModule(void);
-#endif
+int prepareExploitSignerIop(void);
 
 #ifdef ETH
 void loadNetModules(void);

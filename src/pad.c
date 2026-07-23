@@ -12,6 +12,17 @@ u32 new_pad, new_pad_t[2];
 u32 joy_value = 0;
 static int test_joy = 0;
 
+void clearPadPressState(void)
+{
+	memset(old_pad_t, 0, sizeof(old_pad_t));
+	memset(new_pad_t, 0, sizeof(new_pad_t));
+	memset(paddata_t, 0, sizeof(paddata_t));
+	old_pad = 0;
+	new_pad = 0;
+	paddata = 0;
+	joy_value = 0;
+}
+
 //---------------------------------------------------------------------------
 // read PAD, without KB, and allow no auto-repeat. This is needed in code
 // that is used regardless of VSync cycles, and where KB is not wanted.

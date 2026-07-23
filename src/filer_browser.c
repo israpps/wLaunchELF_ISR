@@ -5,7 +5,11 @@
 #include "gui_texteditor.h"
 #include "filer_actions.h"
 #include "filer_shared.h"
+#include "gui_hdd0_format.h"
 #include "init.h"
+
+#define SOURCE_DEVICE_WAIT_INTERVAL_MS 1000
+#define SOURCE_DEVICE_WAIT_TIMEOUT_MS 6000
 
 static int isHddBrowserPath(const char *path)
 {
@@ -91,6 +95,152 @@ static const char *getRootDeviceLabel(const char *name)
 		return "MISC/";
 
 	return NULL;
+}
+
+static void waitUntilTimer(u64 end_time)
+{
+	while (Timer() < end_time) {
+	}
+}
+
+static int probeDirectory(const char *path)
+{
+	char probe_path[MAX_PATH];
+	int fd;
+
+	if (path == NULL || path[0] == '\0')
+		return FALSE;
+
+	snprintf(probe_path, sizeof(probe_path), "%s", path);
+	fd = genDopen(probe_path);
+	if (fd < 0)
+		return FALSE;
+	genDclose(fd);
+	return TRUE;
+}
+
+static void markMx4sioDestinationAfterWrite(const char *path)
+{
+	if (path == NULL || strncmp(path, "mx4sio", 6))
+		return;
+
+	discardNextMx4sioRootListing(path);
+}
+
+static void makeDeviceRootPath(const char *path, char *root, int root_size)
+{
+	const char *separator;
+	int len;
+
+	if (root_size <= 0)
+		return;
+	root[0] = '\0';
+	if (path == NULL)
+		return;
+
+	separator = strchr(path, ':');
+	if (separator == NULL)
+		return;
+
+	len = (int)(separator - path) + 1;
+	if (len >= root_size)
+		len = root_size - 1;
+	memcpy(root, path, len);
+	root[len] = '\0';
+
+#if defined(ETH) || defined(UDPFS)
+	if (!strncmp(root, "host:", 5))
+		return;
+#endif
+
+	if (len + 1 < root_size) {
+		root[len++] = '/';
+		root[len] = '\0';
+	}
+}
+
+static int clipboardHddSourceReady(void)
+{
+	char party[MAX_NAME], dir[MAX_PATH];
+	int pfs_ix;
+
+	if (getHddParty(clipPath, NULL, party, dir) < 0)
+		return FALSE;
+	if (!ensurePathDeviceStackReady(clipPath))
+		return FALSE;
+	pfs_ix = mountParty(party);
+	return (pfs_ix >= 0);
+}
+
+#ifdef DVRP
+static int clipboardDvrHddSourceReady(void)
+{
+	char party[MAX_NAME], dir[MAX_PATH];
+	int pfs_ix;
+
+	if (getHddDVRPParty(clipPath, NULL, party, dir) < 0)
+		return FALSE;
+	if (!ensurePathDeviceStackReady(clipPath))
+		return FALSE;
+	pfs_ix = mountDVRPParty(party);
+	return (pfs_ix >= 0);
+}
+#endif
+
+static int clipboardSourceDeviceReady(void)
+{
+	char fixed_path[MAX_PATH], root_path[MAX_PATH];
+
+	if (clipPath[0] == '\0')
+		return FALSE;
+	if (!strncmp(clipPath, "mc", 2))
+		return TRUE;
+	if (!strncmp(clipPath, "vmc", 3)) {
+		int vmc_index = clipPath[3] - '0';
+
+		return (vmc_index >= 0 && vmc_index < 2 && vmcMounted[vmc_index]);
+	}
+	if (isHddBrowserPath(clipPath))
+		return clipboardHddSourceReady();
+#ifdef DVRP
+	if (!strncmp(clipPath, "dvr_hdd", 7))
+		return clipboardDvrHddSourceReady();
+#endif
+
+	if (!ensurePathDeviceStackReady(clipPath))
+		return FALSE;
+	if (genFixPath(clipPath, fixed_path) < 0)
+		return FALSE;
+	makeDeviceRootPath(fixed_path, root_path, sizeof(root_path));
+	if (probeDirectory(root_path))
+		return TRUE;
+	return probeDirectory(fixed_path);
+}
+
+static int waitForClipboardSourceDevice(void)
+{
+	u64 deadline, next_check;
+
+	if (clipIopResetGeneration == getIopResetGeneration())
+		return 0;
+
+	deadline = Timer() + SOURCE_DEVICE_WAIT_TIMEOUT_MS;
+	while (1) {
+		if (clipboardSourceDeviceReady()) {
+			clipIopResetGeneration = getIopResetGeneration();
+			return 0;
+		}
+		if (Timer() >= deadline)
+			break;
+
+		drawMsg(LNG(Pasting));
+		next_check = Timer() + SOURCE_DEVICE_WAIT_INTERVAL_MS;
+		if (next_check > deadline)
+			next_check = deadline;
+		waitUntilTimer(next_check);
+	}
+
+	return -1;
 }
 
 static void formatBrowserPathForDisplay(const char *path, char *display_path)
@@ -242,6 +392,7 @@ static int menu(const char *path, FILEINFO *file)
 	menu_len = strlen(LNG(New_Dir)) > menu_len ? strlen(LNG(New_Dir)) : menu_len;
 	menu_len = strlen(LNG(Get_Size)) > menu_len ? strlen(LNG(Get_Size)) : menu_len;
 	menu_len = strlen(LNG(TextEditor)) > menu_len ? strlen(LNG(TextEditor)) : menu_len;
+	menu_len = strlen(LNG(Launch_With_Args)) > menu_len ? strlen(LNG(Launch_With_Args)) : menu_len;
 	menu_len = strlen(psu_action_label) > menu_len ? strlen(psu_action_label) : menu_len;
 	menu_len = strlen(LNG(time_manip)) > menu_len ? strlen(LNG(time_manip)) : menu_len;
 	menu_len = strlen(LNG(title_cfg)) > menu_len ? strlen(LNG(title_cfg)) : menu_len;
@@ -300,6 +451,7 @@ static int menu(const char *path, FILEINFO *file)
 		enable[TITLE_CFG] = FALSE;
 
 	enable[OPEN_TEXTEDITOR] = canOpenInTextEditor(path, file);
+	enable[LAUNCH_ELF_ARGS] = enable[OPEN_TEXTEDITOR];
 
 
 	if (write_disabled || menu_disabled) {
@@ -321,6 +473,8 @@ static int menu(const char *path, FILEINFO *file)
 			enable[RENAME] = FALSE;
 			enable[GETSIZE] = FALSE;
 		}
+		if (filerIsExploitProtectedPath(path, file))
+			enable[RENAME] = FALSE;
 	} else {
 		enable[RENAME] = FALSE;
 	}
@@ -406,6 +560,8 @@ static int menu(const char *path, FILEINFO *file)
 					strcpy(tmp, LNG(Get_Size));
 				else if (i == OPEN_TEXTEDITOR)
 					strcpy(tmp, LNG(TextEditor));
+				else if (i == LAUNCH_ELF_ARGS)
+					strcpy(tmp, LNG(Launch_With_Args));
 				else if (i == TITLE_CFG)
 					strcpy(tmp, LNG(title_cfg));
 #ifdef TMANIP
@@ -1002,6 +1158,7 @@ int getFilePath(char *out, int cnfmode)
 						strcpy(ext, "*");
 					browser_cd = TRUE;
 				} else if ((!swapKeys && (new_pad & PAD_CROSS)) || (swapKeys && (new_pad & PAD_CIRCLE))) {  //Cancel command ?
+					LaunchArgsClear();
 					unmountAll();
 					return rv;
 				}
@@ -1009,6 +1166,25 @@ int getFilePath(char *out, int cnfmode)
 				if (new_pad & PAD_R1) {
 					ret = menu(path, &files[browser_sel]);
 					if (ret == COPY || ret == CUT) {
+						if (ret == CUT) {
+							const FILEINFO *protected_file = NULL;
+
+							if (nmarks > 0) {
+								for (i = 0; i < browser_nfiles; i++) {
+									if (marks[i] && filerIsExploitProtectedPath(path, &files[i])) {
+										protected_file = &files[i];
+										break;
+									}
+								}
+							} else if (filerIsExploitProtectedPath(path, &files[browser_sel]))
+								protected_file = &files[browser_sel];
+							if (protected_file != NULL) {
+								if (filerConfirmExploitModify(path, protected_file) < 0) {
+									browser_pushed = FALSE;
+									continue;
+								}
+							}
+						}
 						strcpy(clipPath, path);
 						if (nmarks > 0) {
 							for (i = nclipFiles = 0; i < browser_nfiles; i++)
@@ -1028,6 +1204,7 @@ int getFilePath(char *out, int cnfmode)
 							clipFiles[0] = files[browser_sel];
 							nclipFiles = 1;
 						}
+						clipIopResetGeneration = getIopResetGeneration();
 						sprintf(msg0, "%s", LNG(Copied_to_the_Clipboard));
 						browser_pushed = FALSE;
 						if (ret == CUT)
@@ -1037,17 +1214,21 @@ int getFilePath(char *out, int cnfmode)
 					}  //ends COPY and CUT
 					else if (ret == DELETE) {
 						if (nmarks == 0) {  //dlanor: using title was inappropriate here (filesystem op)
-							sprintf(tmp, "%s", files[browser_sel].name);
-							if (files[browser_sel].stats.AttrFile & sceMcFileAttrSubdir)
-								strcat(tmp, "/");
-							sprintf(tmp1, "\n%s ?", LNG(Delete));
-							strcat(tmp, tmp1);
-							ret = ynDialog(tmp);
+							if (filerIsExploitProtectedPath(path, &files[browser_sel])) {
+								ret = filerConfirmExploitDelete(path, &files[browser_sel]);
+							} else {
+								sprintf(tmp, "%s", files[browser_sel].name);
+								if (files[browser_sel].stats.AttrFile & sceMcFileAttrSubdir)
+									strcat(tmp, "/");
+								sprintf(tmp1, "\n%s ?", LNG(Delete));
+								strcat(tmp, tmp1);
+								ret = ynDialog(tmp);
+							}
 						} else
 							ret = ynDialog(LNG(Mark_Files_Delete));
 
 						if (ret > 0) {
-							int first_deleted = 0;
+							int first_deleted = -1;
 							if (nmarks == 0) {
 								strcpy(tmp, files[browser_sel].name);
 								if (files[browser_sel].stats.AttrFile & sceMcFileAttrSubdir)
@@ -1056,10 +1237,15 @@ int getFilePath(char *out, int cnfmode)
 								strcat(tmp, tmp1);
 								drawMsg(tmp);
 								ret = delete (path, &files[browser_sel]);
+								if (ret >= 0)
+									first_deleted = browser_sel;
 							} else {
 								for (i = 0; i < browser_nfiles; i++) {
 									if (marks[i]) {
-										if (!first_deleted)     //if this is the first mark
+										if (filerIsExploitProtectedPath(path, &files[i]) &&
+										    filerConfirmExploitDelete(path, &files[i]) < 0)
+											continue;
+										if (first_deleted < 0)   //if this is the first mark
 											first_deleted = i;  //then memorize it for cursor positioning
 										strcpy(tmp, files[i].name);
 										if (files[i].stats.AttrFile & sceMcFileAttrSubdir)
@@ -1074,10 +1260,12 @@ int getFilePath(char *out, int cnfmode)
 								}
 							}
 							if (ret >= 0) {
-								if (nmarks == 0)
-									strcpy(cursorEntry, files[browser_sel - 1].name);
-								else
-									strcpy(cursorEntry, files[first_deleted - 1].name);
+								if (first_deleted >= 0) {
+									int cursor_source = first_deleted - 1;
+									if (cursor_source < 0)
+										cursor_source = 0;
+									strcpy(cursorEntry, files[cursor_source].name);
+								}
 							} else {
 								strcpy(cursorEntry, files[browser_sel].name);
 								sprintf(msg0, "%s Err=%d", LNG(Delete_Failed), ret);
@@ -1088,22 +1276,34 @@ int getFilePath(char *out, int cnfmode)
 						}
 					}  //ends DELETE
 					else if (ret == RENAME) {
-						strcpy(tmp, files[browser_sel].name);
-						if (keyboard(tmp, 36) > 0) {
-							if (Rename(path, &files[browser_sel], tmp) < 0) {
-								browser_pushed = FALSE;
-								strcpy(msg0, LNG(Rename_Failed));
-							} else
-								browser_cd = TRUE;
+						if (filerIsExploitProtectedPath(path, &files[browser_sel])) {
+							browser_pushed = FALSE;
+							strcpy(msg0, LNG(Rename_Failed));
+						} else {
+							strcpy(tmp, files[browser_sel].name);
+							if (keyboard(tmp, 36) > 0) {
+								if (Rename(path, &files[browser_sel], tmp) < 0) {
+									browser_pushed = FALSE;
+									strcpy(msg0, LNG(Rename_Failed));
+								} else
+									browser_cd = TRUE;
+							}
 						}
 					}  //ends RENAME
-					else if (ret == PASTE)
-						submenu_func_Paste(msg0, path);
-					else if (ret == PSUPASTE)
-						submenu_func_psuPaste(msg0, path);
+					else if (ret == PASTE) {
+						if (filerConfirmExploitModify(path, NULL) > 0)
+							submenu_func_Paste(msg0, path);
+						else
+							browser_pushed = FALSE;
+					} else if (ret == PSUPASTE) {
+						if (filerConfirmExploitModify(path, NULL) > 0)
+							submenu_func_psuPaste(msg0, path);
+						else
+							browser_pushed = FALSE;
+					}
 					else if (ret == NEWDIR) {
 						tmp[0] = 0;
-						if (keyboard(tmp, 36) > 0) {
+						if (filerConfirmExploitModify(path, NULL) > 0 && keyboard(tmp, 36) > 0) {
 							ret = newdir(path, tmp);
 							if (ret == -17) {
 								strcpy(msg0, LNG(directory_already_exists));
@@ -1121,8 +1321,12 @@ int getFilePath(char *out, int cnfmode)
 							}
 						}
 					}  //ends NEWDIR
-						else if (ret == NEWICON) {
-							strcpy(tmp, LNG(Icon_Title));
+					else if (ret == NEWICON) {
+						if (filerConfirmExploitModify(path, NULL) < 0) {
+							browser_pushed = FALSE;
+							continue;
+						}
+						strcpy(tmp, LNG(Icon_Title));
 							if (keyboard(tmp, 36) <= 0)
 								goto DoneIcon;
 							if (genFixPath(path, tmp1) < 0) {
@@ -1212,13 +1416,28 @@ int getFilePath(char *out, int cnfmode)
 						}
 					}  //ends MOUNTVMCx
 					else if (ret == OPEN_TEXTEDITOR) {
-						snprintf(tmp1, sizeof(tmp1), "%s%s", path, files[browser_sel].name);
-						TextEditor(tmp1);
-						strcpy(cursorEntry, files[browser_sel].name);
-						browser_pushed = FALSE;
-						browser_repos = TRUE;
-						browser_cd = TRUE;
+						if (filerConfirmExploitModify(path, &files[browser_sel]) > 0) {
+							snprintf(tmp1, sizeof(tmp1), "%s%s", path, files[browser_sel].name);
+							ret = TextEditor(tmp1);
+							strcpy(cursorEntry, files[browser_sel].name);
+							browser_pushed = FALSE;
+							browser_repos = TRUE;
+							browser_cd = TRUE;
+							if (ret == TEXTEDITOR_RESULT_LAUNCH_ARGS)
+								snprintf(msg0, sizeof(msg0), LNG(Launch_Args_Loaded), LaunchArgsGetCount());
+							else
+								LaunchArgsClear();
+						} else
+							browser_pushed = FALSE;
 					}  //ends OPEN_TEXTEDITOR
+					else if (ret == LAUNCH_ELF_ARGS) {
+						snprintf(tmp1, sizeof(tmp1), "%s%s", path, files[browser_sel].name);
+						if (LaunchArgsLoadFromFile(tmp1, msg0, sizeof(msg0)) > 0) {
+							strcpy(cursorEntry, files[browser_sel].name);
+							browser_repos = TRUE;
+						}
+						browser_pushed = FALSE;
+					}  //ends LAUNCH_ELF_ARGS
 					else if (ret == GETSIZE) {
 						submenu_func_GetSize(msg0, path, files);
 					}  //ends GETSIZE
@@ -1229,7 +1448,7 @@ int getFilePath(char *out, int cnfmode)
 #else
 						sprintf(msg1, "\n\n %s  [%s]  ?\n", LNG(change_timestamp_of), files[browser_sel].name);
 #endif //TMANIP_MORON
-						if (ynDialog(msg1) > 0) {
+						if (filerConfirmExploitModify(path, &files[browser_sel]) > 0 && ynDialog(msg1) > 0) {
 							time_manip(path, &files[browser_sel], msg0);
 							browser_pushed = FALSE;
 							browser_repos = TRUE;  // TEST
@@ -1239,10 +1458,13 @@ int getFilePath(char *out, int cnfmode)
 //#endif //TMANIP
 
 				else if (ret == TITLE_CFG) {
-					make_title_cfg(path, &files[browser_sel], msg0);
-					browser_pushed = FALSE;
-					browser_repos = TRUE;  // TEST
-					browser_cd = TRUE;     //TEST
+					if (filerConfirmExploitModify(path, &files[browser_sel]) > 0) {
+						make_title_cfg(path, &files[browser_sel], msg0);
+						browser_pushed = FALSE;
+						browser_repos = TRUE;  // TEST
+						browser_cd = TRUE;     //TEST
+					} else
+						browser_pushed = FALSE;
 				}
 				   //R1 menu handling is completed above
 			} else if ((!swapKeys && new_pad & PAD_CROSS) || (swapKeys && new_pad & PAD_CIRCLE)) {
@@ -1272,6 +1494,7 @@ int getFilePath(char *out, int cnfmode)
 					}
 				}
 			} else if (new_pad & PAD_SELECT) {  //Leaving the browser ?
+				LaunchArgsClear();
 				unmountAll();
 				return rv;
 			}
@@ -1293,6 +1516,15 @@ int getFilePath(char *out, int cnfmode)
 			browser_cd = TRUE;
 			browser_repos = TRUE;
 		}  //ends 'if(browser_up)'
+		if (!browser_cd && path[0] == '\0' && !boot_show_all_devices && setting != NULL && setting->Hide_MCMMCE && pollRootMemoryCardDevices()) {
+			if (browser_nfiles > 0)
+				strcpy(cursorEntry, files[browser_sel].name);
+			else
+				cursorEntry[0] = '\0';
+			browser_cd = TRUE;
+			browser_repos = TRUE;
+			event |= 2;
+		}
 		//----- Process newly entered directory here (incl initial entry)
 		if (browser_cd) {
 			if (isGenericUsbRootPath(path)) {
@@ -1301,6 +1533,18 @@ int getFilePath(char *out, int cnfmode)
 					snprintf(path, sizeof(path), "usb%d:/", usb_unit);
 			}
 			browser_nfiles = setFileList(path, ext, files, cnfmode);
+#ifdef UDPFS
+			if (udpfs_dir_open_failed) {
+				udpfs_dir_open_failed = 0;
+				strcpy(msg0, LNG(UDPFS_Server_not_found));
+				browser_pushed = FALSE;
+				rebootIopAndReloadCoreStackSilent();
+				path[0] = '\0';
+				strcpy(cursorEntry, "udpfs:");
+				browser_repos = TRUE;
+				browser_nfiles = setFileList(path, ext, files, cnfmode);
+			}
+#endif
 			if (!cnfmode) {  //Calculate free space (unless configuring)
 				if (!strncmp(path, "mc", 2)) {
 					mcGetInfo(path[2] - '0', 0, &mctype_PSx, &mcfreeSpace, NULL);
@@ -1502,7 +1746,8 @@ int getFilePath(char *out, int cnfmode)
 									genCmpFileExt(files[top + i].name, "XML") ||
 									genCmpFileExt(files[top + i].name, "TOML") ||
 									genCmpFileExt(files[top + i].name, "YAML") ||
-									genCmpFileExt(files[top + i].name, "YML")
+									genCmpFileExt(files[top + i].name, "YML") ||
+									genCmpFileExt(files[top + i].name, "ARG")
 									)
 							iconcolr = COLOR_GRAPH4;
 						else
@@ -1539,19 +1784,9 @@ int getFilePath(char *out, int cnfmode)
 			}  //ends clause for clipboard indicator
 				if (browser_pushed) {
 					char display_path[MAX_PATH];
-					int msg0_prefix;
-					int msg0_path_len;
 
 					formatBrowserPathForDisplay(path, display_path);
-					msg0_prefix = snprintf(msg0, sizeof(msg0), "%s: ", LNG(Path));
-					if (msg0_prefix < 0 || msg0_prefix >= (int)sizeof(msg0))
-						msg0[sizeof(msg0) - 1] = '\0';
-					else {
-						msg0_path_len = (int)sizeof(msg0) - msg0_prefix - 1;
-						if (msg0_path_len < 0)
-							msg0_path_len = 0;
-						snprintf(msg0 + msg0_prefix, sizeof(msg0) - msg0_prefix, "%.*s", msg0_path_len, display_path);
-					}
+					snprintf(msg0, sizeof(msg0), "%s", display_path);
 				}
 
 			//Tooltip section
@@ -1623,6 +1858,8 @@ int getFilePath(char *out, int cnfmode)
 	}  //ends while
 
 	//Leaving the browser
+	if (rv <= 0)
+		LaunchArgsClear();
 	unmountAll();
 	return rv;
 }
@@ -1772,6 +2009,11 @@ static void subfunc_Paste(char *mess, char *path)
 		goto finished;
 	}
 	drawMsg(LNG(Pasting));
+	if (waitForClipboardSourceDevice() < 0) {
+		printf("[PASTE] source device unavailable after IOP reset src='%s' dst='%s'\n", clipPath, path);
+		ret = -1;
+		goto finished;
+	}
 	if (trace_vmc_paste)
 		printf("[PASTE] start src='%s' dst='%s' items=%d mode=%d cut=%d\n",
 		       clipPath, path, nclipFiles, PasteMode, browser_cut);
@@ -1798,6 +2040,10 @@ static void subfunc_Paste(char *mess, char *path)
 	}
 	if ((ret >= 0) && browser_cut) {
 		for (i = 0; i < nclipFiles; i++) {
+			if (filerConfirmExploitDelete(clipPath, &clipFiles[i]) < 0) {
+				ret = -1;
+				break;
+			}
 			ret = delete (clipPath, &clipFiles[i]);
 			if (ret < 0)
 				break;
@@ -1812,8 +2058,11 @@ finished:
 		       ret, clipPath, path, PasteMode, browser_cut);
 		strcpy(mess, LNG(Paste_Failed));
 		browser_pushed = FALSE;
-	} else if (browser_cut)
-		nclipFiles = 0;
+	} else {
+		if (browser_cut)
+			nclipFiles = 0;
+		markMx4sioDestinationAfterWrite(path);
+	}
 	browser_cd = TRUE;
 }
 //------------------------------

@@ -45,6 +45,7 @@ u8 mx4sio_driver_running = 0;
 #endif
 
 u8 console_is_PSX = 0;
+u8 boot_show_all_devices = 0;
 
 static int boot_argc;
 static char *boot_argv[8];

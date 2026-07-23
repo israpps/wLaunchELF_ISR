@@ -73,7 +73,7 @@ static void editorKeyboardPrintLeft(const char *label, int box_left, int box_rig
 //--------------------------------------------------------------
 //--------------------------------------------------------------
 //--------------------------------------------------------------
-void TextEditor(char *path)
+int TextEditor(char *path)
 {
 	char tmp[MAX_PATH], tmp1[MAX_PATH], tmp2[MAX_PATH];
 	unsigned int key_char;
@@ -85,6 +85,7 @@ void TextEditor(char *path)
 	int tmpLen = 0;
 	int event = 1, post_event = 0;
 	int Editor_Start = 0;
+	int editor_result = TEXTEDITOR_RESULT_EXIT;
 	int key_grid_first_col, key_grid_visible_cols, key_grid_visible_w, key_grid_area_x, key_grid_area_w, KEY_GRID_X, KEY_SPECIAL_GRID_X;
 	u64 color;
 	const int KEY_W = 350,
@@ -215,11 +216,15 @@ void TextEditor(char *path)
 				Mark[MARK_IN] = 0, Mark[MARK_OUT] = 0, Mark[MARK_TMP] = 0,
 				Mark[MARK_SIZE] = 0, Mark[MARK_PRINT] = 0, Mark[MARK_COLOR] = 0;
 
-				return;
+				return editor_result;
 			unsave:
-				if (ynDialog(LNG(Exit_Without_Saving)) != 1)
+				if (ynDialog(LNG(Exit_Without_Saving)) != 1) {
+					if (editor_result == TEXTEDITOR_RESULT_LAUNCH_ARGS) {
+						LaunchArgsClear();
+						editor_result = TEXTEDITOR_RESULT_EXIT;
+					}
 					goto abort;
-				else
+				} else
 					goto force;
 			} else if (new_pad & PAD_R1) {
 			menu:
@@ -300,6 +305,13 @@ void TextEditor(char *path)
 					if (ret >= 0) {
 						Active_Window = ret;
 						editorResetState();
+					}
+				} else if (ret == LAUNCH_WITH_ARGS) {
+					ret = LaunchArgsLoadFromBuffer(Path[Active_Window], TextBuffer[Active_Window], TextSize[Active_Window], tmp, sizeof(tmp));
+					drawMsg(tmp);
+					if (ret > 0) {
+						editor_result = TEXTEDITOR_RESULT_LAUNCH_ARGS;
+						goto exit;
 					}
 				} else if (ret == EXIT) {
 					goto exit;
@@ -631,7 +643,7 @@ void TextEditor(char *path)
 		event = 0;
 	}  //ends while.
 
-	return;
+	return TEXTEDITOR_RESULT_EXIT;
 }
 //--------------------------------------------------------------
 //End of file: editor.c

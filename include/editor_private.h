@@ -23,6 +23,7 @@ enum {
 	SAVE,
 	SAVE_AS,
 	WINDOWS,
+	LAUNCH_WITH_ARGS,
 	EXIT,
 	NUM_MENU
 };  // Menu Fonction.

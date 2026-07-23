@@ -2,6 +2,7 @@
 //File name:   main_info_screens.c
 //--------------------------------------------------------------
 #include "launchelf.h"
+#include "main_console_info.h"
 #include "main_startup.h"
 #include "main_info_screens.h"
 
@@ -208,8 +209,11 @@ void Show_build_info(void)
 void ShowDebugInfo(int boot_argc, char *boot_argv[], const char *boot_path, const char *default_osdsys_path2, char rough_region, char *romver_data)
 {
 	char TextRow[256];
+	char console_model[CONSOLE_MODEL_NAME_MAX_LEN + 1];
 	unsigned short romVersion;
 	int i, event, post_event = 0;
+
+	console_model[0] = '\0';
 	event = 1;  //event = initial entry
 	//----- Start of event loop -----
 	while (1) {
@@ -226,13 +230,17 @@ void ShowDebugInfo(int boot_argc, char *boot_argv[], const char *boot_path, cons
 			PrintRow(0, "Debug Info Screen:");
 			if (romver_data[0] == '\0')
 				uLE_InitializeRegion();
+			if (console_model[0] == '\0')
+				GetConsoleModelName(romver_data, console_model, sizeof(console_model));
 			if (romver_data[0] == '\0')
 				snprintf(TextRow, sizeof(TextRow), "rom0:ROMVER == \"<unavailable>\"");
 			else
 				snprintf(TextRow, sizeof(TextRow), "rom0:ROMVER == \"%s\"", romver_data);
 			PrintRow(2, TextRow);
+			snprintf(TextRow, sizeof(TextRow), "Console model == \"%s\"", console_model);
+			PrintRow(-1, TextRow);
 			sprintf(TextRow, "argc == %d", boot_argc);
-			PrintRow(4, TextRow);
+			PrintRow(5, TextRow);
 			for (i = 0; (i < boot_argc) && (i < 8); i++) {
 				sprintf(TextRow, "argv[%d] == \"%s\"", i, boot_argv[i]);
 				PrintRow(-1, TextRow);

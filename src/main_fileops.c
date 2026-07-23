@@ -66,7 +66,8 @@ int IsTextEditorFileType(const char *path)
 	        genCmpFileExt(path, "XML") ||
 	        genCmpFileExt(path, "TOML") ||
 	        genCmpFileExt(path, "YAML") ||
-	        genCmpFileExt(path, "YML"));
+	        genCmpFileExt(path, "YML") ||
+	        genCmpFileExt(path, "ARG"));
 }
 
 int IsSupportedFileType(char *path)

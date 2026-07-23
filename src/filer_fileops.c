@@ -253,6 +253,54 @@ int genRemove(char *path)
 //------------------------------
 //endfunc genRemove
 //--------------------------------------------------------------
+int genGetStat(const char *path, iox_stat_t *stat)
+{
+	char stat_path[MAX_PATH];
+
+	if (path == NULL || path[0] == '\0' || stat == NULL)
+		return -1;
+	snprintf(stat_path, sizeof(stat_path), "%s", path);
+#if defined(ETH) || defined(UDPFS)
+	makeHostPath(stat_path, stat_path);
+#endif
+	genLimObjName(stat_path, 0);
+	return fileXioGetStat(stat_path, stat);
+}
+//------------------------------
+//endfunc genGetStat
+//--------------------------------------------------------------
+int genMkdir(const char *path, int mode)
+{
+	char mkdir_path[MAX_PATH];
+	int ret;
+#if FILEOP_TRACE
+	u64 t0, t1;
+	char log_path[MAX_PATH];
+#endif
+
+	if (path == NULL || path[0] == '\0')
+		return -1;
+	snprintf(mkdir_path, sizeof(mkdir_path), "%s", path);
+#if defined(ETH) || defined(UDPFS)
+	makeHostPath(mkdir_path, mkdir_path);
+#endif
+	genLimObjName(mkdir_path, 0);
+
+#if FILEOP_TRACE
+	t0 = Timer();
+#endif
+	ret = fileXioMkdir(mkdir_path, mode);
+#if FILEOP_TRACE
+	t1 = Timer();
+	printf("[FILEOP] mkdir path=%s mode=0x%x ret=%d dt=%llu ms\n",
+	       fileopTraceDisplayPath(mkdir_path, log_path, sizeof(log_path)),
+	       mode, ret, (unsigned long long)((t1 >= t0) ? (t1 - t0) : 0));
+#endif
+	return ret;
+}
+//------------------------------
+//endfunc genMkdir
+//--------------------------------------------------------------
 int genOpen(const char *path, int mode)
 {
 	char open_path[MAX_PATH], alt_path[MAX_PATH], *sep;

@@ -27,6 +27,7 @@ enum {
 	MOUNTVMC1,
 	GETSIZE,
 	OPEN_TEXTEDITOR,
+	LAUNCH_ELF_ARGS,
 	TIMEMANIP,
 	TITLE_CFG,
 	NUM_MENU
@@ -56,6 +57,7 @@ extern int vfreeSpace;
 extern int browser_cut;
 extern int nclipFiles;
 extern int nmarks;
+extern unsigned int clipIopResetGeneration;
 extern u64 written_size;
 extern u64 PasteTime;
 extern int PSU_content;
@@ -76,8 +78,13 @@ extern FILEINFO clipFiles[MAX_ENTRY];
 #if defined(ETH) || defined(UDPFS)
 extern int host_elflist;
 #endif
+#ifdef UDPFS
+extern int udpfs_dir_open_failed;
+#endif
 
 int getDir(const char *path, FILEINFO *info);
+int pollRootMemoryCardDevices(void);
+void discardNextMx4sioRootListing(const char *path);
 int ensurePathDeviceStackReady(const char *path);
 int prepareTransferDeviceStacks(const char *src_path, const char *dst_path);
 int copy(char *outPath, const char *inPath, FILEINFO file, int recurses);

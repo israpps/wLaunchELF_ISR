@@ -17,6 +17,22 @@ void captureBootArguments(int argc, char *argv[], int *boot_argc, char *boot_arg
 		boot_argv[i] = argv[i];
 }
 
+static void mapDefaultFileBrowserLaunchKeyToOkButton(void)
+{
+	int ok_lk;
+
+	if (setting == NULL)
+		return;
+
+	ok_lk = setting->swapKeys ? SETTING_LK_CROSS : SETTING_LK_CIRCLE;
+	setting->LK_Path[SETTING_LK_CIRCLE][0] = '\0';
+	setting->LK_Flag[SETTING_LK_CIRCLE] = 0;
+	setting->LK_Path[SETTING_LK_CROSS][0] = '\0';
+	setting->LK_Flag[SETTING_LK_CROSS] = 0;
+	strcpy(setting->LK_Path[ok_lk], setting->Misc_FileBrowser);
+	setting->LK_Flag[ok_lk] = 1;
+}
+
 enum BOOT_DEVICE performEarlyBootInitialization(const char *arg0, char *boot_path, size_t boot_path_len, char *main_msg, char *cnf_path, size_t cnf_path_len, int *cnf_error)
 {
 	enum BOOT_DEVICE boot;
@@ -46,12 +62,13 @@ enum BOOT_DEVICE performEarlyBootInitialization(const char *arg0, char *boot_pat
 	if (local_cnf_error < 0) {
 		/* No config loaded: default pad mapping from ROM region.
 		 * ROMVER_data[4] is the region letter.
-		 * J/C => Circle=OK, Cross=Cancel (swapKeys=FALSE)
-		 * others => Cross=OK, Circle=Cancel (swapKeys=TRUE)
+		 * J/C => Circle=OK/FileBrowser, Cross=Cancel (swapKeys=FALSE)
+		 * others => Cross=OK/FileBrowser, Circle=Cancel (swapKeys=TRUE)
 		 */
 		if (ROMVER_data[0] == '\0')
 			uLE_InitializeRegion();
 		setting->swapKeys = ((ROMVER_data[4] == 'J') || (ROMVER_data[4] == 'C')) ? FALSE : TRUE;
+		mapDefaultFileBrowserLaunchKeyToOkButton();
 	}
 	bringUpBootNetworkStack(boot);
 	initializeBootGraphics();

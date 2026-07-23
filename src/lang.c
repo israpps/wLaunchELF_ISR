@@ -51,6 +51,12 @@ static Language Lang_French[] = {
 #undef lang
     {NULL}};
 
+static Language Lang_Hungarian[] = {
+#define lang(id, name, value) {value},
+#include "../Lang/HUN.LNG"
+#undef lang
+    {NULL}};
+
 Language Lang_String[sizeof(Lang_Default) / sizeof(Lang_Default[0])];
 Language Lang_Extern[sizeof(Lang_Default) / sizeof(Lang_Default[0])];
 
@@ -65,6 +71,7 @@ static const char *builtin_language_config_names[BUILTIN_LANGUAGE_COUNT] = {
     "portuguese",
     "brazilian",
     "german",
+    "hungarian",
 };
 
 static const char *builtin_language_native_names[BUILTIN_LANGUAGE_COUNT] = {
@@ -76,6 +83,7 @@ static const char *builtin_language_native_names[BUILTIN_LANGUAGE_COUNT] = {
     "Portugues",
     "Portugues Brasileiro",
     "Deutsch",
+    "Magyar",
 };
 
 int normalizeBuiltinLanguage(int language)
@@ -104,6 +112,8 @@ static Language *getBuiltinLanguageTable(int language)
 			return Lang_Brazilian;
 		case BUILTIN_LANGUAGE_GERMAN:
 			return Lang_German;
+		case BUILTIN_LANGUAGE_HUNGARIAN:
+			return Lang_Hungarian;
 		case BUILTIN_LANGUAGE_ENGLISH:
 		default:
 			return Lang_Default;
@@ -144,6 +154,8 @@ int getBuiltinLanguageByConfigName(const char *name)
 		return BUILTIN_LANGUAGE_BRAZILIAN;
 	if (!stricmp(name, "7") || !stricmp(name, "german") || !stricmp(name, "ger") || !stricmp(name, "deu") || !stricmp(name, "de") || !stricmp(name, "deutsch"))
 		return BUILTIN_LANGUAGE_GERMAN;
+	if (!stricmp(name, "8") || !stricmp(name, "hungarian") || !stricmp(name, "hun") || !stricmp(name, "hu") || !stricmp(name, "magyar"))
+		return BUILTIN_LANGUAGE_HUNGARIAN;
 	return -1;
 }
 
@@ -302,48 +314,101 @@ exit:
 }
 //Ends get_LANG_string
 //---------------------------------------------------------------------------
+static int copy_LANG_value(char *dst, const char *src, int len)
+{
+	int si;
+	int di = 0;
+
+	for (si = 0; si < len; si++) {
+		if (src[si] == '\\' && si + 1 < len) {
+			switch (src[si + 1]) {
+				case 'n':
+					dst[di++] = '\n';
+					si++;
+					continue;
+				case 'r':
+					dst[di++] = '\r';
+					si++;
+					continue;
+				case 't':
+					dst[di++] = '\t';
+					si++;
+					continue;
+				case '"':
+					dst[di++] = '"';
+					si++;
+					continue;
+				case '\\':
+					dst[di++] = '\\';
+					si++;
+					continue;
+				default:
+					break;
+			}
+		}
+		dst[di++] = src[si];
+	}
+
+	dst[di] = '\0';
+	return di;
+}
+
+static int isMiscLaunchNameAlias(const char *name, const char *configured_path, const char *default_name)
+{
+	return !strcmp(name, configured_path + strlen(setting->Misc)) || !strcmp(name, default_name);
+}
+
 static void updateLocalizedMiscPaths(void)
 {
 	int i;
 	char *tmp;
+	char default_misc[64];
+	size_t default_misc_len;
 
 	if (setting == NULL)
 		return;
 
+	sprintf(default_misc, "%s/", LNG_DEF(MISC));
+	default_misc_len = strlen(default_misc);
+
 	if (strlen(setting->Misc) > 0) {
 		for (i = 0; i < 16; i++) {  //Loop to rename the ELF paths with new language for launch keys
 			if ((i < 12) || (setting->LK_Flag[i] != 0)) {
-				if (!strncmp(setting->LK_Path[i], setting->Misc, strlen(setting->Misc))) {
+				if (!strncmp(setting->LK_Path[i], setting->Misc, strlen(setting->Misc)) ||
+				    !strncmp(setting->LK_Path[i], default_misc, default_misc_len)) {
 					tmp = strrchr(setting->LK_Path[i], '/');
 					if (tmp == NULL)
 						continue;
-					if (!strcmp(tmp + 1, setting->Misc_PS2Disc + strlen(setting->Misc)))
+					if (isMiscLaunchNameAlias(tmp + 1, setting->Misc_PS2Disc, LNG_DEF(PS2Disc)))
 						sprintf(setting->LK_Path[i], "%s/%s", LNG(MISC), LNG(PS2Disc));
-					else if (!strcmp(tmp + 1, setting->Misc_FileBrowser + strlen(setting->Misc)))
+					else if (isMiscLaunchNameAlias(tmp + 1, setting->Misc_FileBrowser, LNG_DEF(FileBrowser)))
 						sprintf(setting->LK_Path[i], "%s/%s", LNG(MISC), LNG(FileBrowser));
-					else if (!strcmp(tmp + 1, setting->Misc_PS2Browser + strlen(setting->Misc)))
+					else if (isMiscLaunchNameAlias(tmp + 1, setting->Misc_PS2Browser, LNG_DEF(PS2Browser)))
 						sprintf(setting->LK_Path[i], "%s/%s", LNG(MISC), LNG(PS2Browser));
-					else if (!strcmp(tmp + 1, setting->Misc_PS2Net + strlen(setting->Misc)))
+					else if (isMiscLaunchNameAlias(tmp + 1, setting->Misc_PS2Net, LNG_DEF(PS2Net)))
 						sprintf(setting->LK_Path[i], "%s/%s", LNG(MISC), LNG(PS2Net));
-					else if (!strcmp(tmp + 1, setting->Misc_PS2PowerOff + strlen(setting->Misc)))
+					else if (isMiscLaunchNameAlias(tmp + 1, setting->Misc_PS2PowerOff, LNG_DEF(PS2PowerOff)))
 						sprintf(setting->LK_Path[i], "%s/%s", LNG(MISC), LNG(PS2PowerOff));
-					else if (!strcmp(tmp + 1, setting->Misc_HddManager + strlen(setting->Misc)))
+					else if (isMiscLaunchNameAlias(tmp + 1, setting->Misc_HddManager, LNG_DEF(HddManager)))
 						sprintf(setting->LK_Path[i], "%s/%s", LNG(MISC), LNG(HddManager));
-					else if (!strcmp(tmp + 1, setting->Misc_TextEditor + strlen(setting->Misc)))
+					else if (isMiscLaunchNameAlias(tmp + 1, setting->Misc_TextEditor, LNG_DEF(TextEditor)))
 						sprintf(setting->LK_Path[i], "%s/%s", LNG(MISC), LNG(TextEditor));
-					else if (!strcmp(tmp + 1, setting->Misc_Configure + strlen(setting->Misc)))
+					else if (isMiscLaunchNameAlias(tmp + 1, setting->Misc_Configure, LNG_DEF(Configure)))
 						sprintf(setting->LK_Path[i], "%s/%s", LNG(MISC), LNG(Configure));
-					else if (!strcmp(tmp + 1, setting->Misc_ShowFont + strlen(setting->Misc)))
+					else if (isMiscLaunchNameAlias(tmp + 1, setting->Misc_ShowFont, LNG_DEF(ShowFont)))
 						sprintf(setting->LK_Path[i], "%s/%s", LNG(MISC), LNG(ShowFont));
-					else if (!strcmp(tmp + 1, setting->Misc_Debug_Info + strlen(setting->Misc)))
+					else if (isMiscLaunchNameAlias(tmp + 1, setting->Misc_Debug_Info, LNG_DEF(Debug_Info)))
 						sprintf(setting->LK_Path[i], "%s/%s", LNG(MISC), LNG(Debug_Info));
-					else if (!strcmp(tmp + 1, setting->Misc_About_uLE + strlen(setting->Misc)))
+					else if (isMiscLaunchNameAlias(tmp + 1, setting->Misc_About_uLE, LNG_DEF(About_uLE)))
 						sprintf(setting->LK_Path[i], "%s/%s", LNG(MISC), LNG(About_uLE));
-					else if (!strcmp(tmp + 1, setting->Misc_Show_Build_Info + strlen(setting->Misc)))
+					else if (isMiscLaunchNameAlias(tmp + 1, setting->Misc_Show_Build_Info, LNG_DEF(Build_Info)))
 						sprintf(setting->LK_Path[i], "%s/%s", LNG(MISC), LNG(Build_Info));
-					else if (!strcmp(tmp + 1, setting->Misc_OSDSYS + strlen(setting->Misc)))
+					else if (isMiscLaunchNameAlias(tmp + 1, setting->Misc_OSDSYS, LNG_DEF(OSDSYS)))
 						sprintf(setting->LK_Path[i], "%s/%s", LNG(MISC), LNG(OSDSYS));
-					else if (!strcmp(tmp + 1, setting->Misc_Reboot_IOP + strlen(setting->Misc)))
+					else if (isMiscLaunchNameAlias(tmp + 1, setting->Misc_Exploit_Installer, LNG_DEF(Exploit_Installer)) ||
+					         !strcmp(tmp + 1, "Exploit Installer"))
+						sprintf(setting->LK_Path[i], "%s/%s", LNG(MISC), LNG(Exploit_Installer));
+					else if (isMiscLaunchNameAlias(tmp + 1, setting->Misc_Reboot_IOP, LNG_DEF(Reboot_IOP)))
 						sprintf(setting->LK_Path[i], "%s/%s", LNG(MISC), LNG(Reboot_IOP));
 				}  // end if Misc
 			}      // end if LK assigned
@@ -364,6 +429,7 @@ static void updateLocalizedMiscPaths(void)
 	sprintf(setting->Misc_About_uLE, "%s/%s", LNG(MISC), LNG(About_uLE));
 	sprintf(setting->Misc_Show_Build_Info, "%s/%s", LNG(MISC), LNG(Build_Info));
 	sprintf(setting->Misc_OSDSYS, "%s/%s", LNG(MISC), LNG(OSDSYS));
+	sprintf(setting->Misc_Exploit_Installer, "%s/%s", LNG(MISC), LNG(Exploit_Installer));
 	sprintf(setting->Misc_Reboot_IOP, "%s/%s", LNG(MISC), LNG(Reboot_IOP));
 }
 //---------------------------------------------------------------------------
@@ -449,11 +515,12 @@ void Load_External_Language(void)
 				file_tp = file_bp;
 				lang_tp = lang_bp;
 				while ((test = get_LANG_string(&file_tp, &id_p, &value_p)) >= 0) {
+					int decoded_len;
+
 					index = atoi(id_p);                   //get the string index
 					Lang_Extern[index].String = lang_tp;  //save pointer to this string base
-					strncpy(lang_tp, value_p, test);      //transfer the string
-					lang_tp[test] = '\0';                 //transfer a terminator
-					lang_tp += test + 1;                  //move dest pointer past this string
+					decoded_len = copy_LANG_value(lang_tp, value_p, test);
+					lang_tp += decoded_len + 1;           //move dest pointer past this string
 				}
 				External_Lang_Buffer = lang_bp;  //Save base pointer for releases
 				Lang = Lang_Extern;

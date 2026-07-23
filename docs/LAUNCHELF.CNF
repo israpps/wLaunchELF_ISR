@@ -40,6 +40,7 @@ Misc_PS2Browser = PS2Browser
 Misc_PS2Net = PS2Net
 Misc_PS2PowerOff = PS2PowerOff
 Misc_HddManager = HddManager
+Misc_Exploit_Installer = MC Exploit Installer
 Misc_TextEditor = TextEditor
 Misc_Configure = Configure
 Misc_ShowFont = ShowFont
@@ -232,6 +233,14 @@ VirtualKeyboardLayout = qwerty
 # ----------------------------------------------------------------------
 Hide_Hdd = 5
 # ----------------------------------------------------------------------
+# Hide_MCMMCE controls whether FileBrowser hides mc0/mc1 and mmce0/mmce1
+# when their matching memory card slot is not detected. This is a
+# config-only option and is not exposed in the UI.
+# 0 => always show mc0/mc1/mmce0/mmce1 (default if omitted)
+# 1 => hide mc0/mmce0 or mc1/mmce1 when the matching card is absent
+# ----------------------------------------------------------------------
+Hide_MCMMCE = 0
+# ----------------------------------------------------------------------
 # USBKBD_USED allows you to disable initialization of the USB keyboard
 # driver. This is mainly useful when you need to test some specific
 # software without any USB drivers active. For example, when testing
@@ -279,7 +288,7 @@ USBMASS_FILE =
 # ----------------------------------------------------------------------
 # language selects the built-in language used by the GUI. Valid values
 # are english, spanish, french, italian, polish, portuguese, brazilian,
-# and german.
+# german, and hungarian.
 # If this setting is omitted, blank, or invalid, English is used.
 # This can be changed live in the 'STARTUP SETTINGS' screen.
 # ----------------------------------------------------------------------

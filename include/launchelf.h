@@ -14,7 +14,7 @@
 #define ULE_VERSION_DEBUG_SUFFIX ""
 #endif
 
-#define ULE_VERSION "v4.70_R3Z" ULE_VERSION_DEBUG_SUFFIX
+#define ULE_VERSION "v4.75_R3Z" ULE_VERSION_DEBUG_SUFFIX
 //#ifndef ULE_VERDATE
 //#define ULE_VERDATE __DATE__
 //#endif
@@ -278,6 +278,7 @@ typedef struct
 	char Misc_About_uLE[64];
 	char Misc_Show_Build_Info[64];
 	char Misc_OSDSYS[64];
+	char Misc_Exploit_Installer[64];
 	char Misc_Reboot_IOP[64];
 	char usbkbd_file[MAX_PATH];
 	char kbdmap_file[MAX_PATH];
@@ -303,6 +304,7 @@ typedef struct
 	int reboot_iop_elf_load;
 	int virtual_keyboard_layout;
 	int Hide_Hdd;
+	int Hide_MCMMCE;
 	int Show_Titles;
 	int PathPad_Lock;
 	int PSU_HugeNames;
@@ -330,6 +332,7 @@ extern int TV_mode;
 extern int swapKeys;
 extern int cdmode;      //Last detected disc type
 extern u8 console_is_PSX;
+extern u8 boot_show_all_devices;
 extern char if_conf[IPCONF_MAX_LEN];
 extern int if_conf_len;
 extern char ip[16];
@@ -342,6 +345,7 @@ extern char SystemCnf_BOOT2[MAX_PATH];
 extern char SystemCnf_VER[10];
 extern char SystemCnf_VMODE[10];
 extern char ROMVER_data[16];
+extern char rough_region;
 
 #ifdef MX4SIO
 extern u8 mx4sio_driver_running;
@@ -389,6 +393,13 @@ int loadAtaModules(void);
 int checkELFheader(char *filename);
 void RunLoaderElf(char *filename, char *party, const char *selected_path, int exec_kind, int reboot_iop_elf_load);
 void RunLoaderMemory(const char *arg0, const char *mem_arg, int reboot_iop);
+void LaunchArgsClear(void);
+int LaunchArgsPending(void);
+int LaunchArgsGetCount(void);
+int LaunchArgsLoadFromFile(const char *path, char *message, size_t message_size);
+int LaunchArgsLoadSidecarForExec(const char *exec_path, char *message, size_t message_size);
+int LaunchArgsLoadFromBuffer(const char *source, const char *buffer, int size, char *message, size_t message_size);
+int LaunchArgsCopyToArgv(char **argv, int max_args);
 #ifdef XFROM
 int PrepareMbrLaunchPayload(const char *path, char *mem_arg, size_t mem_arg_size);
 #endif
@@ -458,6 +469,7 @@ int setupPad(void);
 int readpad(void);
 int readpad_no_KB(void);
 int readpad_noRepeat(void);
+void clearPadPressState(void);
 void waitPadReady(int port, int slot);
 void waitAnyPadReady(void);
 
@@ -500,7 +512,6 @@ extern int latestDVRPMount;
 extern int vmcMounted[2];
 extern int vmc_PartyIndex[2];            //PFS index for each VMC, unless -1
 extern int Party_vmcIndex[MOUNT_LIMIT];  //VMC index for each PFS, unless -1
-extern int nparties;                     //Clearing this causes FileBrowser to refresh party list
 extern unsigned char *elisaFnt;
 char *PathPad_menu(const char *path);
 int getFilePath(char *out, const int cnfmode);
@@ -523,6 +534,8 @@ int genWrite(int fd, void *buf, int size);
 int genClose(int fd);
 int genDopen(char *path);
 int genDclose(int fd);
+int genGetStat(const char *path, iox_stat_t *stat);
+int genMkdir(const char *path, int mode);
 int genRemove(char *path);
 int genRmdir(char *path);
 int genCmpFileExt(const char *filename, const char *extension);
@@ -542,7 +555,12 @@ void DebugDisp(char *Message);
 void hddManager(void);
 
 /* editor.c */
-void TextEditor(char *path);
+enum {
+	TEXTEDITOR_RESULT_EXIT = 0,
+	TEXTEDITOR_RESULT_LAUNCH_ARGS = 1
+};
+
+int TextEditor(char *path);
 
 /* timer.c */
 extern u64 WaitTime;
@@ -565,6 +583,7 @@ enum BuiltinLanguage {
 	BUILTIN_LANGUAGE_PORTUGUESE,
 	BUILTIN_LANGUAGE_BRAZILIAN,
 	BUILTIN_LANGUAGE_GERMAN,
+	BUILTIN_LANGUAGE_HUNGARIAN,
 	BUILTIN_LANGUAGE_COUNT
 };
 

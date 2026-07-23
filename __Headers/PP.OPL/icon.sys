@@ -1,0 +1,18 @@
+PS2X
+title0 = OpenPS2Loader
+title1 = 
+bgcola = 0
+bgcol0 = 22, 47, 92
+bgcol1 = 3, 10, 28
+bgcol2 = 3, 10, 28
+bgcol3 = 22, 47, 92
+lightdir0 = 0.5, 0.5, 0.5
+lightdir1 = 0.0, -0.4, -1.0
+lightdir2 = -0.5, -0.5, 0.5
+lightcolamb = 31, 31, 31
+lightcol0 = 62, 62, 55
+lightcol1 = 33, 42, 64
+lightcol2 = 18, 18, 49
+uninstallmes0 = you are about to delete:
+uninstallmes1 = PP.OPL
+uninstallmes2 =

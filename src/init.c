@@ -1,6 +1,7 @@
 #include "launchelf.h"
 #include "init.h"
 #include <unistd.h>
+#include <iopcontrol_special.h>
 
 #define IMPORT_BIN2C(_n) \
     extern u8 _n[];   \
@@ -94,6 +95,7 @@ static u8 have_basic_modules = 0;
 static u8 have_filexio_ready = 0;
 static u8 have_filexio_rwbuf_tuned = 0;
 static u8 have_mc_rpc_ready = 0;
+static unsigned int iop_reset_generation = 0;
 
 #define USB_MASS_BDMFS_SETTLE_MS 1000
 
@@ -135,8 +137,9 @@ static u8 have_ata_bd = 0;
 #ifdef XFROM
 static u8 have_Flash_modules = 0;
 static u8 xfromserv_loaded = 0;
-static u8 have_secrsif = 0;
 #endif
+static u8 have_secrsif = 0;
+static u8 have_exploit_signer_iop = 0;
 #ifdef MMCE
 static u8 have_mmce = 0;
 #endif
@@ -159,6 +162,11 @@ static u8 done_setupPowerOff = 0;
 #define FILEXIO_RWBUF_NET_PRIMARY (128 * 1024)
 #define FILEXIO_RWBUF_NET_FALLBACK (64 * 1024)
 static u8 ps2kbd_opened = 0;
+
+unsigned int getIopResetGeneration(void)
+{
+	return iop_reset_generation;
+}
 
 /*
  * Tracks driver stacks proven loaded in the current IOP session.
@@ -235,10 +243,11 @@ void ensureCoreIoStackReady(void);
 void setupPowerOff(void);
 void startKbd(void);
 void Reset(void);
+static void clearIopModuleState(void);
 static void resetUsbMassScanState(void);
 static void resetUsbMassRuntimeState(void);
 static void resetDriverStackLoadTracking(void);
-static void resetRuntimeDeviceState(void);
+static void resetRuntimeDeviceState(int show_status);
 static void switchStorageDriverStack(int target_mode);
 static void switchBlockStorageStack(int target_mode);
 #if defined(ETH) && defined(UDPFS)
@@ -433,10 +442,10 @@ static int load_ps2hdd_stack(int with_ata_bd)
 	                       "-n"
 	                       "\0"
 	                       "20";
-	/* Limit simultaneously mounted PFS partitions for ATA+APA compatibility. */
+	/* Allow up to four simultaneously mounted PFS partitions. */
 	static char pfsarg[] = "-m"
 	                       "\0"
-	                       "2"
+	                       "4"
 	                       "\0"
 	                       "-o"
 	                       "\0"
@@ -543,11 +552,8 @@ static int load_ps2atad_stack(void)
 //endfunc load_ps2atad_stack
 //---------------------------------------------------------------------------
 #endif
-#ifdef XFROM
-IMPORT_BIN2C(extflash_irx);
-IMPORT_BIN2C(xfromman_irx);
-IMPORT_BIN2C(xfromserv_irx);
 IMPORT_BIN2C(secrsif_irx);
+IMPORT_BIN2C(exploit_ioprp_img);
 int loadSecrSifModule(void)
 {
 	int ID __attribute__((unused)), ret;
@@ -564,6 +570,72 @@ int loadSecrSifModule(void)
 //------------------------------
 //endfunc loadSecrSifModule
 //---------------------------------------------------------------------------
+int prepareExploitSignerIop(void)
+{
+#ifdef NO_IOP_RESET
+	return 0;
+#else
+	int ret;
+
+	if (have_exploit_signer_iop) {
+		ensureCoreIoStackReady();
+#ifdef DS34
+		loadDs34InputModules();
+#endif
+		setupPad();
+		return loadSecrSifModule();
+	}
+
+#ifdef DS34
+	stopDs34Input();
+#endif
+	closeKeyboardIfOpened();
+	unmountAll();
+	showRebootingIopMsg();
+
+	SifInitRpc(0);
+	ret = SifIopRebootBuffer(exploit_ioprp_img, size_exploit_ioprp_img);
+	if (ret <= 0) {
+		SifInitRpc(0);
+		SifLoadFileInit();
+		initsbv_patches();
+		clearIopModuleState();
+		iop_reset_generation++;
+		ensureCoreIoStackReady();
+#ifdef DS34
+		loadDs34InputModules();
+#endif
+		setupPad();
+		return 0;
+	}
+	while (!SifIopSync()) {
+	};
+	SifInitRpc(0);
+	SifLoadFileInit();
+	initsbv_patches();
+
+	clearIopModuleState();
+	iop_reset_generation++;
+	ensureCoreIoStackReady();
+#ifdef DS34
+	loadDs34InputModules();
+#endif
+	setupPad();
+	if (!loadSecrSifModule())
+		return 0;
+
+	have_exploit_signer_iop = 1;
+	DPRINTF(" [EXPLOIT_IOP]: signer IOP ready\n");
+	return 1;
+#endif
+}
+//------------------------------
+//endfunc prepareExploitSignerIop
+//---------------------------------------------------------------------------
+#ifdef XFROM
+IMPORT_BIN2C(extflash_irx);
+IMPORT_BIN2C(xfromman_irx);
+IMPORT_BIN2C(xfromserv_irx);
 static void load_pflash(void)
 {
 	int ID __attribute__((unused)), ret;
@@ -664,7 +736,7 @@ int load_udpfs(void)
 //---------------------------------------------------------------------------
 int reloadUdpfsModules(void)
 {
-	resetRuntimeDeviceState();
+	resetRuntimeDeviceState(TRUE);
 	load_udpfs_stack();
 	return have_udpfs_ioman;
 }
@@ -677,11 +749,11 @@ static void load_ps2dvr(void)
 {
 	int ret, ID __attribute__((unused));
 
-	if (!have_dvrdrv || !have_dvrfile || !have_ps2atad || !have_ps2hdd || !have_ps2fs)
+	if (!have_dvrdrv || !have_dvrfile || !have_ps2hdd || !have_ps2fs)
 		showLoadingModulesMsg("dvr");
 
-	if (!load_ps2atad_stack()) {
-		DPRINTF(" [DVR]: skipping load because ATAD/HDD stack failed to initialize\n");
+	if (!load_ps2hdd_stack(1)) {
+		DPRINTF(" [DVR]: skipping load because HDD stack failed to initialize\n");
 		return;
 	}
 
@@ -1328,12 +1400,13 @@ static void stopDs34Input(void)
 }
 #endif
 
-static void resetRuntimeDeviceState(void)
+static void resetRuntimeDeviceState(int show_status)
 {
 #ifdef DS34
 	stopDs34Input();
 #endif
-	showRebootingIopMsg();
+	if (show_status)
+		showRebootingIopMsg();
 	unmountAll();
 	Reset();
 #ifdef DS34
@@ -1346,7 +1419,12 @@ static void resetRuntimeDeviceState(void)
 
 void rebootIopAndReloadCoreStack(void)
 {
-	resetRuntimeDeviceState();
+	resetRuntimeDeviceState(TRUE);
+}
+
+void rebootIopAndReloadCoreStackSilent(void)
+{
+	resetRuntimeDeviceState(FALSE);
 }
 
 static void switchStorageDriverStack(int target_mode)
@@ -1357,7 +1435,7 @@ static void switchStorageDriverStack(int target_mode)
 
 	if (storage_driver_stack_mode != STORAGE_STACK_DEFAULT) {
 		DPRINTF("Switching storage driver stack (%d -> %d), resetting IOP\n", storage_driver_stack_mode, target_mode);
-		resetRuntimeDeviceState();
+		resetRuntimeDeviceState(TRUE);
 	}
 #else
 	(void)target_mode;
@@ -1381,7 +1459,7 @@ static void switchBlockStorageStack(int target_mode)
 
 	if (block_storage_stack_mode != BLOCK_STACK_NONE) {
 		DPRINTF("Switching block storage stack (%d -> %d), resetting IOP\n", block_storage_stack_mode, target_mode);
-		resetRuntimeDeviceState();
+		resetRuntimeDeviceState(TRUE);
 	}
 }
 
@@ -1393,7 +1471,7 @@ static void switchNetworkStack(int target_mode)
 
 	if (network_stack_mode != NETWORK_STACK_NONE) {
 		DPRINTF("Switching network stack (%d -> %d), resetting IOP\n", network_stack_mode, target_mode);
-		resetRuntimeDeviceState();
+		resetRuntimeDeviceState(TRUE);
 	}
 	network_stack_mode = target_mode;
 }
@@ -1402,29 +1480,20 @@ static void switchNetworkStack(int target_mode)
 #ifdef DVRP
 static void switchPsxHddDriverStack(int use_dvr_stack)
 {
-	int block_stack_active;
-
 	if (!console_is_PSX)
 		return;
-
-	block_stack_active = (block_storage_stack_mode != BLOCK_STACK_NONE || have_ps2hdd || have_ps2fs);
-#ifdef EXFAT
-	block_stack_active = (block_stack_active || have_ata_bd);
-#endif
 
 	if (use_dvr_stack) {
 		if (have_DVRP_HDD_modules)
 			return;
-		if (!have_HDD_modules && !block_stack_active && !have_ps2atad && !have_dvrdrv && !have_dvrfile)
-			return;
-		DPRINTF("Switching PSX HDD stack (hdd0:/ -> dvr_hdd0:/), resetting IOP\n");
+		DPRINTF("Loading PSX DVR HDD stack without resetting IOP\n");
 	} else {
-		if (!have_DVRP_HDD_modules && !have_ps2atad && !have_dvrdrv && !have_dvrfile)
+		if (have_HDD_modules)
 			return;
-		DPRINTF("Switching PSX HDD stack (dvr_hdd0:/ -> hdd0:/), resetting IOP\n");
+		if (!have_DVRP_HDD_modules && !have_dvrdrv && !have_dvrfile)
+			return;
+		DPRINTF("Loading PSX APA HDD stack without resetting IOP\n");
 	}
-
-	resetRuntimeDeviceState();
 }
 #endif
 
@@ -1699,8 +1768,8 @@ int loadDVRPHddModules(void)
 		if (have_DVRP_HDD_modules) {
 			sceCdNoticeGameStart(0, NULL);
 		} else {
-			DPRINTF(" [DVR_HDD]: stack incomplete (ATAD=%d HDD=%d FS=%d DVRDRV=%d DVRFILE=%d)\n",
-			        have_ps2atad, have_ps2hdd, have_ps2fs, have_dvrdrv, have_dvrfile);
+			DPRINTF(" [DVR_HDD]: stack incomplete (HDD=%d FS=%d DVRDRV=%d DVRFILE=%d)\n",
+			        have_ps2hdd, have_ps2fs, have_dvrdrv, have_dvrfile);
 		}
 	}
 	return have_DVRP_HDD_modules;
@@ -1778,21 +1847,8 @@ int ensureUsbKeyboardReady(void)
 //------------------------------
 //endfunc ensureUsbKeyboardReady
 //---------------------------------------------------------------------------
-// reboot IOP (original source by Hermes in BOOT.c - cogswaploader)
-// dlanor: but changed now, as the original was badly bugged
-void Reset()
+static void clearIopModuleState(void)
 {
-#ifndef NO_IOP_RESET
-	SifInitRpc(0);
-	while (!SifIopReset("", 0)) {
-	};
-	while (!SifIopSync()) {
-	};
-	SifInitRpc(0);
-#endif
-	SifLoadFileInit();
-	initsbv_patches();
-
 	have_basic_modules = 0;
 	have_filexio_ready = 0;
 	have_filexio_rwbuf_tuned = 0;
@@ -1838,11 +1894,12 @@ void Reset()
 	ps2dev9_loaded = 0;
 	done_setupPowerOff = 0;
 	ps2kbd_opened = 0;
-	#ifdef XFROM
-		have_Flash_modules = 0;
-		xfromserv_loaded = 0;
-		have_secrsif = 0;
-	#endif
+#ifdef XFROM
+	have_Flash_modules = 0;
+	xfromserv_loaded = 0;
+#endif
+	have_secrsif = 0;
+	have_exploit_signer_iop = 0;
 #ifdef DVRP
 	have_DVRP_HDD_modules = 0;
 	have_ps2atad = 0;
@@ -1851,6 +1908,26 @@ void Reset()
 #endif
 	resetUsbMassRuntimeState();
 	invalidatePartitionCaches();
+}
+//------------------------------
+//endfunc clearIopModuleState
+//---------------------------------------------------------------------------
+// reboot IOP (original source by Hermes in BOOT.c - cogswaploader)
+// dlanor: but changed now, as the original was badly bugged
+void Reset()
+{
+#ifndef NO_IOP_RESET
+	SifInitRpc(0);
+	while (!SifIopReset("", 0)) {
+	};
+	while (!SifIopSync()) {
+	};
+	SifInitRpc(0);
+#endif
+	SifLoadFileInit();
+	initsbv_patches();
+
+	clearIopModuleState();
 
 #ifdef POWERPC_UART
 int i, d;
@@ -1865,6 +1942,7 @@ int i, d;
 	DPRINTF(" [UDPTTY]: id=%d, ret=%d\n", i, d);
 #endif
 	ensureCoreIoStackReady();
+	iop_reset_generation++;
 	DPRINTF("RESET FINISHED\n");
 	//	setupPad();
 }

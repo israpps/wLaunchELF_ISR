@@ -16,6 +16,12 @@ static int getHideHddMode(void)
 {
 	int mode = (setting != NULL) ? setting->Hide_Hdd : HIDE_HDD_HDD1_ATA1;
 
+	if (boot_show_all_devices)
+		return HIDE_HDD_SHOW_ALL;
+
+	if (shouldHideHddAtaDevices())
+		return HIDE_HDD_HDD01_ATA01;
+
 	return (mode >= 0 && mode < HIDE_HDD_COUNT) ? mode : HIDE_HDD_HDD1_ATA1;
 }
 
@@ -59,9 +65,10 @@ int mcfreeSpace;
 int mctype_PSx;  //dlanor: Needed for proper scaling of mcfreespace
 int vfreeSpace;  //flags validity of freespace value
 int browser_cut;
-int nclipFiles, nmarks, nparties;
+int nclipFiles, nmarks;
+unsigned int clipIopResetGeneration;
 #ifdef DVRP
-int ndvrpparties;
+static int ndvrpparties;
 char mountedDVRPParty[MOUNT_LIMIT][MAX_NAME];
 int latestDVRPMount = -1;
 #endif
@@ -70,8 +77,11 @@ int file_show = 1;  //dlanor: 0==name_only, 1==name+size+time, 2==title+size+tim
 int file_sort = 1;  //dlanor: 0==none, 1==name, 2==title, 3==mtime
 int size_valid = 0;
 int time_valid = 0;
-char parties[MAX_PARTITIONS][MAX_PART_NAME+1];
-static char hddPartyListDevice[6];
+static char hddParties[2][MAX_PARTITIONS][MAX_PART_NAME + 1];
+static int hddNparties[2] = {0, 0};
+#ifdef DVRP
+static char dvrParties[MAX_PARTITIONS][MAX_PART_NAME + 1];
+#endif
 char clipPath[MAX_PATH], LastDir[MAX_NAME], marks[MAX_ENTRY];
 FILEINFO clipFiles[MAX_ENTRY];
 int fileMode = FIO_S_IRUSR | FIO_S_IWUSR | FIO_S_IXUSR | FIO_S_IRGRP | FIO_S_IWGRP | FIO_S_IXGRP | FIO_S_IROTH | FIO_S_IWOTH | FIO_S_IXOTH;
@@ -122,6 +132,9 @@ int host_error = 0;
 int host_elflist = 0;
 int host_use_Bsl = 1;  //By default assume that host paths use backslash
 #endif
+#ifdef UDPFS
+int udpfs_dir_open_failed = 0;
+#endif
 u64 written_size;            //Used for pasting progress report
 u64 PasteTime;               //Used for pasting progress report
 
@@ -139,6 +152,16 @@ int readGENERIC(const char *path, FILEINFO *info, int max);
 #define USB_BROWSER_MAX_DRIVES 2
 #define USB_DISCOVERY_ATTEMPTS 3
 #define USB_DISCOVERY_SETTLE_MS 500
+#define ROOT_MC_POLL_INTERVAL_MS 500
+
+static int root_mc_present[2] = {1, 1};
+static int root_mc_poll_active = 0;
+static int root_mc_poll_port = 0;
+static int root_mc_poll_type = 0;
+static int root_mc_poll_free = 0;
+static int root_mc_poll_format = 0;
+static u64 root_mc_next_poll_time = 0;
+static int discard_next_mx4sio_root_listing = 0;
 
 static int mapUsbPathToFatFsPath(const char *usb_path, char *fatfs_path)
 {
@@ -446,20 +469,29 @@ static const char *canonicalizeAtaPath(const char *path, char *buffer)
 	return path;
 }
 
+static int getHddUnitFromDevice(const char *device)
+{
+	if (device == NULL || strncmp(device, "hdd", 3) || device[3] < '0' || device[3] > '1' || device[4] != ':')
+		return -1;
+
+	return device[3] - '0';
+}
+
 static void setPartyListForDevice(const char *device)
 {
 	iox_dirent_t dirEnt;
-	int hddFd;
+	int hddFd, unit;
 
-	nparties = 0;
+	unit = getHddUnitFromDevice(device);
+	if (unit < 0)
+		return;
 
-	hddPartyListDevice[0] = '\0';
+	hddNparties[unit] = 0;
 
 	if ((hddFd = fileXioDopen(device)) < 0)
 		return;
-	snprintf(hddPartyListDevice, sizeof(hddPartyListDevice), "%s", device);
 	while (fileXioDread(hddFd, &dirEnt) > 0) {
-		if (nparties >= MAX_PARTITIONS)
+		if (hddNparties[unit] >= MAX_PARTITIONS)
 			break;
 		if ((dirEnt.stat.attr != ATTR_MAIN_PARTITION) || (dirEnt.stat.mode != FS_TYPE_PFS))
 			continue;
@@ -486,9 +518,9 @@ static void setPartyListForDevice(const char *device)
 			while ((len < MAX_PART_NAME) && (dirEnt.name[len] != '\0')) {
 				len++;
 			}
-			memcpy(parties[nparties], dirEnt.name, len);
-			parties[nparties][len] = '\0';
-			nparties++;
+			memcpy(hddParties[unit][hddNparties[unit]], dirEnt.name, len);
+			hddParties[unit][hddNparties[unit]][len] = '\0';
+			hddNparties[unit]++;
 		}
 	}
 	fileXioDclose(hddFd);
@@ -535,8 +567,8 @@ void setDVRPPartyList(void)
 			while ((len < MAX_PART_NAME) && (dirEnt.name[len] != '\0')) {
 				len++;
 			}
-			memcpy(parties[ndvrpparties], dirEnt.name, len);
-			parties[ndvrpparties][len] = '\0';
+			memcpy(dvrParties[ndvrpparties], dirEnt.name, len);
+			dvrParties[ndvrpparties][len] = '\0';
 			ndvrpparties++;
 		}
 	}
@@ -544,6 +576,15 @@ void setDVRPPartyList(void)
 }
 //--------------------------------------------------------------
 #endif
+
+void invalidatePartitionCaches(void)
+{
+	hddNparties[0] = 0;
+	hddNparties[1] = 0;
+#ifdef DVRP
+	ndvrpparties = 0;
+#endif
+}
 
 //--------------------------------------------------------------
 // The following group of file handling functions are used to allow
@@ -566,7 +607,7 @@ int genFixPath(const char *inp_path, char *gen_path)
 	char uLE_path[MAX_PATH], loc_path[MAX_PATH], ata_path[MAX_PATH], hdd_device[6], party[MAX_NAME], *p;
 	const char *canonical_path;
 	char *pathSep;
-	int part_ix;
+	int part_ix, hdd_unit;
 
 	part_ix = 99;  //Assume valid non-HDD path
 	if (!uLE_related(uLE_path, inp_path))
@@ -638,6 +679,12 @@ int genFixPath(const char *inp_path, char *gen_path)
 		loadMmceModules();
 #endif
 	} else if (getHddDeviceFromPath(uLE_path, hdd_device) >= 0 && uLE_path[5] == '/') {  //If using HDD path
+		hdd_unit = getHddUnitFromDevice(hdd_device);
+		if (hdd_unit < 0) {
+			part_ix = -1;
+			genLimObjName(gen_path, 0);
+			return part_ix;
+		}
 		//Get path on HDD unit, LaunchELF's format (e.g. hdd0:/partition/path/to/file)
 		strcpy(loc_path, uLE_path + 6);
 		if ((p = strchr(loc_path, '/')) != NULL) {
@@ -651,12 +698,9 @@ int genFixPath(const char *inp_path, char *gen_path)
 		}
 		//Generate standard path to the block device (i.e. hddN:/partition results in hddN:partition)
 		sprintf(party, "%s%s", hdd_device, loc_path);
-		if (nparties == 0) {
+		if (hddNparties[hdd_unit] == 0) {
 			//No partitions recognized? Load modules & populate partition list.
 			loadHddModules();
-			setPartyListForDevice(hdd_device);
-		} else if (strcmp(hddPartyListDevice, hdd_device)) {
-			//The HDD stack is already loaded; refresh only the selected unit's partition list.
 			setPartyListForDevice(hdd_device);
 		}
 		//Mount the partition.
@@ -761,25 +805,27 @@ int readHDD(const char *path, FILEINFO *info, int max)
 {
 	iox_dirent_t dirbuf;
 	char hdd_device[6], party[MAX_PATH], dir[MAX_PATH];
-	int i = 0, fd, ret;
+	int i = 0, fd, ret, hdd_unit;
 
 	if (getHddDeviceFromPath(path, hdd_device) < 0)
 		return 0;
 
-	if (nparties == 0) {
+	hdd_unit = getHddUnitFromDevice(hdd_device);
+	if (hdd_unit < 0)
+		return 0;
+
+	if (hddNparties[hdd_unit] == 0) {
 		loadHddModules();
-		setPartyListForDevice(hdd_device);
-	} else if (strcmp(hddPartyListDevice, hdd_device)) {
 		setPartyListForDevice(hdd_device);
 	}
 
 	if (isHddRootPath(path)) {
 		unmountHddPartiesNotNeededByClipboard();
-		for (i = 0; i < nparties; i++) {
-			strcpy(info[i].name, parties[i]);
+		for (i = 0; i < hddNparties[hdd_unit]; i++) {
+			strcpy(info[i].name, hddParties[hdd_unit][i]);
 			info[i].stats.AttrFile = MC_ATTR_norm_folder;
 		}
-		return nparties;
+		return hddNparties[hdd_unit];
 	}
 
 	getHddParty(path, NULL, party, dir);
@@ -841,7 +887,7 @@ int readHDDDVRP(const char *path, FILEINFO *info, int max)
 
 	if (!strcmp(path, "dvr_hdd0:/")) {
 		for (i = 0; i < ndvrpparties; i++) {
-			strcpy(info[i].name, parties[i]);
+			strcpy(info[i].name, dvrParties[i]);
 			info[i].stats.AttrFile = MC_ATTR_norm_folder;
 		}
 		return ndvrpparties;
@@ -1018,6 +1064,69 @@ static int addRootUsbDeviceEntries(FILEINFO *files, int nfiles)
 	return nfiles;
 }
 
+static int isMx4sioRootPath(const char *path)
+{
+	if (path == NULL)
+		return FALSE;
+
+	return (!strcmp(path, "mx4sio:") || !strcmp(path, "mx4sio:/") ||
+	        !strcmp(path, "mx4sio0:") || !strcmp(path, "mx4sio0:/"));
+}
+
+void discardNextMx4sioRootListing(const char *path)
+{
+	if (isMx4sioRootPath(path))
+		discard_next_mx4sio_root_listing = 1;
+}
+
+static int memoryCardResultIndicatesPresent(int ret)
+{
+	return (ret == -1 || ret == 0);
+}
+
+static int rootMemoryCardExists(int port)
+{
+	if (port < 0 || port > 1)
+		return FALSE;
+
+	if (boot_show_all_devices || setting == NULL || !setting->Hide_MCMMCE)
+		return TRUE;
+
+	return root_mc_present[port];
+}
+
+int pollRootMemoryCardDevices(void)
+{
+	int result, sync, changed, start_ret;
+
+	if (root_mc_poll_active) {
+		sync = mcSync(1, NULL, &result);
+		if (sync == 0)
+			return FALSE;
+
+		root_mc_poll_active = 0;
+		root_mc_next_poll_time = Timer() + ROOT_MC_POLL_INTERVAL_MS;
+		if (sync < 0)
+			return FALSE;
+
+		changed = (root_mc_present[root_mc_poll_port] != memoryCardResultIndicatesPresent(result));
+		root_mc_present[root_mc_poll_port] = memoryCardResultIndicatesPresent(result);
+		root_mc_poll_port = (root_mc_poll_port + 1) & 1;
+		return changed;
+	}
+
+	if (Timer() < root_mc_next_poll_time)
+		return FALSE;
+
+	start_ret = mcGetInfo(root_mc_poll_port, 0, &root_mc_poll_type, &root_mc_poll_free, &root_mc_poll_format);
+	if (start_ret == 0)
+		root_mc_poll_active = 1;
+	else
+		root_mc_next_poll_time = Timer() + ROOT_MC_POLL_INTERVAL_MS;
+
+	return FALSE;
+}
+
 //------------------------------
 //endfunc addRootUsbDeviceEntries
 //--------------------------------------------------------------
@@ -1062,6 +1171,20 @@ exit:
 //------------------------------
 //endfunc readGENERIC
 //--------------------------------------------------------------
+#ifdef MX4SIO
+static void drainGENERIC(const char *path)
+{
+	iox_dirent_t record;
+	int dd;
+
+	if ((dd = fileXioDopen(path)) < 0)
+		return;
+	while (fileXioDread(dd, &record) > 0) {
+	}
+	fileXioDclose(dd);
+}
+#endif
+
 #if defined(ETH) || defined(UDPFS)
 char *makeHostPath(char *dp, char *sp)
 {
@@ -1245,9 +1368,16 @@ int readUDPFS(const char *path, FILEINFO *info, int max)
 	iox_dirent_t dirent;
 	int fd, count = 0;
 
+	udpfs_dir_open_failed = 0;
 	initUDPFS();
-	if ((fd = fileXioDopen(path)) < 0)
+	if (host_error) {
+		udpfs_dir_open_failed = 1;
 		return 0;
+	}
+	if ((fd = fileXioDopen(path)) < 0) {
+		udpfs_dir_open_failed = 1;
+		return 0;
+	}
 
 	while (fileXioDread(fd, &dirent) > 0) {
 		if (strcmp(dirent.name, ".") && strcmp(dirent.name, "..")) {
@@ -1423,7 +1553,7 @@ int getDir(const char *path, FILEINFO *info)
 			if (!loadMx4sioModules())
 				return 0;
 
-		is_root = (!strcmp(path, "mx4sio:/") || !strcmp(path, "mx4sio:"));
+		is_root = isMx4sioRootPath(path);
 		wait_budget_ms = is_root ? 2000 : 750;
 
 		indexed_path[0] = '\0';
@@ -1436,6 +1566,11 @@ int getDir(const char *path, FILEINFO *info)
 			else
 				strcpy(path_alt, "mx4sio:");
 			has_path_alt = 1;
+		}
+
+		if (is_root && discard_next_mx4sio_root_listing) {
+			discard_next_mx4sio_root_listing = 0;
+			drainGENERIC(path);
 		}
 
 		n = readGENERIC(path, info, max);
@@ -1540,20 +1675,28 @@ int setFileList(const char *path, const char *ext, FILEINFO *files, int cnfmode)
 			scan_USB_mass();   //then allow another scan here (timer dependent)
 		allow_usb_devices = ((cnfmode != USBD_IRX_CNF) && (cnfmode != USBKBD_IRX_CNF) && (cnfmode != USBMASS_IRX_CNF));
 
-		strcpy(files[nfiles].name, "mc0:");
-		files[nfiles++].stats.AttrFile = sceMcFileAttrSubdir;
-		strcpy(files[nfiles].name, "mc1:");
-		files[nfiles++].stats.AttrFile = sceMcFileAttrSubdir;
+		if (rootMemoryCardExists(0)) {
+			strcpy(files[nfiles].name, "mc0:");
+			files[nfiles++].stats.AttrFile = sceMcFileAttrSubdir;
+		}
+		if (rootMemoryCardExists(1)) {
+			strcpy(files[nfiles].name, "mc1:");
+			files[nfiles++].stats.AttrFile = sceMcFileAttrSubdir;
+		}
 
 		if (allow_usb_devices) {
 			nfiles = addRootUsbDeviceEntries(files, nfiles);
 		}
 
 #ifdef MMCE
-		strcpy(files[nfiles].name, "mmce0:");
-		files[nfiles++].stats.AttrFile = sceMcFileAttrSubdir;
-		strcpy(files[nfiles].name, "mmce1:");
-		files[nfiles++].stats.AttrFile = sceMcFileAttrSubdir;
+		if (rootMemoryCardExists(0)) {
+			strcpy(files[nfiles].name, "mmce0:");
+			files[nfiles++].stats.AttrFile = sceMcFileAttrSubdir;
+		}
+		if (rootMemoryCardExists(1)) {
+			strcpy(files[nfiles].name, "mmce1:");
+			files[nfiles++].stats.AttrFile = sceMcFileAttrSubdir;
+		}
 #endif
 
 #ifdef MX4SIO
@@ -1587,14 +1730,14 @@ int setFileList(const char *path, const char *ext, FILEINFO *files, int cnfmode)
 			files[nfiles++].stats.AttrFile = sceMcFileAttrSubdir;
 
 #ifdef XFROM
-			if (console_is_PSX) {
+			if (console_is_PSX || boot_show_all_devices) {
 				strcpy(files[nfiles].name, "xfrom0:");
 				files[nfiles++].stats.AttrFile = sceMcFileAttrSubdir;
 			}
 #endif
 
 #ifdef DVRP
-			if (console_is_PSX) {
+			if (console_is_PSX || boot_show_all_devices) {
 				strcpy(files[nfiles].name, "dvr_hdd0:");
 				files[nfiles++].stats.AttrFile = sceMcFileAttrSubdir;
 			}
@@ -1606,10 +1749,6 @@ int setFileList(const char *path, const char *ext, FILEINFO *files, int cnfmode)
 				strcpy(files[nfiles].name, "host:");
 				files[nfiles++].stats.AttrFile = sceMcFileAttrSubdir;
 #endif
-#ifdef UDPFS
-				strcpy(files[nfiles].name, "udpfs:");
-				files[nfiles++].stats.AttrFile = sceMcFileAttrSubdir;
-#endif
 				if (vmcMounted[0]) {
 					strcpy(files[nfiles].name, "vmc0:");
 					files[nfiles++].stats.AttrFile = sceMcFileAttrSubdir;
@@ -1619,6 +1758,10 @@ int setFileList(const char *path, const char *ext, FILEINFO *files, int cnfmode)
 					files[nfiles++].stats.AttrFile = sceMcFileAttrSubdir;
 				}
 			}
+#ifdef UDPFS
+			strcpy(files[nfiles].name, "udpfs:");
+			files[nfiles++].stats.AttrFile = sceMcFileAttrSubdir;
+#endif
 			if (cnfmode < 2) {
 				//This condition blocks use of MISC pseudo-device for driver path picks.
 				//And allows this device only for launch keys and for normal browsing.
@@ -1650,6 +1793,8 @@ int setFileList(const char *path, const char *ext, FILEINFO *files, int cnfmode)
 		strcpy(files[nfiles].name, LNG(OSDSYS));
 		files[nfiles++].stats.AttrFile = sceMcFileAttrFile;
 		strcpy(files[nfiles].name, LNG(HddManager));
+		files[nfiles++].stats.AttrFile = sceMcFileAttrFile;
+		strcpy(files[nfiles].name, LNG(Exploit_Installer));
 		files[nfiles++].stats.AttrFile = sceMcFileAttrFile;
 		strcpy(files[nfiles].name, LNG(TextEditor));
 		files[nfiles++].stats.AttrFile = sceMcFileAttrFile;

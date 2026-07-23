@@ -233,13 +233,6 @@ void unmountHddPartiesNotNeededByClipboard(void)
 		unmountParty(i);
 	}
 }
-void invalidatePartitionCaches(void)
-{
-	nparties = 0;
-#ifdef DVRP
-	ndvrpparties = 0;
-#endif
-}
 //--------------------------------------------------------------
 //End of file: filer_mount.c
 //--------------------------------------------------------------

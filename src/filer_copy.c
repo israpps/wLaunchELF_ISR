@@ -534,11 +534,16 @@ restart_copy:  //restart point for PM_PSU_RESTORE to reprocess modified argument
 				if (ynDialog(progress) < 0)
 					return -1;
 				if (PasteMode == PM_PSU_RESTORE) {
+					if (filerConfirmExploitDelete(outPath, &newfile) < 0)
+						return -1;
 					ret = delete (outPath, &newfile);  //Attempt recursive delete
 					if (ret < 0)
 						return -1;
 					if (newdir(outPath, newfile.name) < 0)
 						return -1;
+				} else if (!filerIsExploitProtectedPath(outPath, NULL) &&
+				           filerConfirmExploitModify(outPath, &newfile) < 0) {
+					return -1;
 				}
 				drawMsg(LNG(Pasting));
 			} else if (ret < 0) {

@@ -28,6 +28,13 @@ void initializeRuntimeInputModules(enum BOOT_DEVICE boot_device)
 #endif
 	DPRINTF("setup pad\n");
 	setupPad();  //Comment out this line when using early setupPad above
+	waitAnyPadReady();
+	if (readpad_no_KB() && (new_pad & PAD_SELECT))
+		boot_show_all_devices = 1;
+	else {
+		/* Keep non-Select boot-held launch keys visible to the main menu. */
+		clearPadPressState();
+	}
 	DPRINTF("Starting keyboard\n");
 	startKbd();
 	WaitTime = Timer();

@@ -9,12 +9,6 @@ enum {
 	TRANSFER_STORAGE_MX4SIO
 };
 
-enum {
-	TRANSFER_PSX_HDD_NONE = 0,
-	TRANSFER_PSX_HDD_ATA,
-	TRANSFER_PSX_HDD_DVR
-};
-
 #if defined(ETH) || defined(UDPFS)
 extern int host_error;
 #endif
@@ -32,18 +26,6 @@ static int transferStorageGateForPath(const char *path)
 		return TRANSFER_STORAGE_MX4SIO;
 #endif
 	return TRANSFER_STORAGE_DEFAULT;
-}
-static int transferPsxHddGateForPath(const char *path)
-{
-	if (path == NULL)
-		return TRANSFER_PSX_HDD_NONE;
-#ifdef DVRP
-	if (!strncmp(path, "dvr_hdd", 7) || !strncmp(path, "dvr_pfs", 7))
-		return TRANSFER_PSX_HDD_DVR;
-#endif
-	if (!strncmp(path, "hdd", 3) || !strncmp(path, "pfs", 3))
-		return TRANSFER_PSX_HDD_ATA;
-	return TRANSFER_PSX_HDD_NONE;
 }
 int ensurePathDeviceStackReady(const char *path)
 {
@@ -102,17 +84,10 @@ int prepareTransferDeviceStacks(const char *src_path, const char *dst_path)
 {
 	int src_storage = transferStorageGateForPath(src_path);
 	int dst_storage = transferStorageGateForPath(dst_path);
-	int src_psx_hdd = transferPsxHddGateForPath(src_path);
-	int dst_psx_hdd = transferPsxHddGateForPath(dst_path);
 
 	if (src_storage != TRANSFER_STORAGE_DEFAULT &&
 	    dst_storage != TRANSFER_STORAGE_DEFAULT &&
 	    src_storage != dst_storage)
-		return TRANSFER_STACK_INCOMPATIBLE;
-
-	if (src_psx_hdd != TRANSFER_PSX_HDD_NONE &&
-	    dst_psx_hdd != TRANSFER_PSX_HDD_NONE &&
-	    src_psx_hdd != dst_psx_hdd)
 		return TRANSFER_STACK_INCOMPATIBLE;
 
 	if (!ensurePathDeviceStackReady(src_path))
