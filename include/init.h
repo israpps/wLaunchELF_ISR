@@ -15,6 +15,7 @@ void setupPowerOff(void);
 void closeAllAndPoweroff(void);
 void startKbd(void);
 void ensureCoreIoStackReady(void);
+void ensureMemoryCardPortAccessible(int port);
 void rebootIopAndReloadCoreStack(void);
 void rebootIopAndReloadCoreStackSilent(void);
 int loadSecrSifModule(void);

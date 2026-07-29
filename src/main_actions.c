@@ -58,18 +58,31 @@ static const char *getLaunchArgsSidecarBasePath(const char *path, const char *fu
 	return path;
 }
 
+static void getTextEditorReturnPath(char *out)
+{
+	getFilePath(out, FALSE);
+	LastDir[0] = '\0';
+}
+
 static void executeBrowserSelection(char *selected_path, const MainExecuteContext *ctx)
 {
+	int editor_result;
+
 	while (selected_path[0]) {
 		if (IsTextEditorFileType(selected_path)) {
-			if (TextEditor(selected_path) == TEXTEDITOR_RESULT_LAUNCH_ARGS) {
-				selected_path[0] = 0;
+			editor_result = TextEditor(selected_path);
+			selected_path[0] = 0;
+			if (editor_result == TEXTEDITOR_RESULT_LAUNCH_ARGS) {
 				getFilePath(selected_path, FALSE);
 				if (!selected_path[0])
 					LaunchArgsClear();
 				continue;
 			}
 			LaunchArgsClear();
+			if (editor_result == TEXTEDITOR_RESULT_BROWSE_DIR) {
+				getTextEditorReturnPath(selected_path);
+				continue;
+			}
 		} else {
 			if (LaunchArgsPending() &&
 			    !genCmpFileExt(selected_path, "ELF") &&
@@ -466,11 +479,16 @@ Recurse_for_ESR:  //Recurse here for PS2Disc command with ESR disc
 		hddManager();
 		return;
 	} else if (!stricmp(path, setting->Misc_TextEditor)) {
-		if (TextEditor(NULL) == TEXTEDITOR_RESULT_LAUNCH_ARGS) {
+		t = TextEditor(NULL);
+		if (t == TEXTEDITOR_RESULT_LAUNCH_ARGS) {
 			tmp[0] = 0;
 			getFilePath(tmp, FALSE);
 			if (!tmp[0])
 				LaunchArgsClear();
+			executeBrowserSelection(tmp, ctx);
+		} else if (t == TEXTEDITOR_RESULT_BROWSE_DIR) {
+			tmp[0] = 0;
+			getTextEditorReturnPath(tmp);
 			executeBrowserSelection(tmp, ctx);
 		}
 		return;

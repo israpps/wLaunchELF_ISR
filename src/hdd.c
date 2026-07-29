@@ -32,6 +32,7 @@ enum {  //For menu commands
 	REMOVE,
 	RENAME,
 	INJECT_HEADER,
+	VIEW_SYSTEM_CNF,
 	EXPAND,
 	FORMAT,
 	NUM_MENU
@@ -48,15 +49,6 @@ enum {
 	HEADER_CREATE_PROMPT_CANCEL = -1,
 	HEADER_CREATE_PROMPT_SKIP = 0,
 	HEADER_CREATE_PROMPT_CREATE = 1
-};
-
-/* EXPAND remains implemented below, but hidden until APA chain expansion is safe. */
-static const int hdd_party_menu_items[] = {
-	CREATE,
-	REMOVE,
-	RENAME,
-	INJECT_HEADER,
-	FORMAT,
 };
 
 #define SECTORS_PER_MB 2048  //Divide by this to convert from sector count to MB
@@ -533,22 +525,20 @@ int MenuParty(PARTYINFO Info)
 	u64 color;
 	char enable[NUM_MENU], tmp[64];
 	int x, y, i, sel, cmd;
-	int menu_count = sizeof(hdd_party_menu_items) / sizeof(hdd_party_menu_items[0]);
+	int menu_items[NUM_MENU];
+	int menu_count = 0;
+	int show_system_cnf = 0;
 	int event, post_event = 0;
+	int menu_ch_w, menu_ch_h;
+	int mSprite_X1, mSprite_Y1, mSprite_X2, mSprite_Y2;
 
 	int menu_len = strlen(LNG(Create)) > strlen(LNG(Remove)) ?
 	                   strlen(LNG(Create)) :
 	                   strlen(LNG(Remove));
 	menu_len = strlen(LNG(Rename)) > menu_len ? strlen(LNG(Rename)) : menu_len;
 	menu_len = strlen(LNG(Inject_Header)) > menu_len ? strlen(LNG(Inject_Header)) : menu_len;
+	menu_len = strlen(LNG(View_SYSTEM_CNF)) > menu_len ? strlen(LNG(View_SYSTEM_CNF)) : menu_len;
 	menu_len = strlen(LNG(Format)) > menu_len ? strlen(LNG(Format)) : menu_len;
-
-	int menu_ch_w = menu_len + 1;                                 //Total characters in longest menu string
-	int menu_ch_h = menu_count;                                   //Total number of menu lines
-	int mSprite_Y1 = 64;                                          //Top edge of sprite
-	int mSprite_X2 = SCREEN_WIDTH - 35;                           //Right edge of sprite
-	int mSprite_X1 = mSprite_X2 - (menu_ch_w + 3) * FONT_WIDTH;   //Left edge of sprite
-	int mSprite_Y2 = mSprite_Y1 + (menu_ch_h + 1) * FONT_HEIGHT;  //Bottom edge of sprite
 
 	unmountAll();     //unmount all uLE-used mountpoints
 	unmountParty(0);  //unconditionally unmount primary mountpoint
@@ -558,6 +548,7 @@ int MenuParty(PARTYINFO Info)
 	if (console_is_PSX) {
 		enable[FORMAT] = FALSE;
 	}
+	enable[VIEW_SYSTEM_CNF] = FALSE;
 
 	if ((Info.Name[0] == '_') && (Info.Name[1] == '_')) {
 		enable[REMOVE] = FALSE;
@@ -566,14 +557,20 @@ int MenuParty(PARTYINFO Info)
 		enable[REMOVE] = FALSE;
 		enable[RENAME] = FALSE;
 		enable[INJECT_HEADER] = FALSE;
+		enable[VIEW_SYSTEM_CNF] = FALSE;
 	}
 	if (Info.Treatment == TREAT_SYSTEM) {
 		enable[REMOVE] = FALSE;
 		enable[RENAME] = FALSE;
 		enable[INJECT_HEADER] = FALSE;
+		enable[VIEW_SYSTEM_CNF] = FALSE;
 	}
 	if (Info.Treatment != TREAT_PFS) {
 		enable[INJECT_HEADER] = FALSE;
+	}
+	if (Info.Name[0] != '\0' && Info.Treatment != TREAT_SYSTEM && HddPartitionHeaderSystemCnfExists(Info.Name) > 0) {
+		enable[VIEW_SYSTEM_CNF] = TRUE;
+		show_system_cnf = 1;
 	}
 	/*if (Info.Treatment == TREAT_HDL_RAW) {
 		enable[EXPAND] = FALSE;
@@ -585,8 +582,23 @@ int MenuParty(PARTYINFO Info)
 		enable[EXPAND] = FALSE;
 	}//*/
 	enable[EXPAND] = FALSE;
+	menu_items[menu_count++] = CREATE;
+	menu_items[menu_count++] = REMOVE;
+	menu_items[menu_count++] = RENAME;
+	menu_items[menu_count++] = INJECT_HEADER;
+	if (show_system_cnf)
+		menu_items[menu_count++] = VIEW_SYSTEM_CNF;
+	menu_items[menu_count++] = FORMAT;
+
+	menu_ch_w = menu_len + 1;                                 //Total characters in longest menu string
+	menu_ch_h = menu_count;                                   //Total number of menu lines
+	mSprite_Y1 = 64;                                          //Top edge of sprite
+	mSprite_X2 = SCREEN_WIDTH - 35;                           //Right edge of sprite
+	mSprite_X1 = mSprite_X2 - (menu_ch_w + 3) * FONT_WIDTH;   //Left edge of sprite
+	mSprite_Y2 = mSprite_Y1 + (menu_ch_h + 1) * FONT_HEIGHT;  //Bottom edge of sprite
+
 	for (sel = 0; sel < menu_count; sel++)
-		if (enable[hdd_party_menu_items[sel]] == TRUE)
+		if (enable[menu_items[sel]] == TRUE)
 			break;
 
 	event = 1;  //event = initial entry
@@ -600,14 +612,14 @@ int MenuParty(PARTYINFO Info)
 					sel--;
 					if (sel < 0)
 						sel = menu_count - 1;
-				} while (!enable[hdd_party_menu_items[sel]]);
+				} while (!enable[menu_items[sel]]);
 			} else if (new_pad & PAD_DOWN && sel < menu_count) {
 				event |= 2;  //event |= valid pad command
 				do {
 					sel++;
 					if (sel == menu_count)
 						sel = 0;
-				} while (!enable[hdd_party_menu_items[sel]]);
+				} while (!enable[menu_items[sel]]);
 			} else if ((new_pad & PAD_TRIANGLE) || (!swapKeys && new_pad & PAD_CROSS) || (swapKeys && new_pad & PAD_CIRCLE)) {
 				return -1;
 			} else if ((swapKeys && new_pad & PAD_CROSS) || (!swapKeys && new_pad & PAD_CIRCLE)) {
@@ -625,7 +637,7 @@ int MenuParty(PARTYINFO Info)
 			drawFrame(mSprite_X1, mSprite_Y1, mSprite_X2, mSprite_Y2, setting->color[COLOR_FRAME]);
 
 			for (i = 0, y = mSprite_Y1 + FONT_HEIGHT / 2; i < menu_count; i++) {
-				cmd = hdd_party_menu_items[i];
+				cmd = menu_items[i];
 				if (cmd == CREATE)
 					strcpy(tmp, LNG(Create));
 				else if (cmd == REMOVE)
@@ -634,6 +646,8 @@ int MenuParty(PARTYINFO Info)
 					strcpy(tmp, LNG(Rename));
 				else if (cmd == INJECT_HEADER)
 					strcpy(tmp, LNG(Inject_Header));
+				else if (cmd == VIEW_SYSTEM_CNF)
+					strcpy(tmp, LNG(View_SYSTEM_CNF));
 				else if (cmd == FORMAT)
 					strcpy(tmp, LNG(Format));
 
@@ -672,7 +686,7 @@ int MenuParty(PARTYINFO Info)
 		post_event = event;
 		event = 0;
 	}  //ends while
-	return hdd_party_menu_items[sel];
+	return menu_items[sel];
 }
 //------------------------------
 //endfunc MenuParty
@@ -1606,6 +1620,21 @@ void hddManager(void)
 					} else if (source_device != NULL && inject_mode == HEADER_INJECT_MATCHING_CREATE_MISSING) {
 						InjectMatchingHeadersFromSource(source_device, 1);
 					}
+				} else if (ret == VIEW_SYSTEM_CNF) {
+					unmountAll();
+					unmountParty(0);
+					unmountParty(1);
+					ret = EditHddPartitionHeaderSystemCnf(PartyInfo[browser_sel].Name);
+					if (ret > 0)
+						snprintf(tmp, sizeof(tmp), "SYSTEM.CNF updated");
+					else if (ret == 0)
+						snprintf(tmp, sizeof(tmp), "SYSTEM.CNF unchanged");
+					else
+						snprintf(tmp, sizeof(tmp), "SYSTEM.CNF edit failed: %d", ret);
+					drawMsg(tmp);
+					WaitTime = Timer();
+					while (Timer() < WaitTime + 1500)
+						;
 				} else if (ret == EXPAND) {
 					drawMsg(LNG(Select_New_Partition_Size_In_MB));
 					drawMsg(LNG(Select_New_Partition_Size_In_MB));

@@ -2,6 +2,7 @@
 #include "filer_actions.h"
 #include "filer_shared.h"
 #include "gui_hdd0_format.h"
+#include "init.h"
 
 #define IOCTL_RENAME 0xFEEDC0DE
 
@@ -297,6 +298,7 @@ u64 getFileSize(const char *path, const FILEINFO *file)
 		int rett;  //this var will be used to store the result of mcSetFileInfo()
 		int slot;
 		slot = path[2] - '0';
+		ensureMemoryCardPortAccessible(slot);
 		#define ARRAY_ENTRIES 64
 		static sceMcTblGetDir mcDirAAA[ARRAY_ENTRIES] __attribute__((aligned(64)));  // save file properties
 		static sceMcStDateTime new_mtime;                                            //manipulated struct for savefile properties, this will be used to change the date of the save file properties
@@ -407,6 +409,7 @@ int delete (const char *path, const FILEINFO *file)
 				return -1;
 		}
 		if (!strncmp(dir, "mc", 2)) {
+			ensureMemoryCardPortAccessible(dir[2] - '0');
 			mcSync(0, NULL, NULL);
 			mcDelete(dir[2] - '0', 0, &dir[4]);
 			mcSync(0, NULL, &ret);
@@ -427,6 +430,7 @@ int delete (const char *path, const FILEINFO *file)
 		}
 	} else {  //The object to delete is a file
 		if (!strncmp(path, "mc", 2)) {
+			ensureMemoryCardPortAccessible(path[2] - '0');
 			mcSync(0, NULL, NULL);
 			mcDelete(dir[2] - '0', 0, &dir[4]);
 			mcSync(0, NULL, &ret);
@@ -484,6 +488,7 @@ int Rename(const char *path, const FILEINFO *file, const char *name)
 		ret = fileXioRename(oldPath, newPath);
 #endif
 	} else if (!strncmp(path, "mc", 2)) {
+		ensureMemoryCardPortAccessible(path[2] - '0');
 		sprintf(oldPath, "%s%s", path, file->name);
 		sprintf(newPath, "%s%s", path, name);
 		if ((test = fileXioDopen(newPath)) >= 0) {  //Does folder of same name exist ?
@@ -596,6 +601,7 @@ int newdir(const char *path, const char *name)
 		genLimObjName(dir, 0);
 		ret = filerMkdirNoOverwrite(dir);
 	} else if (!strncmp(path, "mc", 2)) {
+		ensureMemoryCardPortAccessible(path[2] - '0');
 		sprintf(dir, "%s%s", path + 4, name);
 		genLimObjName(dir, 0);
 		mcSync(0, NULL, NULL);

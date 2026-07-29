@@ -1,0 +1,18 @@
+DECLARE_EXPORT_TABLE(mmcedrv, 1, 1)
+    DECLARE_EXPORT(_retonly)
+    DECLARE_EXPORT(_retonly)
+    DECLARE_EXPORT(_ret0)
+    DECLARE_EXPORT(_retonly)
+    DECLARE_EXPORT(mmcedrv_get_size)
+    DECLARE_EXPORT(mmcedrv_read_sector)
+    DECLARE_EXPORT(mmcedrv_config_set)
+    DECLARE_EXPORT(mmcedrv_read)
+    DECLARE_EXPORT(mmcedrv_write)
+    DECLARE_EXPORT(mmcedrv_lseek)
+END_EXPORT_TABLE
+
+void _retonly(void) {}
+
+int _ret0(void) {
+    return 0;
+}

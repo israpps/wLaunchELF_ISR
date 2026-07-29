@@ -64,6 +64,42 @@ static void editorKeyboardPrintLeft(const char *label, int box_left, int box_rig
 	printXY(label, x, y, color, TRUE, editorKeyboardTextWidth(x, box_right));
 }
 
+static int editorRememberPathDir(const char *path)
+{
+	const char *slash;
+	const char *colon;
+	size_t dir_len;
+
+	if (path == NULL || path[0] == '\0')
+		return 0;
+
+	slash = strrchr(path, '/');
+	colon = strrchr(path, ':');
+	if (slash != NULL)
+		dir_len = (size_t)(slash - path) + 1;
+	else if (colon != NULL)
+		dir_len = (size_t)(colon - path) + 1;
+	else
+		return 0;
+	if (dir_len >= MAX_NAME)
+		return 0;
+
+	memcpy(LastDir, path, dir_len);
+	LastDir[dir_len] = '\0';
+	return 1;
+}
+
+static int editorRememberActiveDir(void)
+{
+	if (Active_Window < 0 || Active_Window >= 10)
+		return 0;
+	if (!Window[Active_Window][OPENED])
+		return 0;
+	if (Window[Active_Window][CREATED])
+		return 0;
+	return editorRememberPathDir(Path[Active_Window]);
+}
+
 //ends Window_Selector.
 //--------------------------------------------------------------
 //--------------------------------------------------------------
@@ -204,6 +240,8 @@ int TextEditor(char *path)
 						goto unsave;
 				}
 			force:
+				if (editor_result == TEXTEDITOR_RESULT_EXIT && editorRememberActiveDir())
+					editor_result = TEXTEDITOR_RESULT_BROWSE_DIR;
 				for (i = 0; i < 10; i++) {
 					if (Window[i][OPENED]) {
 						editorClose(i);

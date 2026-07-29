@@ -179,12 +179,6 @@ APP_GameID = 0
 # launches (MISC/PS2Disc path). Default is 0 (disc Game ID enabled).
 # ----------------------------------------------------------------------
 CDROM_Disable_GameID = 0
-#Menu_Title is a string that will be displayed at the top left of the
-#screen. Its main purpose is to allow users to have different titles
-#for different config pages. It is editable in "STARTUP SETTINGS".
-# ----------------------------------------------------------------------
-Menu_Title =
-# ----------------------------------------------------------------------
 # Menu_Frame flags whether or not the big frame that encloses the menu
 # should be visible or not. By default it will be visible.
 # ----------------------------------------------------------------------

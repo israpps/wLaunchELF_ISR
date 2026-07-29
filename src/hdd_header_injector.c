@@ -1,11 +1,18 @@
 #include "launchelf.h"
+#include "config_private.h"
 #include "hdd_header_injector.h"
 
 #include <hdd-ioctl.h>
 
 #define APA_HEADER_SECTORS 4096
 #define APA_HEADER_SIZE (APA_HEADER_SECTORS * 512)
+#define APA_HEADER_SECTOR_SIZE 512
+#define APA_HEADER_ATTRIBUTE_AREA_OFFSET 0x1000
+#define APA_HEADER_ATTRIBUTE_AREA_SIZE (APA_HEADER_SIZE - APA_HEADER_ATTRIBUTE_AREA_OFFSET)
 #define APA_HEADER_MAGIC "PS2ICON3D"
+#define APA_HEADER_SYSTEM_CNF_MAX_SIZE (0x1400 - 0x1200)
+#define APA_HEADER_SYSTEM_CNF_TEMP_FILE_FORMAT "WLEHC%02d.TMP"
+#define APA_HEADER_SYSTEM_CNF_TEMP_FILE_TRIES 100
 #define HDD_HEADER_SOURCE_WAIT_MS 3000
 #define HDD_HEADER_SOURCE_POLL_MS 500
 #define HDD_HEADER_COPY_BUFFER_SIZE 32768
@@ -40,8 +47,27 @@ typedef struct
 	int needs_res_dir;
 } HddHeaderPfsFileSpec;
 
+typedef struct
+{
+	u32 offset;
+	u32 size;
+} HddHeaderAttributeFile;
+
+typedef struct
+{
+	char magic[9];
+	unsigned char unused[3];
+	u32 version;
+	HddHeaderAttributeFile system_cnf;
+	HddHeaderAttributeFile icon_sys;
+	HddHeaderAttributeFile list_icon;
+	HddHeaderAttributeFile delete_icon;
+	HddHeaderAttributeFile elf;
+	HddHeaderAttributeFile ioprp;
+} HddHeaderAttributeAreaHeader;
+
 static const HddHeaderFileSpec hdd_header_files[HDD_HEADER_FILE_COUNT] = {
-    {"system.cnf", 0x1200, 0x1010, 0x1014, 0x1400 - 0x1200, 1},
+    {"system.cnf", 0x1200, 0x1010, 0x1014, APA_HEADER_SYSTEM_CNF_MAX_SIZE, 1},
     {"icon.sys", 0x1400, 0x1018, 0x101C, 0x1800 - 0x1400, 0},
     {"list.ico", 0x1800, 0x1020, 0x1024, 0x111000 - 0x1800, 0},
     {"boot.kelf", 0x111000, 0x1030, 0x1034, APA_HEADER_SIZE - 0x111000, 0},
@@ -183,6 +209,18 @@ static int hddHeaderBuildSourceRootDir(char *out, size_t out_size, const char *s
 		return -EINVAL;
 
 	written = snprintf(out, out_size, "%s/__Headers/", source_device);
+
+	return (written >= 0 && written < (int)out_size) ? 0 : -ENAMETOOLONG;
+}
+
+static int hddHeaderBuildPartitionPath(char *out, size_t out_size, const char *partition_name)
+{
+	int written;
+
+	if (out == NULL || out_size == 0 || partition_name == NULL || partition_name[0] == '\0')
+		return -EINVAL;
+
+	written = snprintf(out, out_size, "hdd0:%s", partition_name);
 
 	return (written >= 0 && written < (int)out_size) ? 0 : -ENAMETOOLONG;
 }
@@ -381,17 +419,40 @@ static int hddHeaderWaitForSource(const char *source_device, const char *partiti
 	return ret;
 }
 
-static int hddHeaderReadSectors(u32 partition_sector)
+static int hddHeaderReadSector(u32 lba, void *sector)
 {
 	hddAtaTransfer_t *transfer = (hddAtaTransfer_t *)hdd_header_io_buffer;
+
+	if (sector == NULL)
+		return -EINVAL;
+
+	transfer->lba = lba;
+	transfer->size = 1;
+	return fileXioDevctl("hdd0:", HDIOC_READSECTOR, hdd_header_io_buffer,
+	                     sizeof(hddAtaTransfer_t), sector, APA_HEADER_SECTOR_SIZE);
+}
+
+static int hddHeaderWriteSector(u32 lba, const void *sector)
+{
+	hddAtaTransfer_t *transfer = (hddAtaTransfer_t *)hdd_header_io_buffer;
+
+	if (sector == NULL)
+		return -EINVAL;
+
+	transfer->lba = lba;
+	transfer->size = 1;
+	memcpy(transfer->data, sector, APA_HEADER_SECTOR_SIZE);
+	return fileXioDevctl("hdd0:", HDIOC_WRITESECTOR, hdd_header_io_buffer,
+	                     APA_HEADER_SECTOR_SIZE + sizeof(hddAtaTransfer_t), NULL, 0);
+}
+
+static int hddHeaderReadSectors(u32 partition_sector)
+{
 	int i;
 	int ret = 0;
 
 	for (i = 0; i < APA_HEADER_SECTORS; i++) {
-		transfer->lba = partition_sector + i;
-		transfer->size = 1;
-		ret = fileXioDevctl("hdd0:", HDIOC_READSECTOR, hdd_header_io_buffer,
-		                    sizeof(hddAtaTransfer_t), hdd_header_buffer + 512 * i, 512);
+		ret = hddHeaderReadSector(partition_sector + i, hdd_header_buffer + APA_HEADER_SECTOR_SIZE * i);
 		if (ret < 0)
 			return ret;
 	}
@@ -401,21 +462,406 @@ static int hddHeaderReadSectors(u32 partition_sector)
 
 static int hddHeaderWriteSectors(u32 partition_sector)
 {
-	hddAtaTransfer_t *transfer = (hddAtaTransfer_t *)hdd_header_io_buffer;
 	int i;
 	int ret = 0;
 
 	for (i = 0; i < APA_HEADER_SECTORS; i++) {
-		transfer->lba = partition_sector + i;
-		transfer->size = 1;
-		memcpy(transfer->data, hdd_header_buffer + 512 * i, 512);
-		ret = fileXioDevctl("hdd0:", HDIOC_WRITESECTOR, hdd_header_io_buffer,
-		                    512 + sizeof(hddAtaTransfer_t), NULL, 0);
+		ret = hddHeaderWriteSector(partition_sector + i, hdd_header_buffer + APA_HEADER_SECTOR_SIZE * i);
 		if (ret < 0)
 			return ret;
 	}
 
 	return ret;
+}
+
+static int hddHeaderGetPartitionSector(const char *partition_name, u32 *partition_sector)
+{
+	char partition_path[MAX_NAME + 6];
+	iox_stat_t stat;
+	int ret;
+
+	if (partition_sector == NULL)
+		return -EINVAL;
+
+	ret = hddHeaderBuildPartitionPath(partition_path, sizeof(partition_path), partition_name);
+	if (ret < 0)
+		return ret;
+
+	ret = fileXioGetStat(partition_path, &stat);
+	if (ret < 0)
+		return ret;
+
+	*partition_sector = stat.private_5;
+	return 0;
+}
+
+static u32 hddHeaderAttributeFileCapacity(const HddHeaderAttributeAreaHeader *header, const HddHeaderAttributeFile *file)
+{
+	const HddHeaderAttributeFile *files;
+	u32 capacity;
+	int i;
+
+	if (header == NULL || file == NULL || file->offset >= APA_HEADER_ATTRIBUTE_AREA_SIZE)
+		return 0;
+
+	capacity = APA_HEADER_ATTRIBUTE_AREA_SIZE - file->offset;
+	files = &header->system_cnf;
+	for (i = 0; i < 6; i++) {
+		if (&files[i] == file || files[i].offset == 0 || files[i].size == 0)
+			continue;
+		if (files[i].offset > file->offset && files[i].offset - file->offset < capacity)
+			capacity = files[i].offset - file->offset;
+	}
+
+	if (capacity > APA_HEADER_SYSTEM_CNF_MAX_SIZE)
+		capacity = APA_HEADER_SYSTEM_CNF_MAX_SIZE;
+
+	return capacity;
+}
+
+static int hddHeaderValidateSystemCnfEntry(const HddHeaderAttributeAreaHeader *header)
+{
+	u32 capacity;
+
+	if (header == NULL)
+		return -EINVAL;
+	if (memcmp(header->magic, APA_HEADER_MAGIC, strlen(APA_HEADER_MAGIC)))
+		return -ENOENT;
+	if (header->system_cnf.offset < APA_HEADER_SECTOR_SIZE || header->system_cnf.size == 0)
+		return -ENOENT;
+
+	capacity = hddHeaderAttributeFileCapacity(header, &header->system_cnf);
+	if (capacity == 0)
+		return -EINVAL;
+	if (header->system_cnf.size > capacity)
+		return -EFBIG;
+
+	return 0;
+}
+
+static int hddHeaderReadAttributeHeader(u32 partition_sector, HddHeaderAttributeAreaHeader *header)
+{
+	int ret;
+
+	if (header == NULL)
+		return -EINVAL;
+
+	ret = hddHeaderReadSector(partition_sector + APA_HEADER_ATTRIBUTE_AREA_OFFSET / APA_HEADER_SECTOR_SIZE,
+	                          hdd_header_buffer);
+	if (ret < 0)
+		return ret;
+
+	memcpy(header, hdd_header_buffer, sizeof(*header));
+	return 0;
+}
+
+static int hddHeaderReadRawRange(u32 partition_sector, u32 raw_offset, void *data, u32 size)
+{
+	unsigned char *out = (unsigned char *)data;
+	u32 copied = 0;
+	int ret;
+
+	if (data == NULL && size > 0)
+		return -EINVAL;
+	if (raw_offset >= APA_HEADER_SIZE || size > APA_HEADER_SIZE - raw_offset)
+		return -EINVAL;
+
+	while (copied < size) {
+		u32 pos = raw_offset + copied;
+		u32 sector_offset = pos % APA_HEADER_SECTOR_SIZE;
+		u32 chunk = APA_HEADER_SECTOR_SIZE - sector_offset;
+
+		if (chunk > size - copied)
+			chunk = size - copied;
+
+		ret = hddHeaderReadSector(partition_sector + pos / APA_HEADER_SECTOR_SIZE, hdd_header_buffer);
+		if (ret < 0)
+			return ret;
+
+		memcpy(out + copied, hdd_header_buffer + sector_offset, chunk);
+		copied += chunk;
+	}
+
+	return 0;
+}
+
+static int hddHeaderWriteRawRange(u32 partition_sector, u32 raw_offset, const void *data, u32 size)
+{
+	const unsigned char *in = (const unsigned char *)data;
+	u32 copied = 0;
+	int ret;
+
+	if (data == NULL && size > 0)
+		return -EINVAL;
+	if (raw_offset >= APA_HEADER_SIZE || size > APA_HEADER_SIZE - raw_offset)
+		return -EINVAL;
+
+	while (copied < size) {
+		u32 pos = raw_offset + copied;
+		u32 sector_offset = pos % APA_HEADER_SECTOR_SIZE;
+		u32 chunk = APA_HEADER_SECTOR_SIZE - sector_offset;
+
+		if (chunk > size - copied)
+			chunk = size - copied;
+
+		ret = hddHeaderReadSector(partition_sector + pos / APA_HEADER_SECTOR_SIZE, hdd_header_buffer);
+		if (ret < 0)
+			return ret;
+
+		memcpy(hdd_header_buffer + sector_offset, in + copied, chunk);
+
+		ret = hddHeaderWriteSector(partition_sector + pos / APA_HEADER_SECTOR_SIZE, hdd_header_buffer);
+		if (ret < 0)
+			return ret;
+
+		copied += chunk;
+	}
+
+	return 0;
+}
+
+static int hddHeaderReadSystemCnf(u32 partition_sector, HddHeaderAttributeAreaHeader *header, unsigned char *data, u32 data_size, u32 *cnf_size)
+{
+	u32 raw_offset;
+	int ret;
+
+	if (data == NULL || cnf_size == NULL)
+		return -EINVAL;
+
+	ret = hddHeaderReadAttributeHeader(partition_sector, header);
+	if (ret < 0)
+		return ret;
+	ret = hddHeaderValidateSystemCnfEntry(header);
+	if (ret < 0)
+		return ret;
+	if (header->system_cnf.size > data_size)
+		return -EFBIG;
+
+	raw_offset = APA_HEADER_ATTRIBUTE_AREA_OFFSET + header->system_cnf.offset;
+	ret = hddHeaderReadRawRange(partition_sector, raw_offset, data, header->system_cnf.size);
+	if (ret < 0)
+		return ret;
+
+	*cnf_size = header->system_cnf.size;
+	return 0;
+}
+
+static int hddHeaderWriteSystemCnf(u32 partition_sector, HddHeaderAttributeAreaHeader *header, const unsigned char *data, u32 data_size)
+{
+	unsigned char cnf_buffer[APA_HEADER_SYSTEM_CNF_MAX_SIZE];
+	u32 capacity;
+	u32 raw_offset;
+	int ret;
+
+	if (header == NULL || data == NULL || data_size == 0)
+		return -EINVAL;
+
+	ret = hddHeaderValidateSystemCnfEntry(header);
+	if (ret < 0)
+		return ret;
+
+	capacity = hddHeaderAttributeFileCapacity(header, &header->system_cnf);
+	if (data_size > capacity)
+		return -EFBIG;
+
+	memset(cnf_buffer, 0, sizeof(cnf_buffer));
+	memcpy(cnf_buffer, data, data_size);
+
+	raw_offset = APA_HEADER_ATTRIBUTE_AREA_OFFSET + header->system_cnf.offset;
+	ret = hddHeaderWriteRawRange(partition_sector, raw_offset, cnf_buffer, capacity);
+	if (ret < 0)
+		return ret;
+
+	header->system_cnf.size = data_size;
+	ret = hddHeaderReadSector(partition_sector + APA_HEADER_ATTRIBUTE_AREA_OFFSET / APA_HEADER_SECTOR_SIZE,
+	                          hdd_header_buffer);
+	if (ret < 0)
+		return ret;
+
+	memcpy(hdd_header_buffer, header, sizeof(*header));
+	return hddHeaderWriteSector(partition_sector + APA_HEADER_ATTRIBUTE_AREA_OFFSET / APA_HEADER_SECTOR_SIZE,
+	                            hdd_header_buffer);
+}
+
+static int hddHeaderWriteTempFile(const char *path, const unsigned char *data, u32 size)
+{
+	char fixed_path[MAX_PATH];
+	int fd;
+	int ret;
+
+	if (path == NULL || data == NULL)
+		return -EINVAL;
+
+	if (genFixPath(path, fixed_path) < 0) {
+		snprintf(fixed_path, sizeof(fixed_path), "%s", path);
+		fixed_path[sizeof(fixed_path) - 1] = '\0';
+	}
+
+	fd = genOpen(fixed_path, FIO_O_WRONLY | FIO_O_TRUNC | FIO_O_CREAT);
+	if (fd < 0)
+		return fd;
+
+	ret = (genWrite(fd, (void *)data, size) == (int)size) ? 0 : -EIO;
+	genClose(fd);
+	return ret;
+}
+
+static int hddHeaderReadTempFile(const char *path, unsigned char *data, u32 data_size, u32 *size)
+{
+	char fixed_path[MAX_PATH];
+	s64 file_size;
+	int fd;
+	int ret;
+
+	if (path == NULL || data == NULL || size == NULL)
+		return -EINVAL;
+
+	if (genFixPath(path, fixed_path) < 0) {
+		snprintf(fixed_path, sizeof(fixed_path), "%s", path);
+		fixed_path[sizeof(fixed_path) - 1] = '\0';
+	}
+
+	fd = genOpen(fixed_path, FIO_O_RDONLY);
+	if (fd < 0)
+		return fd;
+
+	file_size = genLseek(fd, 0, SEEK_END);
+	if (file_size < 0) {
+		genClose(fd);
+		return (int)file_size;
+	}
+	if (file_size > data_size) {
+		genClose(fd);
+		return -EFBIG;
+	}
+
+	ret = (genLseek(fd, 0, SEEK_SET) >= 0 &&
+	       genRead(fd, data, (int)file_size) == (int)file_size) ?
+	          0 :
+	          -EIO;
+	genClose(fd);
+	if (ret < 0)
+		return ret;
+
+	*size = (u32)file_size;
+	return 0;
+}
+
+static int hddHeaderTempFileExists(const char *path)
+{
+	char fixed_path[MAX_PATH];
+	int fd;
+
+	if (path == NULL || path[0] == '\0')
+		return 0;
+
+	if (genFixPath(path, fixed_path) < 0) {
+		snprintf(fixed_path, sizeof(fixed_path), "%s", path);
+		fixed_path[sizeof(fixed_path) - 1] = '\0';
+	}
+
+	fd = genOpen(fixed_path, FIO_O_RDONLY);
+	if (fd < 0)
+		return 0;
+
+	genClose(fd);
+	return 1;
+}
+
+static int hddHeaderBuildTempPath(char *path, size_t path_size)
+{
+	char name[16];
+	int i;
+
+	if (path == NULL || path_size == 0)
+		return -EINVAL;
+
+	for (i = 0; i < APA_HEADER_SYSTEM_CNF_TEMP_FILE_TRIES; i++) {
+		snprintf(name, sizeof(name), APA_HEADER_SYSTEM_CNF_TEMP_FILE_FORMAT, i);
+		configBuildSysconfPath(path, path_size, name);
+		if (!hddHeaderTempFileExists(path))
+			return 0;
+	}
+
+	path[0] = '\0';
+	return -EEXIST;
+}
+
+static void hddHeaderRemoveTempFile(const char *path)
+{
+	char fixed_path[MAX_PATH];
+
+	if (path == NULL || path[0] == '\0')
+		return;
+
+	if (genFixPath(path, fixed_path) < 0) {
+		snprintf(fixed_path, sizeof(fixed_path), "%s", path);
+		fixed_path[sizeof(fixed_path) - 1] = '\0';
+	}
+	genRemove(fixed_path);
+}
+
+int HddPartitionHeaderSystemCnfExists(const char *partition_name)
+{
+	HddHeaderAttributeAreaHeader header;
+	u32 partition_sector;
+	int ret;
+
+	ret = hddHeaderGetPartitionSector(partition_name, &partition_sector);
+	if (ret < 0)
+		return ret;
+
+	ret = hddHeaderReadAttributeHeader(partition_sector, &header);
+	if (ret < 0)
+		return ret;
+
+	ret = hddHeaderValidateSystemCnfEntry(&header);
+	return (ret < 0) ? ret : 1;
+}
+
+int EditHddPartitionHeaderSystemCnf(const char *partition_name)
+{
+	HddHeaderAttributeAreaHeader header;
+	unsigned char original[APA_HEADER_SYSTEM_CNF_MAX_SIZE];
+	unsigned char edited[APA_HEADER_SYSTEM_CNF_MAX_SIZE];
+	char temp_path[MAX_PATH];
+	u32 partition_sector;
+	u32 original_size;
+	u32 edited_size;
+	int ret;
+
+	ret = hddHeaderGetPartitionSector(partition_name, &partition_sector);
+	if (ret < 0)
+		return ret;
+
+	ret = hddHeaderReadSystemCnf(partition_sector, &header, original, sizeof(original), &original_size);
+	if (ret < 0)
+		return ret;
+
+	ret = hddHeaderBuildTempPath(temp_path, sizeof(temp_path));
+	if (ret < 0)
+		return ret;
+	configEnsureSysconfDir(temp_path);
+
+	ret = hddHeaderWriteTempFile(temp_path, original, original_size);
+	if (ret < 0) {
+		hddHeaderRemoveTempFile(temp_path);
+		return ret;
+	}
+
+	TextEditor(temp_path);
+
+	ret = hddHeaderReadTempFile(temp_path, edited, sizeof(edited), &edited_size);
+	hddHeaderRemoveTempFile(temp_path);
+	if (ret < 0)
+		return ret;
+	if (edited_size == 0)
+		return -EINVAL;
+	if (edited_size == original_size && !memcmp(original, edited, original_size))
+		return 0;
+
+	ret = hddHeaderWriteSystemCnf(partition_sector, &header, edited, edited_size);
+	return (ret < 0) ? ret : 1;
 }
 
 static int hddHeaderReadFileIntoHeader(const char *source_dir, const HddHeaderFileSpec *spec)
@@ -464,7 +910,7 @@ static int hddHeaderReadFileIntoHeader(const char *source_dir, const HddHeaderFi
 	}
 	genClose(fd);
 
-	data_offset = spec->data_offset - 0x1000;
+	data_offset = spec->data_offset - APA_HEADER_ATTRIBUTE_AREA_OFFSET;
 	memcpy(hdd_header_buffer + spec->offset_offset, &data_offset, sizeof(data_offset));
 	memcpy(hdd_header_buffer + spec->size_offset, &file_size, sizeof(file_size));
 
@@ -481,7 +927,7 @@ static int hddHeaderPatchFromSource(const char *source_dir)
 	int i;
 	int ret;
 
-	memcpy(hdd_header_buffer + 0x1000, APA_HEADER_MAGIC, strlen(APA_HEADER_MAGIC));
+	memcpy(hdd_header_buffer + APA_HEADER_ATTRIBUTE_AREA_OFFSET, APA_HEADER_MAGIC, strlen(APA_HEADER_MAGIC));
 	for (i = 0; i < HDD_HEADER_FILE_COUNT; i++) {
 		ret = hddHeaderReadFileIntoHeader(source_dir, &hdd_header_files[i]);
 		if (ret < 0)
@@ -674,9 +1120,9 @@ int InjectHddPartitionHeaderFromSource(const char *partition_name, const char *s
 		source_dir[source_dir_size - 1] = '\0';
 	}
 
-	ret = snprintf(partition_path, sizeof(partition_path), "hdd0:%s", partition_name);
-	if (ret < 0 || ret >= (int)sizeof(partition_path))
-		return -ENAMETOOLONG;
+	ret = hddHeaderBuildPartitionPath(partition_path, sizeof(partition_path), partition_name);
+	if (ret < 0)
+		return ret;
 
 	ret = fileXioDevctl("hdd0:", HDIOC_STATUS, NULL, 0, NULL, 0);
 	if (ret != 0)

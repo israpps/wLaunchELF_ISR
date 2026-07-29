@@ -6,6 +6,7 @@
 #include "filer_actions.h"
 #include "filer_shared.h"
 #include "gui_hdd0_format.h"
+#include "init.h"
 #include "psu_functions.h"
 #include "psu_types.h"
 
@@ -96,6 +97,7 @@ static int applyMcInfoToMcPath(const char *path, const sceMcTblGetDir *info)
 	if (strncmp(path, "mc", 2))
 		return -1;
 
+	ensureMemoryCardPortAccessible(path[2] - '0');
 	mcGetInfo(path[2] - '0', 0, &mctype, &dummy, &dummy);
 	mcSync(0, NULL, &dummy);
 	mcSetFileInfo(path[2] - '0', 0, &path[4], info, MC_SFI);
@@ -642,6 +644,7 @@ restart_copy:  //restart point for PM_PSU_RESTORE to reprocess modified argument
 				return -1;
 		} else if (PM_flag[recurses + 1] == PM_NORMAL) {             //Normal mode folder paste closure
 			if (!strncmp(out, "mc", 2)) {                            //Handle folder copied to MC
+				ensureMemoryCardPortAccessible(out[2] - '0');
 				ret = MC_SFI;                                   //default request for changing entire mcTable
 				if (!isMemoryCardLikePath(in)) {                //Handle folder copied from non-MC/non-VMC to MC
 					file.stats.AttrFile = MC_ATTR_norm_folder;  //normalize MC folder attribute
@@ -1031,6 +1034,7 @@ copy_file_data_done:
 	}
 
 	if (!strncmp(out, "mc", 2)) {                                 //Handle file copied to MC
+		ensureMemoryCardPortAccessible(out[2] - '0');
 		ret = MC_SFI;                                 //default request for changing entire mcTable
 		if (!isMemoryCardLikePath(in)) {              //Handle file copied from non-MC/non-VMC to MC
 			file.stats.AttrFile = MC_ATTR_norm_file;  //normalize MC file attribute

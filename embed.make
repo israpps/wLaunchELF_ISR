@@ -154,11 +154,25 @@ USBMASS_BD_SDK_MODULE_DIR :=
 
 IOMANX_SOURCE := iop/__precompiled/iomanX.irx
 FILEXIO_SOURCE := iop/__precompiled/fileXio.irx
+MMCEMAN_AUTOGEN := iop/__generated/mmceman.irx
+MMCEMAN_SOURCE := iop/__precompiled/mmceman.irx
+MMCEMAN_LOCAL_DIR := iop/mmceman
+MMCEMAN_LOCAL_SOURCES := $(wildcard $(MMCEMAN_LOCAL_DIR)/Makefile $(MMCEMAN_LOCAL_DIR)/src/* $(MMCEMAN_LOCAL_DIR)/include/*)
 VMCMAN_AUTOGEN := iop/__generated/vmcman.irx
 VMCMAN_SOURCE := $(VMCMAN_AUTOGEN)
 VMCMAN_LOCAL_DIR := iop/vmcman
 VMCMAN_LOCAL_SOURCES := $(wildcard $(VMCMAN_LOCAL_DIR)/Makefile $(VMCMAN_LOCAL_DIR)/src/* $(VMCMAN_LOCAL_DIR)/include/*)
 VMCMAN_SDK_ROOT :=
+
+ifneq ($(wildcard $(MMCEMAN_LOCAL_DIR)/Makefile),)
+MMCEMAN_SOURCE := $(MMCEMAN_AUTOGEN)
+endif
+
+ifneq ($(MMCEMAN_SOURCE),$(MMCEMAN_AUTOGEN))
+ifeq ($(wildcard $(MMCEMAN_SOURCE)),)
+$(error Missing $(MMCEMAN_SOURCE). Add iop/__precompiled/mmceman.irx or provide iop/mmceman sources)
+endif
+endif
 
 ifneq ($(wildcard $(PS2SDK)/iop/irx/bdm.irx),)
 BDM_SOURCE := $(PS2SDK)/iop/irx/bdm.irx
@@ -357,7 +371,7 @@ $(MX4SIO_BD_AUTOGEN): | iop/__generated
 $(EE_ASM_DIR)mx4sio_bd.s: $(MX4SIO_BD_SOURCE) | $(EE_ASM_DIR)
 	$(BIN2S) $< $@ mx4sio_bd_irx
 	
-$(EE_ASM_DIR)mmceman_irx.s: iop/__precompiled/mmceman.irx | $(EE_ASM_DIR)
+$(EE_ASM_DIR)mmceman_irx.s: $(MMCEMAN_SOURCE) | $(EE_ASM_DIR)
 	$(BIN2S) $< $@ mmceman_irx
  
 $(EE_ASM_DIR)extflash_irx.s: $(EXTFLASH_SOURCE) | $(EE_ASM_DIR)
@@ -597,6 +611,16 @@ $(VMCMAN_AUTOGEN): $(VMCMAN_LOCAL_SOURCES) | iop/__generated
 		PS2SDK=$(VMCMAN_SDK_ROOT) \
 		IOP_BIN_DIR=$(abspath iop/__generated)/ \
 		IOP_OBJS_DIR=$(abspath iop/__generated/vmcman_obj)/ \
+		IOP_BIN=$(abspath $@) \
+		DEBUG=$(DEBUG)
+	test -s $@
+
+$(MMCEMAN_AUTOGEN): $(MMCEMAN_LOCAL_SOURCES) | iop/__generated
+	$(MAKE) -C $(MMCEMAN_LOCAL_DIR) \
+		PS2SDKSRC=$(VMCMAN_SDK_ROOT) \
+		PS2SDK=$(VMCMAN_SDK_ROOT) \
+		IOP_BIN_DIR=$(abspath iop/__generated)/ \
+		IOP_OBJS_DIR=$(abspath iop/__generated/mmceman_obj)/ \
 		IOP_BIN=$(abspath $@) \
 		DEBUG=$(DEBUG)
 	test -s $@

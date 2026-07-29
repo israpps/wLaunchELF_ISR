@@ -3,6 +3,7 @@
 //--------------------------------------------------------------
 #include "launchelf.h"
 #include "draw_private.h"
+#include "main_title.h"
 
 GSGLOBAL *gsGlobal;
 GSTEXTURE TexIcon[2];
@@ -15,6 +16,7 @@ int updateScr_2;      //dlanor: used for anti-flicker delay in drawScr()
 u64 updateScr_t = 0;  //dlanor: exit time of last drawScr()
 
 char LastMessage[MAX_TEXT_LINE + 2];
+static int menu_title_refresh_frames = 0;
 
 int Menu_start_x = SCREEN_MARGIN + LINE_THICKNESS + FONT_WIDTH;
 int Menu_title_y = SCREEN_MARGIN;
@@ -29,17 +31,56 @@ int Menu_tooltip_y;  //Menus may also use this row for tooltips
 
 
 //--------------------------------------------------------------
-void setScrTmp(const char *msg0, const char *msg1)
+static int getMenuTitleCharLimit(const char *version_text)
+{
+	int title_chars;
+
+	title_chars = (SCREEN_WIDTH - (SCREEN_MARGIN * 2) - (FONT_WIDTH * ((int)strlen(version_text) + 1))) / FONT_WIDTH;
+	if (title_chars < 0)
+		title_chars = 0;
+	if (title_chars > MAX_TEXT_LINE)
+		title_chars = MAX_TEXT_LINE;
+
+	return title_chars;
+}
+//--------------------------------------------------------------
+static void drawMenuTitleLine(void)
 {
 	int x, y;
-	char temp_txt[64];
+	char app_title[64];
+	char status_title[MAX_TEXT_LINE + 1];
+
+	if (setting == NULL)
+		return;
 
 	x = SCREEN_MARGIN;
 	y = Menu_title_y;
-	printXY(setting->Menu_Title, x, y, setting->color[COLOR_TEXT], TRUE, 0);
-	sprintf(temp_txt, " \xff\x34 wLaunchELF %s \xff\x34", ULE_VERSION);
-	printXY(temp_txt, SCREEN_WIDTH - SCREEN_MARGIN - FONT_WIDTH * strlen(temp_txt), y,
-	        setting->color[COLOR_FRAME], TRUE, 0);
+	sprintf(app_title, "\xff\x34 wLaunchELF %s \xff\x34", ULE_VERSION);
+
+	drawSprite(setting->color[COLOR_BACKGR], 0, Menu_title_y - 1, SCREEN_WIDTH, Menu_message_y - 1);
+	printXY(app_title, x, y, setting->color[COLOR_FRAME], TRUE, 0);
+	menuTitleFormat(status_title, getMenuTitleCharLimit(app_title) + 1);
+	printXY(status_title, SCREEN_WIDTH - SCREEN_MARGIN - FONT_WIDTH * strlen(status_title), y,
+	        setting->color[COLOR_TEXT], TRUE, 0);
+}
+//--------------------------------------------------------------
+static void updateDynamicMenuTitleLine(void)
+{
+	if (menuTitleUpdateAsync(0))
+		menu_title_refresh_frames = 2;
+
+	if (menu_title_refresh_frames > 0) {
+		drawMenuTitleLine();
+		menu_title_refresh_frames--;
+	}
+}
+//--------------------------------------------------------------
+void setScrTmp(const char *msg0, const char *msg1)
+{
+	int x;
+
+	x = SCREEN_MARGIN;
+	drawMenuTitleLine();
 
 	strncpy(LastMessage, msg0, MAX_TEXT_LINE);
 	LastMessage[MAX_TEXT_LINE] = '\0';
@@ -128,6 +169,8 @@ void clrScr(u64 color)
 //--------------------------------------------------------------
 void drawScr(void)
 {
+	updateDynamicMenuTitleLine();
+
 	if (updateScr_2) {  //Did we render anything last time
 		while (Timer() < updateScr_t + 5)
 			;  //if so, delay to complete rendering

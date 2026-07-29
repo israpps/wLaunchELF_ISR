@@ -36,7 +36,8 @@ Drivers load on demand for maximum compatibility and initial boot speed.
 - Xfrom/dvr_hdd0 hidden from non-PSX consoles
 - Dual hdd support
 - multi-usb support
-- HDD Manager can inject APA partition headers from header files on `usb:`, `mmce0:`, `mmce1:`, or `udpfs:` for HDD-OSD icons/launch metadata
+- HDD Manager can inject APA partition headers
+- View/edit APA partiion header `system.cnf`
 - All drivers besides core lazy loading for faster boot and support of all devices.
 - Create and Extract PSU options so user knows what will happen
 - Extra file extensions for Text Editor ShortCuts

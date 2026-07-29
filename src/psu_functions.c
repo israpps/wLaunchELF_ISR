@@ -1,4 +1,5 @@
 #include "psu_functions.h"
+#include "init.h"
 #include <string.h>
 
 #define PSU_HEADER_SIZE ((int)sizeof(psu_header))
@@ -181,6 +182,7 @@ int psu_restore_apply_entry_stats_to_mc(const char *out_dir, const sceMcTblGetDi
 	if (snprintf(path, sizeof(path), "%s%.32s", out_dir, (const char *)stats->EntryName) >= (int)sizeof(path))
 		return -1;
 
+	ensureMemoryCardPortAccessible(path[2] - '0');
 	mcGetInfo(path[2] - '0', 0, &dummy, &dummy, &dummy);
 	mcSync(0, NULL, &dummy);
 	mcSetFileInfo(path[2] - '0', 0, &path[4], (sceMcTblGetDir *)stats, set_mode);

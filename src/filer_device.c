@@ -27,6 +27,28 @@ static int transferStorageGateForPath(const char *path)
 #endif
 	return TRANSFER_STORAGE_DEFAULT;
 }
+
+static int isMx4sioPath(const char *path)
+{
+#ifdef MX4SIO
+	return (path != NULL && !strncmp(path, "mx4sio", 6));
+#else
+	(void)path;
+	return FALSE;
+#endif
+}
+
+static int isMc1Path(const char *path)
+{
+	return (path != NULL && !strncmp(path, "mc1:", 4));
+}
+
+static int transferUsesMx4sioAndMc1(const char *src_path, const char *dst_path)
+{
+	return ((isMx4sioPath(src_path) && isMc1Path(dst_path)) ||
+	        (isMc1Path(src_path) && isMx4sioPath(dst_path)));
+}
+
 int ensurePathDeviceStackReady(const char *path)
 {
 	if (path == NULL || path[0] == '\0')
@@ -84,6 +106,9 @@ int prepareTransferDeviceStacks(const char *src_path, const char *dst_path)
 {
 	int src_storage = transferStorageGateForPath(src_path);
 	int dst_storage = transferStorageGateForPath(dst_path);
+
+	if (transferUsesMx4sioAndMc1(src_path, dst_path))
+		return TRANSFER_STACK_INCOMPATIBLE;
 
 	if (src_storage != TRANSFER_STORAGE_DEFAULT &&
 	    dst_storage != TRANSFER_STORAGE_DEFAULT &&

@@ -14,7 +14,7 @@
 #define ULE_VERSION_DEBUG_SUFFIX ""
 #endif
 
-#define ULE_VERSION "v4.75_R3Z" ULE_VERSION_DEBUG_SUFFIX
+#define ULE_VERSION "v4.76_R3Z" ULE_VERSION_DEBUG_SUFFIX
 //#ifndef ULE_VERDATE
 //#define ULE_VERDATE __DATE__
 //#endif
@@ -185,7 +185,6 @@ enum {
 	MAX_PATH = 1025,
 	MAX_ENTRY = 2048,
 	MAX_PARTITIONS = 1400,
-	MAX_MENU_TITLE = 40,
 	MAX_ELF_TITLE = 72,
 	MAX_TEXT_LINE = 80
 };
@@ -282,7 +281,6 @@ typedef struct
 	char Misc_Reboot_IOP[64];
 	char usbkbd_file[MAX_PATH];
 	char kbdmap_file[MAX_PATH];
-	char Menu_Title[MAX_MENU_TITLE + 1];
 	char lang_file[MAX_PATH];
 	char font_file[MAX_PATH];
 	char popstarter_file[MAX_PATH];
@@ -557,7 +555,8 @@ void hddManager(void);
 /* editor.c */
 enum {
 	TEXTEDITOR_RESULT_EXIT = 0,
-	TEXTEDITOR_RESULT_LAUNCH_ARGS = 1
+	TEXTEDITOR_RESULT_LAUNCH_ARGS = 1,
+	TEXTEDITOR_RESULT_BROWSE_DIR = 2
 };
 
 int TextEditor(char *path);

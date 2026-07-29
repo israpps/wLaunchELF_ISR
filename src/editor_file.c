@@ -39,16 +39,14 @@ int editorNew(int Win)
 {
 	int ret = 0;
 
-	TextSize[Win] = 1;
+	TextSize[Win] = 0;
 
-	if (TextSize[Win]) {
-		if ((TextBuffer[Win] = malloc(TextSize[Win] + 256)) > 0) {
-			TextBuffer[Win][0] = '\0';
-			TextMode[Win] = OTHER;
-			Window[Win][CREATED] = 1, Window[Win][OPENED] = 1, Window[Win][SAVED] = 0;
-			editorResetState();
-			ret = 1;
-		}
+	if ((TextBuffer[Win] = malloc(TextSize[Win] + 256)) != NULL) {
+		TextBuffer[Win][0] = '\0';
+		TextMode[Win] = OTHER;
+		Window[Win][CREATED] = 1, Window[Win][OPENED] = 1, Window[Win][SAVED] = 0;
+		editorResetState();
+		ret = 1;
 	}
 
 	if (ret) {

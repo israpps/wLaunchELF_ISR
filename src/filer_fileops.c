@@ -1,5 +1,6 @@
 #include "launchelf.h"
 #include "filer_shared.h"
+#include "init.h"
 
 #ifdef ULE_DEBUG_BUILD
 #ifndef FILEOP_TRACE
@@ -9,6 +10,13 @@
 #undef FILEOP_TRACE
 #define FILEOP_TRACE 0
 #endif
+
+static void ensurePathMemoryCardAccessible(const char *path)
+{
+	if (path != NULL && !strncmp(path, "mc1:", 4))
+		ensureMemoryCardPortAccessible(1);
+}
+
 #if FILEOP_TRACE
 #define FILEOP_TRACE_FD_SLOTS 128
 typedef struct
@@ -204,6 +212,7 @@ int genRmdir(char *path)
 	path = mapped_path;
 #endif
 
+	ensurePathMemoryCardAccessible(path);
 	genLimObjName(path, 0);
 #if FILEOP_TRACE
 	t0 = Timer();
@@ -237,6 +246,7 @@ int genRemove(char *path)
 	path = mapped_path;
 #endif
 
+	ensurePathMemoryCardAccessible(path);
 	genLimObjName(path, 0);
 #if FILEOP_TRACE
 	t0 = Timer();
@@ -263,6 +273,7 @@ int genGetStat(const char *path, iox_stat_t *stat)
 #if defined(ETH) || defined(UDPFS)
 	makeHostPath(stat_path, stat_path);
 #endif
+	ensurePathMemoryCardAccessible(stat_path);
 	genLimObjName(stat_path, 0);
 	return fileXioGetStat(stat_path, stat);
 }
@@ -284,6 +295,7 @@ int genMkdir(const char *path, int mode)
 #if defined(ETH) || defined(UDPFS)
 	makeHostPath(mkdir_path, mkdir_path);
 #endif
+	ensurePathMemoryCardAccessible(mkdir_path);
 	genLimObjName(mkdir_path, 0);
 
 #if FILEOP_TRACE
@@ -318,6 +330,7 @@ int genOpen(const char *path, int mode)
 #if defined(ETH) || defined(UDPFS)
 	makeHostPath(open_path, open_path);
 #endif
+	ensurePathMemoryCardAccessible(open_path);
 	genLimObjName(open_path, 0);
 #if FILEOP_TRACE
 	t0 = Timer();
@@ -361,6 +374,7 @@ int genOpen(const char *path, int mode)
 	}
 
 	genLimObjName(alt_path, 0);
+	ensurePathMemoryCardAccessible(alt_path);
 #if FILEOP_TRACE
 	t0 = Timer();
 #endif
@@ -397,6 +411,7 @@ int genDopen(char *path)
 
 	DPRINTF("%s: '%s'\n", __FUNCTION__, path);
 
+	ensurePathMemoryCardAccessible(path);
 	if (!strncmp(path, "pfs", 3) || !strncmp(path, "vmc", 3)) {
 		char tmp[MAX_PATH];
 

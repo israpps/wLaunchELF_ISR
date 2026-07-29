@@ -1427,6 +1427,18 @@ void rebootIopAndReloadCoreStackSilent(void)
 	resetRuntimeDeviceState(FALSE);
 }
 
+void ensureMemoryCardPortAccessible(int port)
+{
+#ifdef MX4SIO
+	if (port == 1 && (storage_driver_stack_mode == STORAGE_STACK_MX4SIO || mx4sio_driver_running)) {
+		DPRINTF("Switching from MX4SIO stack to mc1:, resetting IOP\n");
+		resetRuntimeDeviceState(TRUE);
+	}
+#else
+	(void)port;
+#endif
+}
+
 static void switchStorageDriverStack(int target_mode)
 {
 #if defined(MMCE) || defined(MX4SIO)

@@ -3,6 +3,7 @@
 //--------------------------------------------------------------
 #include "launchelf.h"
 #include "init.h"
+#include "main_gameid.h"
 #include "main_startup.h"
 #include <stdlib.h>
 
@@ -129,6 +130,7 @@ int readSystemCnf(void)
 {
 	int var_cnt;
 	char *RAM_p, *CNF_p, *name, *value;
+	char generic_gameid[12];
 
 	BootDiscType = 0;
 	SystemCnf_BOOT[0] = '\0';
@@ -154,11 +156,8 @@ int readSystemCnf(void)
 		strcpy(SystemCnf_VER, "???");
 
 	if (RAM_p == NULL) {  //if SYSTEM.CNF was not found test for PS1 special cases
-		if (wleExists("cdrom0:\\PSXMYST\\MYST.CCS;1")) {
-			strcpy(SystemCnf_BOOT, "SLPS_000.24");
-			BootDiscType = 1;
-		} else if (wleExists("cdrom0:\\CDROM\\LASTPHOT\\ALL_C.NBN;1")) {
-			strcpy(SystemCnf_BOOT, "SLPS_000.65");
+		if (buildPS1GenericDiscGameID(generic_gameid, sizeof(generic_gameid))) {
+			strcpy(SystemCnf_BOOT, generic_gameid);
 			BootDiscType = 1;
 		} else if (wleExists("cdrom0:\\PSX.EXE;1")) {
 			BootDiscType = 1;

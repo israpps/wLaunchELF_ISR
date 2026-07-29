@@ -4,6 +4,7 @@
 #include "launchelf.h"
 #include "config_private.h"
 #include "gui_colors.h"
+#include "init.h"
 #include <stdbool.h>
 #include <stdlib.h>
 
@@ -352,6 +353,7 @@ void configEnsureSysconfDir(const char *path)
 	if (path == NULL)
 		return;
 	if (!strncmp(path, "mc0:/SYS-CONF/", 14) || !strncmp(path, "mc1:/SYS-CONF/", 14)) {
+		ensureMemoryCardPortAccessible(path[2] - '0');
 		mcSync(0, NULL, NULL);
 		mcMkDir(path[2] - '0', 0, "SYS-CONF");
 		mcSync(0, NULL, &ret);
@@ -525,7 +527,6 @@ void saveConfigToPath(char *mainMsg, char *CNF, const char *target_path)
 	        "NET_HOSTwrite = %d\r\n"
 	        "APP_GameID = %d\r\n"
 	        "CDROM_Disable_GameID = %d\r\n"
-	        "Menu_Title = %s\r\n"
 	        "Init_Delay = %d\r\n"
 	        "REBOOT_IOP_ELFLOAD = %d\r\n"
 	        "VirtualKeyboardLayout = %s\r\n"
@@ -552,7 +553,6 @@ void saveConfigToPath(char *mainMsg, char *CNF, const char *target_path)
 	        setting->HOSTwrite,        //NET_HOST_write
 	        setting->app_gameid,       //app_gameid
 	        setting->cdrom_disable_gameid, //cdrom_disable_gameid
-	        setting->Menu_Title,       //Menu_Title
 	        setting->Init_Delay,       //Init_Delay
 	        setting->reboot_iop_elf_load,
 	        getVirtualKeyboardLayoutConfigName(setting->virtual_keyboard_layout),
@@ -708,11 +708,10 @@ void initConfig(void)
 	setting->LK_Flag[SETTING_LK_TRIANGLE] = 1;
 	setting->usbkbd_file[0] = '\0';
 	setting->kbdmap_file[0] = '\0';
-	setting->Menu_Title[0] = '\0';
-		setting->CNF_Path[0] = '\0';
-		setting->lang_file[0] = '\0';
-		setting->font_file[0] = '\0';
-		setting->popstarter_file[0] = '\0';
+	setting->CNF_Path[0] = '\0';
+	setting->lang_file[0] = '\0';
+	setting->font_file[0] = '\0';
+	setting->popstarter_file[0] = '\0';
 	setting->timeout = DEF_TIMEOUT;
 	setting->Hide_Paths = DEF_HIDE_PATHS;
 	setting->color[COLOR_BACKGR] = DEF_COLOR1;
@@ -888,8 +887,7 @@ int loadConfig(char *mainMsg, char *CNF)
 		else if (!strcmp(name, "CDROM_Disable_GameID") || !strcmp(name, "cdrom_disable_gameid") || !strcmp(name, "Disable_Disc_GameID"))
 			setting->cdrom_disable_gameid = atoi(value);
 		else if (!strcmp(name, "Menu_Title")) {
-			strncpy(setting->Menu_Title, value, MAX_MENU_TITLE);
-			setting->Menu_Title[MAX_MENU_TITLE] = '\0';
+			// Legacy setting ignored. The title bar is fixed at runtime.
 		} else if (!strcmp(name, "Init_Delay"))
 			setting->Init_Delay = atoi(value);
 		else if (!strcmp(name, "USBKBD_USED"))
@@ -973,7 +971,6 @@ int loadConfig(char *mainMsg, char *CNF)
 //---------------------------------------------------------------------------
 // Other settings by EP
 // sincro: ADD USBD SELECTOR MENU
-// dlanor: Add Menu_Title config
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------

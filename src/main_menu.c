@@ -70,6 +70,7 @@ void MainMenuState_UpdateTimers(MainMenuState *state, int *event)
 		if ((state->timeout / 1000) != (state->prev_timeout / 1000))
 			*event |= 8;  //event |= visible timeout change
 	}
+
 }
 
 int drawMainMenuScreen(MainMenuState *state, const char *main_msg)

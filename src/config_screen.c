@@ -38,7 +38,6 @@ enum CONFIG_SCREEN {
 	CONFIG_SCREEN_TV_STARTX,
 	CONFIG_SCREEN_TV_STARTY,
 
-	CONFIG_SCREEN_MENU_TITLE,
 	CONFIG_SCREEN_MENU_FRAME,
 	CONFIG_SCREEN_POPUP_OPAQUE,
 
@@ -71,11 +70,11 @@ void Config_Screen(void)
 	}
 
 	s = CONFIG_SCREEN_FIRST;
-		while (1) {
-			//Pad response section
-			waitPadReady(0, 0);
-			if (readpad()) {
-				if (new_pad & PAD_UP) {
+	while (1) {
+		//Pad response section
+		waitPadReady(0, 0);
+		if (readpad()) {
+			if (new_pad & PAD_UP) {
 				event |= 2;  //event |= valid pad command
 				if (s == CONFIG_SCREEN_FIRST)
 					s = max_s;
@@ -93,12 +92,9 @@ void Config_Screen(void)
 					s++;
 			} else if (new_pad & PAD_LEFT) {
 				event |= 2;  //event |= valid pad command
-
 				if (s >= CONFIG_SCREEN_RETURN)
 					s = CONFIG_SCREEN_MENU_FRAME;
 				else if (s >= CONFIG_SCREEN_MENU_FRAME)
-					s = CONFIG_SCREEN_MENU_TITLE;
-				else if (s >= CONFIG_SCREEN_MENU_TITLE)
 					s = CONFIG_SCREEN_TV_MODE;
 				else if (s >= CONFIG_SCREEN_TV_STARTX)
 					s = CONFIG_SCREEN_TV_MODE;  //at or
@@ -110,10 +106,8 @@ void Config_Screen(void)
 				event |= 2;  //event |= valid pad command
 				if (s >= CONFIG_SCREEN_MENU_FRAME)
 					s = CONFIG_SCREEN_RETURN;
-				else if (s >= CONFIG_SCREEN_MENU_TITLE)
-					s = CONFIG_SCREEN_MENU_FRAME;
 				else if (s >= CONFIG_SCREEN_TV_STARTX)
-					s = CONFIG_SCREEN_MENU_TITLE;
+					s = CONFIG_SCREEN_MENU_FRAME;
 				else if (s >= CONFIG_SCREEN_TV_MODE)
 					s = CONFIG_SCREEN_TV_STARTX;
 				else if (s >= CONFIG_SCREEN_COL_LAST)
@@ -138,8 +132,6 @@ void Config_Screen(void)
 						setting->screen_y--;
 						updateScreenMode();
 					}
-				} else if (s == CONFIG_SCREEN_MENU_TITLE) {  //cursor is at Menu_Title
-					setting->Menu_Title[0] = '\0';
 				}
 			} else if ((swapKeys && new_pad & PAD_CROSS) || (!swapKeys && new_pad & PAD_CIRCLE)) {  //User pressed OK=>Add/Ok/Edit
 				event |= 2;                                                                         //event |= valid pad command
@@ -162,11 +154,6 @@ void Config_Screen(void)
 						setting->screen_y++;
 						updateScreenMode();
 					}
-				} else if (s == CONFIG_SCREEN_MENU_TITLE) {  //cursor is at Menu_Title
-					char tmp[MAX_MENU_TITLE + 1];
-					strcpy(tmp, setting->Menu_Title);
-					if (keyboard(tmp, MAX_MENU_TITLE) >= 0)
-						strcpy(setting->Menu_Title, tmp);
 				} else if (s == CONFIG_SCREEN_MENU_FRAME) {
 					setting->Menu_Frame = !setting->Menu_Frame;
 				} else if (s == CONFIG_SCREEN_POPUP_OPAQUE) {
@@ -281,22 +268,14 @@ void Config_Screen(void)
 			y += FONT_HEIGHT;
 			y += FONT_HEIGHT / 2;
 
-			if (setting->Menu_Title[0] == '\0')
-				sprintf(c, "  %s: %s", LNG(Menu_Title), LNG(NULL));
-			else
-				sprintf(c, "  %s: %s", LNG(Menu_Title), setting->Menu_Title);
+			configFormatLabelValueAligned(c, sizeof(c), LNG(Menu_Frame), setting->Menu_Frame ? LNG(ON) : LNG(OFF), bool_label_width);
+			printXY(c, x, y, setting->color[COLOR_TEXT], TRUE, 0);
+			y += FONT_HEIGHT;
+
+			configFormatLabelValueAligned(c, sizeof(c), LNG(Popups_Opaque), setting->Popup_Opaque ? LNG(ON) : LNG(OFF), bool_label_width);
 			printXY(c, x, y, setting->color[COLOR_TEXT], TRUE, 0);
 			y += FONT_HEIGHT;
 			y += FONT_HEIGHT / 2;
-
-				configFormatLabelValueAligned(c, sizeof(c), LNG(Menu_Frame), setting->Menu_Frame ? LNG(ON) : LNG(OFF), bool_label_width);
-				printXY(c, x, y, setting->color[COLOR_TEXT], TRUE, 0);
-				y += FONT_HEIGHT;
-
-				configFormatLabelValueAligned(c, sizeof(c), LNG(Popups_Opaque), setting->Popup_Opaque ? LNG(ON) : LNG(OFF), bool_label_width);
-				printXY(c, x, y, setting->color[COLOR_TEXT], TRUE, 0);
-				y += FONT_HEIGHT;
-				y += FONT_HEIGHT / 2;
 
 			sprintf(c, "  %s", LNG(RETURN));
 			printXY(c, x, y, setting->color[COLOR_TEXT], TRUE, 0);
@@ -321,10 +300,8 @@ void Config_Screen(void)
 					y += FONT_HEIGHT / 2;           //adjust for half-row space below colours
 				if (s >= CONFIG_SCREEN_TV_STARTX)   //if cursor at or beyond screen offsets
 					y += FONT_HEIGHT / 2;           //adjust for half-row space below TV mode choice
-				if (s >= CONFIG_SCREEN_MENU_TITLE)  //if cursor at or beyond 'Menu Title'
-					y += FONT_HEIGHT / 2;           //adjust for half-row space below screen offsets
 				if (s >= CONFIG_SCREEN_MENU_FRAME)  //if cursor at or beyond 'Menu Frame'
-					y += FONT_HEIGHT / 2;           //adjust for half-row space below 'Menu Title'
+					y += FONT_HEIGHT / 2;           //adjust for half-row space below screen offsets
 				if (s >= CONFIG_SCREEN_RETURN)      //if cursor at or beyond 'RETURN'
 					y += FONT_HEIGHT / 2;           //adjust for half-row space below 'Popups Opaque'
 			}
@@ -352,17 +329,6 @@ void Config_Screen(void)
 					len = sprintf(c, "\xFF"
 					                 "0:%s",
 					              LNG(Change));
-			} else if (s == CONFIG_SCREEN_MENU_TITLE) {  //if cursor at Menu_Title
-				if (swapKeys)
-					len = sprintf(c, "\xFF"
-					                 "1:%s \xFF"
-					                 "0:%s",
-					              LNG(Edit), LNG(Clear));
-				else
-					len = sprintf(c, "\xFF"
-					                 "0:%s \xFF"
-					                 "1:%s",
-					              LNG(Edit), LNG(Clear));
 			} else {  //if cursor at 'RETURN' or 'DEFAULT' options
 				if (swapKeys)
 					len = sprintf(c, "\xFF"

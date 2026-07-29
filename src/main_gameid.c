@@ -4,6 +4,12 @@
 #include "launchelf.h"
 #include "main_gameid.h"
 
+#define PS1_PVD_LBA 16
+#define PS1_CD_SECTOR_DATA_SIZE 2048
+
+extern const PS1_GENERIC_GAME_ID ps1_generic_game_ids[];
+extern const size_t ps1_generic_game_ids_count;
+
 static u8 calculateRetroGemCRC(const u8 *data, int len)
 {
 	int i;
@@ -103,6 +109,58 @@ static int isDiscExecPath(const char *exec_path)
 	return (!strncmp(exec_path, "cdrom", 5) || !strncmp(exec_path, "cdfs", 4));
 }
 
+static int isLikelyTitleID(const char *gameID)
+{
+	return (gameID != NULL &&
+	        strlen(gameID) >= 11 &&
+	        gameID[4] == '_' &&
+	        (gameID[7] == '.' || gameID[8] == '.'));
+}
+
+int buildPS1GenericGameIDFromTimestamp(const char *volume_timestamp, char *gameID, size_t gameID_len)
+{
+	size_t i;
+
+	if (volume_timestamp == NULL || gameID == NULL || gameID_len < 12)
+		return 0;
+
+	gameID[0] = '\0';
+	for (i = 0; i < ps1_generic_game_ids_count; i++) {
+		if (!strncmp(volume_timestamp,
+		             ps1_generic_game_ids[i].volume_timestamp,
+		             PS1_PVD_VOLUME_TIMESTAMP_LEN)) {
+			snprintf(gameID, gameID_len, "%s", ps1_generic_game_ids[i].game_id);
+			return 1;
+		}
+	}
+
+	return 0;
+}
+
+int buildPS1GenericDiscGameID(char *gameID, size_t gameID_len)
+{
+	unsigned char sector[PS1_CD_SECTOR_DATA_SIZE] __attribute__((aligned(16)));
+	sceCdRMode read_mode;
+
+	if (gameID == NULL || gameID_len < 12)
+		return 0;
+	gameID[0] = '\0';
+
+	memset(sector, 0, sizeof(sector));
+	read_mode.trycount = 3;
+	read_mode.spindlctrl = SCECdSpinNom;
+	read_mode.datapattern = SCECdSecS2048;
+	read_mode.pad = 0;
+
+	if (!sceCdRead(PS1_PVD_LBA, 1, sector, &read_mode) || sceCdSync(0))
+		return 0;
+	if (strncmp((const char *)sector + 1, "CD001", 5))
+		return 0;
+
+	return buildPS1GenericGameIDFromTimestamp((const char *)sector + PS1_PVD_VOLUME_TIMESTAMP_OFFSET,
+	                                          gameID, gameID_len);
+}
+
 int buildLaunchGameID(const char *exec_path, char *gameID, size_t gameID_len)
 {
 	const char *start;
@@ -143,7 +201,9 @@ int buildLaunchGameID(const char *exec_path, char *gameID, size_t gameID_len)
 	if (start == NULL || *start == '\0')
 		return 0;
 
-	title_id_like = (strlen(start) >= 11 && start[4] == '_' && (start[7] == '.' || start[8] == '.'));
+	title_id_like = isLikelyTitleID(start);
+	if (disc_exec_path && !title_id_like)
+		return buildPS1GenericDiscGameID(gameID, gameID_len);
 
 	for (i = 0; i < 11 && start[i] != '\0'; i++) {
 		char c = start[i];
