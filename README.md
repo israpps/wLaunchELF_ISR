@@ -49,7 +49,7 @@ Drivers load on demand for maximum compatibility and initial boot speed.
 - Support for PS3/PS4 Dualshocks thanks to Alex Parrado (DS34 build)
 
 ### LaunchELF with Args
-
+ 
 <details>
 
 <summary>LaunchELF with Args</summary>
